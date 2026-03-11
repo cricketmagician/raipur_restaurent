@@ -1,0 +1,146 @@
+@import "tailwindcss";
+@import "./theme.css";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary-color);
+  --color-secondary: var(--secondary-color);
+  --color-accent: var(--accent-color);
+
+  --font-serif: var(--font-playfair), serif;
+  --font-sans: var(--font-inter), sans-serif;
+
+  /* Additional variables */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2.5rem;
+}
+
+@utility glass {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+@utility glass-dark {
+  background: rgba(15, 18, 24, 0.92);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@utility glass-navy {
+  background: rgba(23, 37, 84, 0.95);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+@utility section-padding {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-playfair), serif;
+}
+
+.font-sans {
+  font-family: var(--font-inter), sans-serif !important;
+}
+
+.font-serif {
+  font-family: var(--font-playfair), serif !important;
+}
+
+/* Print Utilities */
+@media print {
+
+  .no-print,
+  aside,
+  nav,
+  button,
+  .bottom-nav,
+  header {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+    position: static !important;
+  }
+
+  .print-area {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    display: block !important;
+    position: static !important;
+    overflow: visible !important;
+  }
+
+  /* Force white background for printed elements */
+  .bg-white,
+  .bg-slate-50,
+  .bg-slate-900 {
+    background-color: white !important;
+    background-image: none !important;
+    color: black !important;
+  }
+
+  /* Specific background-color force if needed for some elements */
+  [style*="background-color"] {
+    background-color: transparent !important;
+    color: black !important;
+  }
+
+  .text-white,
+  .text-slate-300,
+  .text-slate-400 {
+    color: black !important;
+  }
+
+  /* Ensure the print area is visible and not clipped */
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+    overflow: visible !important;
+  }
+
+  /* Hide everything by default, then show our print-area */
+  body>*:not(main) {
+    display: none !important;
+  }
+
+  header,
+  footer,
+  .sidebar,
+  .bottom-nav {
+    display: none !important;
+  }
+}

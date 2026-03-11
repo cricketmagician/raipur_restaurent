@@ -1,0 +1,22 @@
+:root {
+  --primary: #0f172a;
+  /* Deep Navy/Charcoal */
+  --primary-accent: #b45309;
+  /* Warm Amber/Gold */
+  --primary-color: var(--primary);
+  --secondary-color: #94a3b8;
+  --accent-color: var(--primary-accent);
+  --background: #fdfbf7;
+  /* White Sand Luxury */
+  --foreground: #1a1c20;
+  /* Deep Charcoal */
+  --bg-pattern: radial-gradient(at top left, #f5f2e8 0%, transparent 50%),
+    radial-gradient(at bottom right, #fcfaf2 0%, transparent 50%);
+}
+
+body {
+  background-color: var(--background);
+  background-image: var(--bg-pattern);
+}
+
+/* For multi-tenant, these will be overridden via inline styles from DB */

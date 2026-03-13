@@ -12,12 +12,13 @@ export async function middleware(request: NextRequest) {
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     // Robust check to ensure we have a valid-looking URL before passing it to createServerClient
-    const isConfigured = supabaseUrl && 
+    const isConfigured = !!(supabaseUrl && 
                          supabaseUrl.startsWith('http') && 
                          !supabaseUrl.includes('your-project-id') && 
                          supabaseKey && 
+                         supabaseKey.length > 50 &&
                          supabaseKey !== 'placeholder-key' &&
-                         process.env.NEXT_PUBLIC_FORCE_DEMO !== 'true';
+                         process.env.NEXT_PUBLIC_FORCE_DEMO !== 'true');
 
     // Bypass middleware if Supabase is not configured (Demo Mode) or if Force Demo is active
     if (!isConfigured) {
@@ -25,8 +26,8 @@ export async function middleware(request: NextRequest) {
     }
 
     const supabase = createServerClient(
-        supabaseUrl,
-        supabaseKey,
+        supabaseUrl!,
+        supabaseKey!,
         {
             cookies: {
                 get(name: string) {

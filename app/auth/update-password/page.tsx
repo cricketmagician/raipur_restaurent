@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { updatePassword } from "@/utils/store";
+import { updatePassword, isDemoMode } from "@/utils/store";
 import { Lock, Loader2, CheckCircle2, ShieldCheck, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -32,7 +32,7 @@ function UpdatePasswordContent() {
 
         try {
             // In demo mode, mock the success
-            if (process.env.NEXT_PUBLIC_FORCE_DEMO === 'true') {
+            if (isDemoMode()) {
                 await new Promise(resolve => setTimeout(resolve, 1500));
             } else {
                 const { error: updateError } = await updatePassword(password);

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { signIn, useHotelBranding, getUserProfile, resetPasswordForEmail } from "@/utils/store";
+import { signIn, useHotelBranding, getUserProfile, resetPasswordForEmail, isDemoMode } from "@/utils/store";
 import { Lock, Mail, Loader2, Hotel, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -45,9 +45,9 @@ function LoginContent() {
 
         try {
             // Mock Login Bypass for Demo Mode
-            if (process.env.NEXT_PUBLIC_FORCE_DEMO === 'true') {
+            if (isDemoMode()) {
                 await new Promise(resolve => setTimeout(resolve, 800));
-                console.log("FORCE_DEMO is active. Mocking login result for:", email);
+                console.log("Demo Mode is active. Mocking login result for:", email);
 
                 let mockRole: 'admin' | 'kitchen' | 'housekeeping' = 'admin';
                 if (email.includes('kitchen')) mockRole = 'kitchen';
@@ -108,7 +108,7 @@ function LoginContent() {
 
         try {
             // In demo mode, mock the success
-            if (process.env.NEXT_PUBLIC_FORCE_DEMO === 'true') {
+            if (isDemoMode()) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
             } else {
                 const { error: resetError } = await resetPasswordForEmail(

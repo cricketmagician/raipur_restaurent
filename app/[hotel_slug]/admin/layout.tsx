@@ -4,7 +4,7 @@ import Link from "next/link";
 import { LayoutDashboard, Inbox, Hotel, Utensils, Settings, Users, BarChart, Receipt, Shirt, ConciergeBell, ShieldAlert, Loader2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { useAuth, getUserProfile, UserProfile } from "@/utils/store";
+import { useAuth, getUserProfile, UserProfile, isDemoMode } from "@/utils/store";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminLayout({
@@ -28,7 +28,7 @@ export default function AdminLayout({
 
         if (!user && !isLoginPage) {
             // In demo mode we might allow it, but generally redirect to login
-            if (process.env.NEXT_PUBLIC_FORCE_DEMO !== 'true') {
+            if (!isDemoMode()) {
                 router.push(`/${hotelSlug}/admin/login`);
             }
             setProfileLoading(false);
@@ -56,7 +56,7 @@ export default function AdminLayout({
     ];
 
     // Filtered nav items based on role
-    const userRole = profile?.role || (process.env.NEXT_PUBLIC_FORCE_DEMO === 'true' ? 'admin' : 'staff');
+    const userRole = profile?.role || (isDemoMode() ? 'admin' : 'staff');
     const filteredNavItems = navItems.filter(item => item.roles.includes(userRole));
 
     // Check if current path is allowed

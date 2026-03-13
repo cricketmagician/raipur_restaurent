@@ -91,9 +91,10 @@ function LoginContent() {
         setError("");
 
         try {
+                const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
                 const { error: resetError } = await resetPasswordForEmail(
                     resetEmail,
-                    `${window.location.origin}/auth/update-password`
+                    `${appUrl}/auth/update-password`
                 );
                 if (resetError) throw resetError;
             setResetSent(true);

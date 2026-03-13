@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { signIn, useHotelBranding, getUserProfile, resetPasswordForEmail } from "@/utils/store";
-import { Lock, Mail, Loader2, Hotel, ShieldCheck } from "lucide-react";
+import { isSupabaseConfigured } from "@/lib/supabaseClient";
+import { Lock, Mail, Loader2, Hotel, ShieldCheck, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function LoginContent() {
@@ -133,6 +134,20 @@ function LoginContent() {
                             <ShieldCheck className="w-3 h-3 mr-1" /> Secure Staff Portal
                         </p>
                     </div>
+
+                    {!isSupabaseConfigured && (
+                        <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl mb-8">
+                            <div className="flex items-start">
+                                <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 mr-3 shrink-0" />
+                                <div>
+                                    <p className="text-xs font-black text-amber-900 uppercase tracking-tight mb-1">Database Disconnected</p>
+                                    <p className="text-[10px] font-bold text-amber-700 leading-relaxed">
+                                        Your Vercel environment variables are missing or invalid. Check <code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_SUPABASE_URL</code> and <code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {error && (
                         <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-bold mb-8 border border-red-100">

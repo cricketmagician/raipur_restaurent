@@ -16,7 +16,7 @@ export async function middleware(request: NextRequest) {
                          supabaseUrl.startsWith('http') && 
                          !supabaseUrl.includes('your-project-id') && 
                          supabaseKey && 
-                         supabaseKey.length > 50 &&
+                         supabaseKey.length > 40 &&
                          supabaseKey !== 'placeholder-key' &&
                          process.env.NEXT_PUBLIC_FORCE_DEMO !== 'true');
 

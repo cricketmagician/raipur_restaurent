@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
-import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, LayoutDashboard } from "lucide-react";
+import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, LayoutDashboard, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHotelBranding, useSupabaseRequests, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
@@ -15,12 +15,10 @@ export default function AdminHub() {
     const router = useRouter();
     const params = useParams();
     const hotelSlug = params?.hotel_slug as string;
-    const hotelId = params.hotel_id as string;
-
     const { branding, loading: brandingLoading } = useHotelBranding(hotelSlug);
     const { user, loading: authLoading } = useAuth();
     const { profile, loading: profileLoading } = useProfile(user?.id);
-    const requests = useSupabaseRequests(hotelId);
+    const requests = useSupabaseRequests(branding?.id);
     const { rooms, loading: roomsLoading } = useHotelRooms(branding?.id);
 
     const [audioEnabled, setAudioEnabled] = useState(true);
@@ -30,6 +28,17 @@ export default function AdminHub() {
     const [searchQuery, setSearchQuery] = useState("");
 
     const loading = brandingLoading || authLoading || profileLoading;
+
+    useEffect(() => {
+        if (!brandingLoading && branding) {
+            console.log("--- ADMIN DIAGNOSTIC ---");
+            console.log("Hotel Slug:", hotelSlug);
+            console.log("Branding ID:", branding.id);
+            console.log("Is Demo Mode:", branding.id?.toString().startsWith('demo-') ? "YES" : "NO (Supabase)");
+            console.log("Requests Count:", requests.length);
+            console.log("------------------------");
+        }
+    }, [branding, brandingLoading, requests.length, hotelSlug]);
 
     // Load initial preference from localStorage
     useEffect(() => {
@@ -124,6 +133,66 @@ export default function AdminHub() {
     const billedRequests = requests.filter(r => (r.price || 0) > 0);
     const totalRevenue = billedRequests.reduce((sum, r) => sum + (r.total || 0), 0);
 
+/**
+ * Diagnostic component to check if the database allows insertions (RLS Check)
+ */
+function SyncHealth({ hotelId }: { hotelId: string }) {
+    const [status, setStatus] = useState<'checking' | 'pass' | 'fail'>('checking');
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function checkRLS() {
+            if (!hotelId || hotelId.startsWith('demo-')) return;
+            const { supabase } = await import('@/lib/supabaseClient');
+            
+            // Try a "dry-run" insert into a temp request (we'll delete it immediately)
+            const testId = `diag-${Date.now()}`;
+            const { error } = await supabase.from('requests').insert([{
+                id: '00000000-0000-0000-0000-000000000000', // invalid uuid but check if policy blocks it
+                hotel_id: hotelId,
+                room: 'DIAGNOSTIC',
+                type: 'DIAGNOSTIC',
+                timestamp: 0,
+                time: '00:00'
+            }]);
+
+            if (error && (error.code === '42501' || error.message.includes('row-level security'))) {
+                setStatus('fail');
+                setError(error.message);
+            } else {
+                setStatus('pass');
+            }
+        }
+        checkRLS();
+    }, [hotelId]);
+
+    if (status === 'fail') {
+        return (
+            <div className="bg-red-50 border border-red-200 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 mb-2 shadow-sm">
+                <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center">
+                        <ShieldAlert className="w-6 h-6 text-red-600" />
+                    </div>
+                    <div>
+                        <h4 className="font-black text-red-900 leading-none mb-1">REAL-TIME SYNC BLOCKED</h4>
+                        <p className="text-xs font-bold text-red-600/70 uppercase tracking-wider">Database permissions (RLS) are preventing guest orders from appearing.</p>
+                    </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                    <button 
+                        onClick={() => window.alert("Please run the 'fix_supabase.sql' script in your Supabase SQL Editor to enable syncing.")}
+                        className="bg-red-600 text-white px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95"
+                    >
+                        How to Fix
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    return null;
+}
+
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
             <motion.div 
@@ -136,6 +205,11 @@ export default function AdminHub() {
 
     return (
         <div className="p-8 max-w-[1600px] mx-auto space-y-12 pb-20">
+            {/* Sync Status Banner */}
+            {branding && branding.id && !branding.id.toString().startsWith('demo-') && (
+                <SyncHealth hotelId={branding.id} />
+            )}
+
             {/* Audio Awareness Banner */}
             <AnimatePresence>
                 {!audioEnabled && (

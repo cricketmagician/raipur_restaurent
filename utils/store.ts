@@ -532,10 +532,19 @@ export function useHotelRooms(hotelId: string | undefined) {
 
     const fetchRooms = async () => {
         if (!hotelId) return;
-        setLoading(true);
-        const { data } = await getHotelRooms(hotelId);
-        if (data) setRooms(data);
-        setLoading(false);
+        try {
+            const { data } = await getHotelRooms(hotelId);
+            if (data && data.length > 0) {
+                setRooms(data);
+            } else if (data && data.length === 0) {
+                // Only clear if in production mode; in demo, we prefer defaults
+                if (!isDemoMode()) setRooms([]);
+            }
+        } catch (err) {
+            console.error("useHotelRooms: Fetch failed", err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -545,19 +554,29 @@ export function useHotelRooms(hotelId: string | undefined) {
             return;
         }
 
+        console.log(`[useHotelRooms] Subscribing to: ${hotelId} (Mode: ${isDemoMode() ? 'DEMO' : 'PROD'})`);
         fetchRooms();
 
         if (isDemoMode()) {
-            // Poll for changes in demo mode (simple approach)
             const interval = setInterval(() => {
-                const key = `${DEMO_ROOMS_KEY}_${hotelId}`;
-                const roomsList = JSON.parse(localStorage.getItem(key) || '[]');
-                setRooms(roomsList);
-            }, 2000);
-            return () => clearInterval(interval);
+                fetchRooms();
+            }, 5000); // Relaxed polling for demo
+
+            const handleUpdate = (e: any) => {
+                if (e.detail?.hotelId === hotelId || e.type === 'storage') {
+                    fetchRooms();
+                }
+            };
+            window.addEventListener('demo_rooms_updated', handleUpdate);
+            window.addEventListener('storage', handleUpdate);
+
+            return () => {
+                clearInterval(interval);
+                window.removeEventListener('demo_rooms_updated', handleUpdate);
+                window.removeEventListener('storage', handleUpdate);
+            };
         }
 
-        // Production Real-time subscription
         const subscription = supabase
             .channel(`rooms_channel_${hotelId}`)
             .on('postgres_changes', {
@@ -566,7 +585,6 @@ export function useHotelRooms(hotelId: string | undefined) {
                 table: 'rooms',
                 filter: `hotel_id=eq.${hotelId}`
             }, () => {
-                // Fetch fresh data when something changes
                 fetchRooms();
             })
             .subscribe();
@@ -1059,75 +1077,7 @@ export async function deleteRoom(roomId: string, hotelId: string) {
     return { error };
 }
 
-/**
- * Hook to fetch and subscribe to rooms for a specific hotel in real-time
- */
-export function useRooms(hotelId?: string) {
-    const [rooms, setRooms] = useState<Room[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchRooms = async () => {
-            if (!hotelId) {
-                setLoading(false);
-                return;
-            }
-
-            if (isDemoMode()) {
-                setRooms(getDemoRooms(hotelId));
-                setLoading(false);
-                return;
-            }
-
-            const { data } = await supabase
-                .from('rooms')
-                .select('*')
-                .eq('hotel_id', hotelId)
-                .order('room_number', { ascending: true });
-
-            if (data && data.length > 0) {
-                setRooms(data);
-            }
-            setLoading(false);
-        };
-
-        fetchRooms();
-
-        if (hotelId && isDemoMode()) {
-            const handleUpdate = (e: any) => {
-                if (e.detail?.hotelId === hotelId || e.type === 'storage') {
-                    setRooms(getDemoRooms(hotelId));
-                }
-            };
-            window.addEventListener('demo_rooms_updated', handleUpdate);
-            window.addEventListener('storage', handleUpdate);
-            return () => {
-                window.removeEventListener('demo_rooms_updated', handleUpdate);
-                window.removeEventListener('storage', handleUpdate);
-            };
-        }
-
-        if (hotelId) {
-            const subscription = supabase
-                .channel(`hotel_rooms_${hotelId}`)
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'rooms',
-                    filter: `hotel_id=eq.${hotelId}`
-                }, () => {
-                    fetchRooms();
-                })
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(subscription);
-            };
-        }
-    }, [hotelId]);
-
-    return { rooms, loading };
-}
+// useRooms consolidated into useHotelRooms above
 
 /**
  * Check-in a room logic: generates a 4-digit PIN

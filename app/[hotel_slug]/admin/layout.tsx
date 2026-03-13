@@ -168,10 +168,21 @@ export default function AdminLayout({
                         </div>
                         <button
                             onClick={() => router.push(`/${hotelSlug}/guest/dashboard`)}
-                            className="w-full flex items-center justify-center py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all shadow-sm active:scale-95 group"
+                            className="w-full flex items-center justify-center py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all shadow-sm active:scale-95 group mb-2"
                         >
                             <LayoutDashboard className="w-3 h-3 mr-2 opacity-60 group-hover:opacity-100" />
                             Guest View
+                        </button>
+                        <button
+                            onClick={async () => {
+                                const { signOut } = await import('@/utils/store');
+                                await signOut();
+                                router.push(`/${hotelSlug}/admin/login`);
+                            }}
+                            className="w-full flex items-center justify-center py-2.5 bg-red-50 border border-red-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all shadow-sm active:scale-95 group"
+                        >
+                            <ConciergeBell className="w-3 h-3 mr-2 opacity-60 group-hover:opacity-100" />
+                            Logout Staff
                         </button>
                     </div>
                 </div>
@@ -185,6 +196,21 @@ export default function AdminLayout({
                 
                 <div className="relative z-10 h-full">
                     {children}
+
+                    {/* Debug Status Overlay */}
+                    <div className="fixed bottom-4 right-4 z-[9999] opacity-20 hover:opacity-100 transition-opacity pointer-events-none hover:pointer-events-auto">
+                        <div className="bg-slate-900 border border-white/10 p-3 rounded-2xl shadow-2xl flex flex-col space-y-1">
+                            <div className="flex items-center space-x-2">
+                                <div className={`w-2 h-2 rounded-full ${isDemoMode() ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                                <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">
+                                    {isDemoMode() ? 'Mode: DEMO' : 'Mode: PROD'}
+                                </span>
+                            </div>
+                            <div className="text-[8px] font-bold text-slate-400 font-mono tracking-tight leading-none">
+                                Slug: {hotelSlug}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>

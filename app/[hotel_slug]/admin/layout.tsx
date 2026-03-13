@@ -209,6 +209,10 @@ export default function AdminLayout({
                             <div className="text-[8px] font-bold text-slate-400 font-mono tracking-tight leading-none">
                                 Slug: {hotelSlug}
                             </div>
+                            <div className="text-[7px] font-mono text-slate-500 border-t border-white/5 pt-1 mt-1">
+                                URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅' : '❌'} | 
+                                KEY: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅' : '❌'}
+                            </div>
                         </div>
                     </div>
                 </div>

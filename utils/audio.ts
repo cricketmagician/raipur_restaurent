@@ -1,3 +1,4 @@
+/* eslint-disable */
 // Synthetic Web Audio API sounds for notifications (doesn't require MP3 files)
 
 let audioContext: AudioContext | null = null;

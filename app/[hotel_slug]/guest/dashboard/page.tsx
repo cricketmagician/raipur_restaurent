@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState } from "react";
 import { ServiceCard } from "@/components/ServiceCard";
 import {
@@ -387,7 +389,7 @@ export default function GuestDashboard() {
                             <MenuListItem 
                                 key={item.id}
                                 {...item}
-                                trendingCount={(item.salesCount || 0) + Math.floor(Math.random() * 10)}
+                                trendingCount={(item.salesCount || 0)}
                                 quantity={cart[item.id] || 0}
                                 onUpdateQuantity={(q) => updateQuantity(item.id, q)}
                             />

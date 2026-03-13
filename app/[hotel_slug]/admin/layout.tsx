@@ -48,17 +48,11 @@ export default function AdminLayout({
     }, [user, authLoading, hotelSlug, isLoginPage, router]);
 
     const navItems = [
-        { id: 'dashboard', name: "Main Dashboard", href: `/${hotelSlug}/admin/dashboard`, icon: <LayoutDashboard className="w-5 h-5" />, roles: ['admin'] },
-        { id: 'waiter', name: "Waiter Service", href: `/${hotelSlug}/admin/waiter`, icon: <Utensils className="w-5 h-5" />, roles: ['admin', 'waiter'] },
-        { id: 'kitchen', name: "Kitchen Board", href: `/${hotelSlug}/admin/kitchen`, icon: <Utensils className="w-5 h-5" />, roles: ['admin', 'kitchen'] },
-        { id: 'housekeeping', name: "Housekeeping", href: `/${hotelSlug}/admin/housekeeping`, icon: <Shirt className="w-5 h-5" />, roles: ['admin', 'housekeeping'] },
-        { id: 'reception', name: "Reception Board", href: `/${hotelSlug}/admin/reception`, icon: <ConciergeBell className="w-5 h-5" />, roles: ['admin', 'reception'] },
-        { id: 'requests', name: "All Requests", href: `/${hotelSlug}/admin/requests`, icon: <Inbox className="w-5 h-5" />, roles: ['admin', 'reception'] },
+        { id: 'requests', name: "Live Requests", href: `/${hotelSlug}/admin`, icon: <Inbox className="w-5 h-5" />, roles: ['admin', 'reception', 'kitchen', 'housekeeping', 'waiter'] },
         { id: 'rooms', name: "Tables & QR", href: `/${hotelSlug}/admin/rooms`, icon: <Hotel className="w-5 h-5" />, roles: ['admin', 'reception'] },
         { id: 'menu', name: "Menu Management", href: `/${hotelSlug}/admin/menu`, icon: <Utensils className="w-5 h-5" />, roles: ['admin', 'kitchen'] },
-        { id: 'analytics', name: "Data Analytics", href: `/${hotelSlug}/admin/analytics`, icon: <BarChart className="w-5 h-5" />, roles: ['admin'] },
         { id: 'staff', name: "Staff Management", href: `/${hotelSlug}/admin/staff`, icon: <Users className="w-5 h-5" />, roles: ['admin'] },
-        { id: 'branding', name: "Restaurant Settings", href: `/${hotelSlug}/admin/branding`, icon: <Settings className="w-5 h-5" />, roles: ['admin'] },
+        { id: 'branding', name: "Hotel Settings", href: `/${hotelSlug}/admin/branding`, icon: <Settings className="w-5 h-5" />, roles: ['admin'] },
     ];
 
     // Filtered nav items based on role

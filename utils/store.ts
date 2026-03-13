@@ -29,6 +29,7 @@ export interface HotelBranding {
     checkoutMessage?: string;
     googleReviewLink?: string;
     welcomeMessage?: string;
+    address?: string;
 }
 
 export interface SpecialOffer {
@@ -58,7 +59,7 @@ export interface HotelRequest {
     time: string;
     price?: number;
     total?: number;
-    is_paid: boolean;
+    isPaid?: boolean;
 }
 
 export interface Room {
@@ -152,36 +153,8 @@ const getDemoRequests = (hotelId: string): HotelRequest[] => {
     const stored = localStorage.getItem(`${DEMO_REQUESTS_KEY}_${hotelId}`);
     if (stored) return JSON.parse(stored);
 
-    // Default Demo Data for rich Analytics testing
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
-    const hour = 60 * 60 * 1000;
-
-    const demoRequests: HotelRequest[] = [
-        // Today's peak morning orders
-        { id: 'dr1', hotel_id: hotelId, room: '101', type: 'Dining Order', notes: '2x Continental Breakfast, 1x Coffee', status: 'Completed', timestamp: now - hour * 5, time: '09:30', total: 48.0, is_paid: true },
-        { id: 'dr2', hotel_id: hotelId, room: '102', type: 'Dining Order', notes: '1x Continental Breakfast, 2x Fresh Juice', status: 'Completed', timestamp: now - hour * 5.5, time: '09:00', total: 32.0, is_paid: true },
-        { id: 'dr3', hotel_id: hotelId, room: '201', type: 'Housekeeping', notes: 'Fresh towels and extra pillows', status: 'Completed', timestamp: now - hour * 4, time: '10:30', is_paid: true },
-
-        // Lunch rush
-        { id: 'dr4', hotel_id: hotelId, room: '101', type: 'Dining Order', notes: '1x Caesar Salad, 1x Margherita Pizza', status: 'Completed', timestamp: now - hour * 2, time: '12:45', total: 36.5, is_paid: true },
-        { id: 'dr5', hotel_id: hotelId, room: '305', type: 'Dining Order', notes: '3x Margherita Pizza, 2x Truffle Fries', status: 'Completed', timestamp: now - hour * 1.5, time: '13:15', total: 90.0, is_paid: true },
-
-        // Afternoon / Recent
-        { id: 'dr6', hotel_id: hotelId, room: '103', type: 'Laundry', notes: 'Express service for 2 shirts', status: 'In Progress', timestamp: now - hour * 0.5, time: '14:15', total: 15.0, is_paid: false },
-        { id: 'dr7', hotel_id: hotelId, room: '202', type: 'Reception', notes: 'Late checkout request (4 PM)', status: 'Pending', timestamp: now - 15 * 60 * 1000, time: '14:30', is_paid: false },
-
-        // Past 24 hours distribution for heatmap
-        { id: 'dr8', hotel_id: hotelId, room: '105', type: 'Dining Order', notes: '1x Margherita Pizza', status: 'Completed', timestamp: now - hour * 18, time: '20:45', total: 22.0, is_paid: true },
-        { id: 'dr9', hotel_id: hotelId, room: '204', type: 'Dining Order', notes: '2x Truffle Fries', status: 'Completed', timestamp: now - hour * 19, time: '19:30', total: 24.0, is_paid: true },
-        { id: 'dr10', hotel_id: hotelId, room: '101', type: 'Dining Order', notes: '1x Caesar Salad', status: 'Completed', timestamp: now - hour * 20, time: '18:30', total: 14.5, is_paid: true },
-
-        // More room-wise distribution
-        { id: 'dr11', hotel_id: hotelId, room: 'Room 501', type: 'Dining Order', notes: '4x Margherita Pizza', status: 'Completed', timestamp: now - hour * 12, time: '02:45', total: 88.0, is_paid: true },
-        { id: 'dr12', hotel_id: hotelId, room: 'Room 501', type: 'Dining Order', notes: '1x Truffle Fries', status: 'Completed', timestamp: now - hour * 13, time: '01:45', total: 12.0, is_paid: true },
-    ];
-
-    return demoRequests;
+    // Starting with clean slate for user testing
+    return [];
 };
 
 const saveDemoRequests = (hotelId: string, requests: HotelRequest[]) => {
@@ -536,6 +509,63 @@ export async function signOut() {
 /**
  * Hook to fetch and subscribe to hotel branding in real-time
  */
+/**
+ * Custom hook to fetch and subscribe to hotel rooms for a specific hotel ID.
+ * Returns the rooms list, loading state, and a manual refresh function.
+ */
+export function useHotelRooms(hotelId: string | undefined) {
+    const [rooms, setRooms] = useState<Room[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchRooms = async () => {
+        if (!hotelId) return;
+        setLoading(true);
+        const { data } = await getHotelRooms(hotelId);
+        if (data) setRooms(data);
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        if (!hotelId) {
+            setLoading(false);
+            setRooms([]);
+            return;
+        }
+
+        fetchRooms();
+
+        if (isDemoMode()) {
+            // Poll for changes in demo mode (simple approach)
+            const interval = setInterval(() => {
+                const key = `${DEMO_ROOMS_KEY}_${hotelId}`;
+                const roomsList = JSON.parse(localStorage.getItem(key) || '[]');
+                setRooms(roomsList);
+            }, 2000);
+            return () => clearInterval(interval);
+        }
+
+        // Production Real-time subscription
+        const subscription = supabase
+            .channel(`rooms_channel_${hotelId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'rooms',
+                filter: `hotel_id=eq.${hotelId}`
+            }, () => {
+                // Fetch fresh data when something changes
+                fetchRooms();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(subscription);
+        };
+    }, [hotelId]);
+
+    return { rooms, loading, refresh: fetchRooms };
+}
+
 export function useHotelBranding(slug: string | undefined) {
     const [branding, setBranding] = useState<HotelBranding | null>(null);
     const [loading, setLoading] = useState(true);
@@ -579,14 +609,16 @@ export function useHotelBranding(slug: string | undefined) {
                         checkoutMessage: data.checkout_message,
                         googleReviewLink: data.google_review_link,
                         welcomeMessage: data.welcome_message,
+                        bgPattern: data.bg_pattern,
+                        address: data.address,
                     });
                 } else if (isDemoMode()) {
                     // Mock branding fallback ONLY in demo mode
                     const demoHotels: Record<string, any> = {
-                        'grand-royale': { id: '00000000-0000-0000-0000-000000000001', name: 'The Grand Royale', primaryColor: '#1e293b', accentColor: '#2563eb' },
-                        'azure-bay': { id: '00000000-0000-0000-0000-000000000002', name: 'Azure Bay Resort', primaryColor: '#0891b2', accentColor: '#0ea5e9' },
-                        'mountain-lodge': { id: '00000000-0000-0000-0000-000000000003', name: 'Mountain Lodge', primaryColor: '#166534', accentColor: '#22c55e' },
-                        'babylon': { id: '00000000-0000-0000-0000-000000000004', name: 'Babylon Raipur', primaryColor: '#1e3a8a', accentColor: '#3b82f6' }
+                        'grand-royale': { id: '00000000-0000-0000-0000-000000000001', name: 'The Grand Royale', primaryColor: '#1e293b', accentColor: '#2563eb', address: '123 Luxury Ave, London' },
+                        'azure-bay': { id: '00000000-0000-0000-0000-000000000002', name: 'Azure Bay Resort', primaryColor: '#0891b2', accentColor: '#0ea5e9', address: 'Sunny Beach, Miami' },
+                        'mountain-lodge': { id: '00000000-0000-0000-0000-000000000003', name: 'Mountain Lodge', primaryColor: '#166534', accentColor: '#22c55e', address: 'Green Peak, Alps' },
+                        'babylon': { id: '00000000-0000-0000-0000-000000000004', name: 'Babylon Raipur', primaryColor: '#1e3a8a', accentColor: '#3b82f6', address: 'VIP Road, Raipur, Chhattisgarh' }
                     };
 
                     if (demoHotels[slug]) {
@@ -598,7 +630,9 @@ export function useHotelBranding(slug: string | undefined) {
                             name: slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' '),
                             primaryColor: '#2563eb',
                             accentColor: '#3b82f6',
-                            receptionPhone: '+91 99999 99999'
+                            receptionPhone: '+91 99999 99999',
+                            bgPattern: undefined,
+                            address: 'India',
                         });
                     }
                 } else {
@@ -648,6 +682,8 @@ export function useHotelBranding(slug: string | undefined) {
                     checkoutMessage: data.checkout_message,
                     googleReviewLink: data.google_review_link,
                     welcomeMessage: data.welcome_message,
+                    bgPattern: data.bg_pattern,
+                    address: data.address,
                 });
             })
             .subscribe();
@@ -760,16 +796,17 @@ export async function addSupabaseRequest(hotelId: string, request: Partial<Hotel
         total: request.total || 0,
         timestamp: Date.now(),
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        is_paid: request.is_paid || false
+        isPaid: request.isPaid || false
     };
 
     if (isDemoMode()) {
         const demoRequest = {
             ...newRequestData,
-            id: Math.random().toString(36).substr(2, 9)
+            id: `demo-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
         };
         const requests = getDemoRequests(hotelId);
         saveDemoRequests(hotelId, [demoRequest, ...requests]);
+        console.log("Demo Request Added:", demoRequest);
         return { data: demoRequest, error: null };
     }
 
@@ -825,6 +862,60 @@ export async function updateSupabaseRequestStatus(id: string, status: RequestSta
 
     if (error) console.error("Error updating status:", error);
     return { data, error };
+}
+
+/**
+ * Settle all requests for a specific table (Mark as Paid & Complete)
+ */
+export async function settleTableRequests(hotelId: string, roomNumber: string) {
+    if (isDemoMode()) {
+        const reqKey = `${DEMO_REQUESTS_KEY}_${hotelId}`;
+        const roomKey = `${DEMO_ROOMS_KEY}_${hotelId}`;
+        
+        // Update Requests
+        const requestsList: HotelRequest[] = JSON.parse(localStorage.getItem(reqKey) || '[]');
+        const updatedRequests = requestsList.map(r => {
+            if (r.room === roomNumber && r.status !== 'Completed') {
+                return { ...r, status: 'Completed' as RequestStatus, isPaid: true };
+            }
+            return r;
+        });
+        saveDemoRequests(hotelId, updatedRequests);
+
+        // Update Room Occupancy and clear session
+        const roomsList: Room[] = JSON.parse(localStorage.getItem(roomKey) || '[]');
+        const updatedRooms = roomsList.map(rm => {
+            if (rm.room_number === roomNumber) {
+                return { ...rm, is_occupied: false, booking_pin: null, checked_in_at: null };
+            }
+            return rm;
+        });
+        localStorage.setItem(roomKey, JSON.stringify(updatedRooms));
+        
+        console.log(`Demo Mode: Settled and Vacated Table ${roomNumber}`);
+        return { data: null, error: null };
+    }
+
+    // 1. Mark all requests as paid and completed
+    const { error: reqError } = await supabase
+        .from('requests')
+        .update({ status: 'Completed', isPaid: true })
+        .eq('hotel_id', hotelId)
+        .eq('room', roomNumber)
+        .neq('status', 'Completed');
+
+    if (reqError) console.error("Error settling table requests:", reqError);
+
+    // 2. Mark table as vacant and clear session
+    const { error: roomError } = await supabase
+        .from('rooms')
+        .update({ is_occupied: false, booking_pin: null, checked_in_at: null })
+        .eq('hotel_id', hotelId)
+        .eq('room_number', roomNumber);
+
+    if (roomError) console.error("Error vacating table:", roomError);
+
+    return { data: null, error: reqError || roomError };
 }
 
 /**

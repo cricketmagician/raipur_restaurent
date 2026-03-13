@@ -4,9 +4,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: var(--primary-color);
-  --color-secondary: var(--secondary-color);
-  --color-accent: var(--accent-color);
+  --color-primary: #F55D2C; /* Vibrant Orange */
+  --color-secondary: #0F1B2D; /* Deep Slate */
+  --color-accent: #C58B2A; /* Gold Accent */
 
   --font-serif: var(--font-playfair), serif;
   --font-sans: var(--font-inter), sans-serif;
@@ -17,6 +17,7 @@
   --radius-lg: 0.5rem;
   --radius-xl: 1.5rem;
   --radius-2xl: 2.5rem;
+  --radius-3xl: 3.5rem;
 }
 
 @utility glass {
@@ -43,6 +44,24 @@
 @utility section-padding {
   padding-left: 1.5rem;
   padding-right: 1.5rem;
+}
+
+@utility premium-shadow {
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.08);
+}
+
+@utility orange-glow {
+  box-shadow: 0 10px 30px -5px rgba(245, 93, 44, 0.3);
+}
+
+:root {
+  --background: #F6F3EF;
+  --foreground: #0F1B2D;
+}
+
+@utility bg-noise {
+  background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+  background-repeat: repeat;
 }
 
 body {

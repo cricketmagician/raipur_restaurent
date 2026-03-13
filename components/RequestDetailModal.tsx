@@ -1,20 +1,53 @@
-"use client";
-
-import React from "react";
-import { X, MapPin, Clock, Info, Utensils, Bell } from "lucide-react";
+import React from 'react';
+import { X, MapPin, Clock, Info, Utensils, Bell, ShoppingBag, CreditCard, CheckCircle } from "lucide-react";
 import { StatusBadge, RequestStatus } from "./StatusBadge";
-import { HotelRequest } from "@/utils/store";
+import { HotelRequest, useSupabaseRequests, settleTableRequests } from "@/utils/store";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface RequestDetailModalProps {
-    request: HotelRequest | null;
+    request?: HotelRequest | null;
+    roomNumber?: string | null;
+    hotelId: string;
     onClose: () => void;
 }
 
-export function RequestDetailModal({ request, onClose }: RequestDetailModalProps) {
-    if (!request) return null;
+export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: RequestDetailModalProps) {
+    const allRequests = useSupabaseRequests(hotelId);
+    const [isSettling, setIsSettling] = React.useState(false);
 
-    const isRestaurant = request.type.toLowerCase().includes("restaurant") || request.type.toLowerCase().includes("room service");
+    const targetRoom = request?.room || roomNumber;
+    if (!targetRoom) return null;
+
+    // Aggregate all requests for this specific table that are not completed or not paid
+    const tableRequests = allRequests.filter(r => 
+        r.room === targetRoom && 
+        (r.status !== 'Completed' || !r.isPaid) &&
+        (r.price || 0) > 0 &&
+        r.type !== 'Checkout Requested' // Don't sum the checkout signals themselves
+    );
+
+    const totalBill = tableRequests.reduce((sum, r) => sum + (r.total || 0), 0);
+
+    const isRestaurant = request?.type.toLowerCase().includes("restaurant") || request?.type.toLowerCase().includes("room service");
+    const isTakeaway = targetRoom.toLowerCase() === "takeaway";
+
+    const handleSettle = async () => {
+        if (!window.confirm(`Mark all items for Table ${targetRoom} as PAID and complete the session?`)) return;
+        setIsSettling(true);
+        await settleTableRequests(hotelId, targetRoom);
+        setIsSettling(false);
+        onClose();
+    };
+
+    let headerBgClass = "bg-blue-50";
+    let iconBgClass = "bg-blue-100 text-blue-700";
+    if (isTakeaway) {
+        headerBgClass = "bg-purple-100";
+        iconBgClass = "bg-purple-200 text-purple-700";
+    } else if (isRestaurant) {
+        headerBgClass = "bg-amber-50";
+        iconBgClass = "bg-amber-100 text-amber-700";
+    }
 
     return (
         <AnimatePresence>
@@ -23,82 +56,88 @@ export function RequestDetailModal({ request, onClose }: RequestDetailModalProps
                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100"
+                    className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100 max-h-[90vh] flex flex-col"
                 >
-                    <div className={`p-6 flex justify-between items-center ${isRestaurant ? 'bg-amber-50' : 'bg-blue-50'}`}>
+                    <div className={`p-8 flex justify-between items-center ${headerBgClass}`}>
                         <div className="flex items-center">
-                            <div className={`p-3 rounded-2xl mr-4 ${isRestaurant ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
-                                {isRestaurant ? <Utensils className="w-6 h-6" /> : <Bell className="w-6 h-6" />}
+                            <div className={`p-4 rounded-2xl mr-4 ${iconBgClass} shadow-sm`}>
+                                {isTakeaway ? <ShoppingBag className="w-6 h-6" /> : (isRestaurant ? <Utensils className="w-6 h-6" /> : <Bell className="w-6 h-6" />)}
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-gray-900">{isRestaurant ? "Dining Order" : "Service Request"}</h2>
-                                <p className="text-sm text-gray-500">#{request.id.split('_').pop()}</p>
+                                <h2 className="text-2xl font-black text-gray-900 tracking-tight">
+                                    {request ? (isTakeaway ? "Takeaway Order" : (isRestaurant ? "Dining Order" : "Service Request")) : "Table Detail"}
+                                </h2>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 opacity-70">Table {targetRoom} • {request?.time || 'Current Session'}</p>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-gray-200/50 rounded-full transition-colors text-gray-500">
+                        <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors text-gray-500">
                             <X className="w-6 h-6" />
                         </button>
                     </div>
 
-                    <div className="p-8 space-y-8">
-                        <div className="grid grid-cols-2 gap-6">
-                            <div className="flex items-start">
-                                <MapPin className="w-5 h-5 text-gray-400 mr-3 mt-1" />
-                                <div>
-                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Location</p>
-                                    <p className="text-lg font-bold text-gray-900">Room {request.room}</p>
+                    <div className="p-8 space-y-8 overflow-y-auto flex-1">
+                        <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                             <div className="flex items-center">
+                                <Clock className="w-4 h-4 text-slate-400 mr-2" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Current Status</span>
+                             </div>
+                             {request ? (
+                                 <StatusBadge status={request.status} />
+                             ) : (
+                                 <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Active Session</span>
+                             )}
+                        </div>
+
+                        {/* Live Itemized Bill Section */}
+                        {tableRequests.length > 0 && (
+                            <div className="space-y-4">
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Live Table Bill</h3>
+                                <div className="bg-slate-50/50 rounded-3xl border border-slate-100 overflow-hidden">
+                                    <div className="p-5 space-y-3">
+                                        {tableRequests.map((r) => (
+                                            <div key={r.id} className="flex justify-between items-center">
+                                                <div className="flex items-center">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-3" />
+                                                    <span className="text-sm font-bold text-slate-700">{r.type}</span>
+                                                </div>
+                                                <span className="text-sm font-black text-slate-900">₹{r.total?.toLocaleString()}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="bg-slate-100/50 p-5 mt-2 flex justify-between items-center border-t border-slate-200/50">
+                                        <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">Total Unpaid Amount</span>
+                                        <span className="text-xl font-black text-blue-600">₹{totalBill.toLocaleString()}</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex items-start">
-                                <Clock className="w-5 h-5 text-gray-400 mr-3 mt-1" />
-                                <div>
-                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Requested At</p>
-                                    <p className="text-lg font-bold text-gray-900">{request.time}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Status</p>
-                            <StatusBadge status={request.status} />
-                        </div>
-
-                        <div className={`p-6 rounded-2xl border ${isRestaurant ? 'bg-amber-50/30 border-amber-100' : 'bg-gray-50 border-gray-100'}`}>
-                            <div className="flex items-center mb-4 text-gray-900 font-bold">
-                                <Info className="w-5 h-5 mr-2 text-primary" />
-                                {isRestaurant ? "Order Details" : "Notes / Requirements"}
-                            </div>
-                            <div className="text-gray-700 leading-relaxed text-lg">
-                                {request.notes ? (
-                                    isRestaurant ? (
-                                        <ul className="list-disc list-inside space-y-2">
-                                            {request.notes.split(',').map((item, i) => (
-                                                <li key={i} className="font-medium capitalize">{item.trim()}</li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        request.notes
-                                    )
-                                ) : (
-                                    <span className="text-gray-400 italic">No additional details provided.</span>
-                                )}
-                            </div>
-                        </div>
-
-                        {isRestaurant && (
-                            <div className="flex items-center justify-between text-sm py-4 border-t border-gray-100">
-                                <span className="text-gray-500">Priority Level</span>
-                                <span className="bg-red-50 text-red-600 px-3 py-1 rounded-full font-bold">HIGH</span>
                             </div>
                         )}
+
+                        <div className={`p-6 rounded-[2rem] border ${isTakeaway ? 'bg-purple-50/30 border-purple-100' : isRestaurant ? 'bg-amber-50/30 border-amber-100' : 'bg-gray-50 border-gray-100'}`}>
+                            <div className="flex items-center mb-4 text-gray-900 font-black text-xs uppercase tracking-widest">
+                                <Info className="w-4 h-4 mr-2 text-primary" />
+                                {isRestaurant ? "Order Notes" : "Request Details"}
+                            </div>
+                            <div className="text-gray-700 leading-relaxed font-bold text-[15px]">
+                                {request?.notes || <span className="text-gray-400 italic font-medium">No special instructions provided.</span>}
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
+                    <div className="p-8 bg-white border-t border-gray-50 flex flex-col md:flex-row gap-3">
+                        <button
+                            onClick={handleSettle}
+                            disabled={isSettling || tableRequests.length === 0}
+                            className="flex-1 py-4 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-green-100 hover:bg-green-700 transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:grayscale"
+                        >
+                            {isSettling ? "Processing..." : (
+                                <><CreditCard className="w-4 h-4 mr-2" /> Mark as Paid & Complete</>
+                            )}
+                        </button>
                         <button
                             onClick={onClose}
-                            className="px-6 py-2.5 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-all shadow-lg active:scale-95"
+                            className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-black transition-all shadow-xl shadow-slate-200 active:scale-95"
                         >
-                            Close Details
+                            Close
                         </button>
                     </div>
                 </motion.div>

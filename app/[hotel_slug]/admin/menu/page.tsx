@@ -16,7 +16,7 @@ export default function MenuPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [editingItem, setEditingItem] = useState<Partial<MenuItem> | null>(null);
 
-    const categories = ["Breakfast", "Lunch", "Dinner", "All Day Snacks"];
+    const categories = ["Burgers", "Fries", "Sides", "Drinks", "Desserts"];
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();

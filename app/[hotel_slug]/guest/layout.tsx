@@ -3,9 +3,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
+import { GlobalHeader } from "@/components/GlobalHeader";
+import { QuickActionFAB } from "@/components/QuickActionFAB";
 import { useEffect } from "react";
 import { initAudioContext } from "@/utils/audio";
 import { GuestAuthWrapper } from "./GuestAuthWrapper";
+import { useHotelBranding } from "@/utils/store";
+import { useParams } from "next/navigation";
 
 export default function GuestLayout({
     children,
@@ -29,10 +33,12 @@ export default function GuestLayout({
 
     return (
         <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 antialiased pb-24 overflow-x-hidden">
+            <GlobalHeader />
+
             {/* Ambient Background Gradient */}
             <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-from),_transparent_50%)] from-blue-50/50 to-transparent"></div>
 
-            <main className="flex-1 w-full max-w-md mx-auto relative px-5 pt-8">
+            <main className="flex-1 w-full max-w-md mx-auto relative px-5 pt-32">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={pathname}
@@ -49,6 +55,7 @@ export default function GuestLayout({
             </main>
 
             <BottomNav />
+            <QuickActionFAB />
         </div>
     );
 }

@@ -518,17 +518,6 @@ export default function GuestDashboard() {
                 )}
             </AnimatePresence>
 
-            {/* Debug Status Overlay */}
-            <div className="fixed top-4 right-4 z-[9999] opacity-20 hover:opacity-100 transition-opacity pointer-events-none hover:pointer-events-auto">
-                <div className="bg-slate-900 border border-white/10 p-3 rounded-2xl shadow-2xl flex flex-col space-y-1">
-                    <div className="flex items-center space-x-2">
-                        <div className={`w-2 h-2 rounded-full ${branding?.id?.toString().startsWith('demo-') ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                        <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">
-                            {branding?.id?.toString().startsWith('demo-') ? 'Mode: DEMO' : 'Mode: PROD'}
-                        </span>
-                    </div>
-                </div>
-            </div>
 
             <Toast
                 message={toast.message}

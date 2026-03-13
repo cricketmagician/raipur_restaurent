@@ -197,24 +197,6 @@ export default function AdminLayout({
                 <div className="relative z-10 h-full">
                     {children}
 
-                    {/* Debug Status Overlay */}
-                    <div className="fixed bottom-4 right-4 z-[9999] opacity-20 hover:opacity-100 transition-opacity pointer-events-none hover:pointer-events-auto">
-                        <div className="bg-slate-900 border border-white/10 p-3 rounded-2xl shadow-2xl flex flex-col space-y-1">
-                            <div className="flex items-center space-x-2">
-                                <div className={`w-2 h-2 rounded-full ${isDemoMode() ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                                <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">
-                                    {isDemoMode() ? 'Mode: DEMO' : 'Mode: PROD'}
-                                </span>
-                            </div>
-                            <div className="text-[8px] font-bold text-slate-400 font-mono tracking-tight leading-none">
-                                Slug: {hotelSlug}
-                            </div>
-                            <div className="text-[7px] font-mono text-slate-500 border-t border-white/5 pt-1 mt-1">
-                                URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅' : '❌'} | 
-                                KEY: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅' : '❌'}
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </main>
         </div>

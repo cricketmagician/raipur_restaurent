@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { signIn, useHotelBranding, getUserProfile, resetPasswordForEmail, isDemoMode } from "@/utils/store";
+import { signIn, useHotelBranding, getUserProfile, resetPasswordForEmail } from "@/utils/store";
 import { Lock, Mail, Loader2, Hotel, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -44,23 +44,6 @@ function LoginContent() {
         setError("");
 
         try {
-            // Mock Login Bypass for Demo Mode
-            if (isDemoMode()) {
-                await new Promise(resolve => setTimeout(resolve, 800));
-                console.log("Demo Mode is active. Mocking login result for:", email);
-
-                let mockRole: 'admin' | 'kitchen' | 'housekeeping' = 'admin';
-                if (email.includes('kitchen')) mockRole = 'kitchen';
-                else if (email.includes('housekeeping')) mockRole = 'housekeeping';
-
-                let redirectPath = `/${hotelSlug}/admin/dashboard`;
-                if (mockRole === 'kitchen') redirectPath = `/${hotelSlug}/admin/kitchen`;
-                else if (mockRole === 'housekeeping') redirectPath = `/${hotelSlug}/admin/housekeeping`;
-
-                console.log("Mock Redirecting to:", redirectPath);
-                window.location.href = redirectPath;
-                return;
-            }
 
             console.log("Calling signIn utility...");
             const { data, error: authError } = await signIn(email, password);
@@ -107,16 +90,11 @@ function LoginContent() {
         setError("");
 
         try {
-            // In demo mode, mock the success
-            if (isDemoMode()) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            } else {
                 const { error: resetError } = await resetPasswordForEmail(
                     resetEmail,
                     `${window.location.origin}/auth/update-password`
                 );
                 if (resetError) throw resetError;
-            }
             setResetSent(true);
         } catch (err: any) {
             setError(err.message || "Failed to send reset link.");

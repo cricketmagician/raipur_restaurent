@@ -101,11 +101,7 @@ export interface MenuItem {
 }
 
 // --- Utilities ---
-export const isDemoMode = () => {
-    // Check if demo mode is explicitly forced via env var or if credentials are missing/invalid
-    if (process.env.NEXT_PUBLIC_FORCE_DEMO === 'true') return true;
-    return !isSupabaseConfigured;
-};
+export const isDemoMode = () => false; // Enforce Production Mode only
 
 /**
  * Sanitizes a phone number for WhatsApp links (wa.me)
@@ -737,15 +733,6 @@ export function useSupabaseRequests(hotelId?: string, roomNumber?: string, check
         if (!hotelId) return;
 
         const fetchRequests = async () => {
-            if (isDemoMode()) {
-                const allRequests = getDemoRequests(hotelId);
-                let filtered = roomNumber ? allRequests.filter(r => r.room === roomNumber) : allRequests;
-                if (checkedInAt) {
-                    filtered = filtered.filter(r => r.timestamp >= checkedInAt);
-                }
-                setRequests(filtered);
-                return;
-            }
 
             let query = supabase
                 .from('requests')
@@ -830,16 +817,7 @@ export async function addSupabaseRequest(hotelId: string, request: Partial<Hotel
         is_paid: request.is_paid || false
     };
 
-    if (isDemoMode()) {
-        const demoRequest = {
-            ...newRequestData,
-            id: `demo-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
-        };
-        const requests = getDemoRequests(hotelId);
-        saveDemoRequests(hotelId, [demoRequest, ...requests]);
-        console.log("Demo Request Added:", demoRequest);
-        return { data: demoRequest, error: null };
-    }
+    // Demo blocks removed to enforce production only
 
     // In production, we omit the 'id' and let Supabase generate a proper UUID
     const { data, error } = await supabase
@@ -863,29 +841,7 @@ export async function addSupabaseRequest(hotelId: string, request: Partial<Hotel
  * Update request status in Supabase
  */
 export async function updateSupabaseRequestStatus(id: string, status: RequestStatus) {
-    if (isDemoMode()) {
-        if (typeof window === 'undefined') return { data: null, error: null };
-
-        // Find the hotelId by searching through all demo request keys in localStorage
-        const keys = Object.keys(localStorage);
-        for (const key of keys) {
-            if (key.startsWith(DEMO_REQUESTS_KEY)) {
-                const requests: HotelRequest[] = JSON.parse(localStorage.getItem(key) || '[]');
-                const requestIndex = requests.findIndex(r => r.id === id);
-
-                if (requestIndex !== -1) {
-                    const foundHotelId = key.replace(`${DEMO_REQUESTS_KEY}_`, '');
-                    requests[requestIndex].status = status;
-                    saveDemoRequests(foundHotelId, requests);
-                    console.log(`Demo Mode: Updated status of request ${id} to ${status} for hotel ${foundHotelId}`);
-                    return { data: null, error: null };
-                }
-            }
-        }
-
-        console.warn(`Demo Mode: Could not find request with ID ${id} in any hotel store.`);
-        return { data: null, error: null };
-    }
+    // Demo toggle removed
 
     const { data, error } = await supabase
         .from('requests')
@@ -900,33 +856,7 @@ export async function updateSupabaseRequestStatus(id: string, status: RequestSta
  * Settle all requests for a specific table (Mark as Paid & Complete)
  */
 export async function settleTableRequests(hotelId: string, roomNumber: string) {
-    if (isDemoMode()) {
-        const reqKey = `${DEMO_REQUESTS_KEY}_${hotelId}`;
-        const roomKey = `${DEMO_ROOMS_KEY}_${hotelId}`;
-        
-        // Update Requests
-        const requestsList: HotelRequest[] = JSON.parse(localStorage.getItem(reqKey) || '[]');
-        const updatedRequests = requestsList.map(r => {
-            if (r.room === roomNumber && r.status !== 'Completed') {
-                return { ...r, status: 'Completed' as RequestStatus, is_paid: true };
-            }
-            return r;
-        });
-        saveDemoRequests(hotelId, updatedRequests);
-
-        // Update Room Occupancy and clear session
-        const roomsList: Room[] = JSON.parse(localStorage.getItem(roomKey) || '[]');
-        const updatedRooms = roomsList.map(rm => {
-            if (rm.room_number === roomNumber) {
-                return { ...rm, is_occupied: false, booking_pin: null, checked_in_at: null };
-            }
-            return rm;
-        });
-        localStorage.setItem(roomKey, JSON.stringify(updatedRooms));
-        
-        console.log(`Demo Mode: Settled and Vacated Table ${roomNumber}`);
-        return { data: null, error: null };
-    }
+    // Demo settle removed
 
     // 1. Mark all requests as paid and completed
     const { error: reqError } = await supabase
@@ -1276,14 +1206,6 @@ export function useSpecialOffers(hotelId?: string) {
                 return;
             }
 
-            if (isDemoMode()) {
-                setOffers([
-                    { id: '1', hotel_id: hotelId, title: '20% Off Spa', description: 'Enjoy our premium spa services at a discount.', image_url: 'https://images.unsplash.com/photo-1544161515-4ae6ce6db87e?auto=format&fit=crop&q=80', is_active: true },
-                    { id: '2', hotel_id: hotelId, title: 'Dinner Buffet', description: 'Complementary dinner buffet for all diamond members.', image_url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80', is_active: true }
-                ]);
-                setLoading(false);
-                return;
-            }
 
             const { data } = await supabase
                 .from('special_offers')
@@ -1365,11 +1287,6 @@ export function useSupabaseMenuItems(hotelId?: string) {
                 return;
             }
 
-            if (isDemoMode()) {
-                setMenuItems(getDemoMenu(hotelId));
-                setLoading(false);
-                return;
-            }
 
             const { data } = await supabase
                 .from('menu_items')
@@ -1382,20 +1299,6 @@ export function useSupabaseMenuItems(hotelId?: string) {
         };
 
         fetchMenuItems();
-
-        if (hotelId && isDemoMode()) {
-            const handleUpdate = (e: any) => {
-                if (e.detail?.hotelId === hotelId || e.type === 'storage') {
-                    setMenuItems(getDemoMenu(hotelId));
-                }
-            };
-            window.addEventListener('demo_menu_updated', handleUpdate);
-            window.addEventListener('storage', handleUpdate);
-            return () => {
-                window.removeEventListener('demo_menu_updated', handleUpdate);
-                window.removeEventListener('storage', handleUpdate);
-            };
-        }
 
         if (hotelId) {
             const subscription = supabase
@@ -1423,18 +1326,6 @@ export function useSupabaseMenuItems(hotelId?: string) {
  * Save or add a menu item
  */
 export async function saveSupabaseMenuItem(hotelId: string, item: Partial<MenuItem>) {
-    if (isDemoMode()) {
-        const items = getDemoMenu(hotelId);
-        if (item.id) {
-            const updatedItems = items.map(i => i.id === item.id ? { ...i, ...item } as MenuItem : i);
-            saveDemoMenu(hotelId, updatedItems);
-            return { data: null, error: null };
-        } else {
-            const newItem = { ...item, id: Math.random().toString(36).substr(2, 9), hotel_id: hotelId } as MenuItem;
-            saveDemoMenu(hotelId, [...items, newItem]);
-            return { data: newItem, error: null };
-        }
-    }
 
     if (item.id) {
         const { data, error } = await supabase
@@ -1473,12 +1364,6 @@ export async function saveSupabaseMenuItem(hotelId: string, item: Partial<MenuIt
  * Delete a menu item
  */
 export async function deleteSupabaseMenuItem(id: string, hotelId: string) {
-    if (isDemoMode()) {
-        const items = getDemoMenu(hotelId);
-        const updatedItems = items.filter(i => i.id !== id);
-        saveDemoMenu(hotelId, updatedItems);
-        return { error: null };
-    }
     return await supabase.from('menu_items').delete().eq('id', id);
 }
 

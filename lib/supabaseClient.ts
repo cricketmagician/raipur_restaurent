@@ -8,6 +8,7 @@ export const isSupabaseConfigured = rawUrl &&
                      rawUrl.startsWith('http') && 
                      !rawUrl.includes('your-project-id') && 
                      rawKey && 
+                     rawKey.length > 50 && // Supabase keys are long JWTs
                      rawKey !== 'placeholder-key';
 
 const supabaseUrl = (isSupabaseConfigured ? rawUrl : "https://placeholder.supabase.co") as string;

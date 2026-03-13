@@ -14,13 +14,27 @@ export default function LandingPage() {
     useEffect(() => {
         const fetchHotels = async () => {
             try {
-                const { data, error } = await supabase.from('hotels').select('*');
+                // First check if supabase is even configured
+                const isConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && 
+                                   process.env.NEXT_PUBLIC_SUPABASE_URL.includes('supabase.co');
+                
+                if (!isConfigured) {
+                    console.warn("Supabase not configured, showing placeholders");
+                    throw new Error("unconfigured");
+                }
+
+                const { data, error } = await supabase.from('hotels').select('*').order('name');
+                if (error) throw error;
+                
                 if (data && data.length > 0) {
                     setHotels(data);
                 } else {
-                    throw new Error("No data");
+                    console.log("Supabase connected but 'hotels' table is empty.");
+                    setHotels([]); // Show empty state, not placeholders
                 }
             } catch (err) {
+                console.error("Home Page Fetch Error:", err);
+                // Only show placeholders if fundamentally unconfigured
                 setHotels([
                     { id: '1', name: 'The Golden Saffron', slug: 'golden-saffron', logo_image: null },
                     { id: '2', name: 'Bistro 21', slug: 'bistro-21', logo_image: null },
@@ -178,34 +192,50 @@ export default function LandingPage() {
                         viewport={{ once: true }}
                         className="grid md:grid-cols-3 gap-8"
                     >
-                        {hotels.map((hotel) => (
-                            <motion.button
-                                variants={item}
-                                key={hotel.id}
-                                onClick={() => router.push(`/${hotel.slug}/guest/dashboard`)}
-                                className="group bg-white p-8 rounded-[3rem] transition-all text-left shadow-2xl shadow-[#0F1B2D]/5 hover:shadow-[#0F1B2D]/10 hover:-translate-y-2 border border-transparent hover:border-[#C58B2A]/20 flex flex-col h-[320px]"
-                            >
-                                <div className="w-16 h-16 rounded-2xl bg-[var(--background)] flex items-center justify-center mb-8 border border-[var(--primary-color)]/5 overflow-hidden">
-                                    {hotel.logo_image ? (
-                                        <img src={hotel.logo_image} alt={hotel.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <Building2 className="w-8 h-8 text-[#C58B2A]" />
-                                    )}
-                                </div>
-                                <div className="flex-1">
-                                    <h4 className="text-3xl font-serif font-black mb-3 text-[var(--primary-color)]">{hotel.name}</h4>
-                                    <div className="flex items-center space-x-1">
-                                        {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3 h-3 text-[#C58B2A] fill-[#C58B2A]" />)}
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] ml-2">Luxury Collection</span>
+                        {hotels.length > 0 ? (
+                            hotels.map((hotel) => (
+                                <motion.button
+                                    variants={item}
+                                    key={hotel.id}
+                                    onClick={() => router.push(`/${hotel.slug}/guest/dashboard`)}
+                                    className="group bg-white p-8 rounded-[3rem] transition-all text-left shadow-2xl shadow-[#0F1B2D]/5 hover:shadow-[#0F1B2D]/10 hover:-translate-y-2 border border-transparent hover:border-[#C58B2A]/20 flex flex-col h-[320px]"
+                                >
+                                    <div className="w-16 h-16 rounded-2xl bg-[var(--background)] flex items-center justify-center mb-8 border border-[var(--primary-color)]/5 overflow-hidden">
+                                        {hotel.logo_image ? (
+                                            <img src={hotel.logo_image} alt={hotel.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <Building2 className="w-8 h-8 text-[#C58B2A]" />
+                                        )}
                                     </div>
-                                </div>
-                                <div className="flex items-center text-[#C58B2A] font-black text-xs uppercase tracking-widest group-hover:translate-x-2 transition-transform">
-                                    Enter Dashboard <ArrowUpRight className="ml-2 w-4 h-4" />
-                                </div>
-                            </motion.button>
-                        ))}
+                                    <div className="flex-1">
+                                        <h4 className="text-3xl font-serif font-black mb-3 text-[var(--primary-color)]">{hotel.name}</h4>
+                                        <div className="flex items-center space-x-1">
+                                            {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3 h-3 text-[#C58B2A] fill-[#C58B2A]" />)}
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] ml-2">Luxury Collection</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center text-[#C58B2A] font-black text-xs uppercase tracking-widest group-hover:translate-x-2 transition-transform">
+                                        Enter Dashboard <ArrowUpRight className="ml-2 w-4 h-4" />
+                                    </div>
+                                </motion.button>
+                            ))
+                        ) : (
+                            <div className="col-span-3 text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
+                                <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                                <h4 className="text-xl font-bold text-slate-900 mb-2">No properties found</h4>
+                                <p className="text-slate-500 max-w-sm mx-auto">Please add your first restaurant from the admin panel or check your database connection.</p>
+                            </div>
+                        )}
                     </motion.div>
                 )}
+
+                {/* Database Connectivity Diagnostic (Small & Subtle) */}
+                <div className="mt-20 flex justify-center">
+                    <div className="inline-flex items-center space-x-2 bg-slate-100 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        <div className={`w-1.5 h-1.5 rounded-full ${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                        <span>System Status: {process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Live Data Enabled' : 'Placeholder Mode (Check Vercel ENV)'}</span>
+                    </div>
+                </div>
             </section>
 
             {/* Features / Product Psychology */}

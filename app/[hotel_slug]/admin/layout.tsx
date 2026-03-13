@@ -48,7 +48,7 @@ export default function AdminLayout({
     }, [user, authLoading, hotelSlug, isLoginPage, router]);
 
     const navItems = [
-        { id: 'requests', name: "Live Requests", href: `/${hotelSlug}/admin`, icon: <Inbox className="w-5 h-5" />, roles: ['admin', 'reception', 'kitchen', 'housekeeping', 'waiter'] },
+        { id: 'dashboard', name: "Dashboard", href: `/${hotelSlug}/admin/dashboard`, icon: <Inbox className="w-5 h-5" />, roles: ['admin', 'reception', 'kitchen', 'housekeeping', 'waiter'] },
         { id: 'rooms', name: "Tables & QR", href: `/${hotelSlug}/admin/rooms`, icon: <Hotel className="w-5 h-5" />, roles: ['admin', 'reception'] },
         { id: 'menu', name: "Menu Management", href: `/${hotelSlug}/admin/menu`, icon: <Utensils className="w-5 h-5" />, roles: ['admin', 'kitchen'] },
         { id: 'staff', name: "Staff Management", href: `/${hotelSlug}/admin/staff`, icon: <Users className="w-5 h-5" />, roles: ['admin'] },

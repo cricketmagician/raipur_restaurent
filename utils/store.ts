@@ -59,7 +59,7 @@ export interface HotelRequest {
     time: string;
     price?: number;
     total?: number;
-    isPaid?: boolean;
+    is_paid?: boolean;
 }
 
 export interface Room {
@@ -796,7 +796,7 @@ export async function addSupabaseRequest(hotelId: string, request: Partial<Hotel
         total: request.total || 0,
         timestamp: Date.now(),
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isPaid: request.isPaid || false
+        is_paid: request.is_paid || false
     };
 
     if (isDemoMode()) {
@@ -876,7 +876,7 @@ export async function settleTableRequests(hotelId: string, roomNumber: string) {
         const requestsList: HotelRequest[] = JSON.parse(localStorage.getItem(reqKey) || '[]');
         const updatedRequests = requestsList.map(r => {
             if (r.room === roomNumber && r.status !== 'Completed') {
-                return { ...r, status: 'Completed' as RequestStatus, isPaid: true };
+                return { ...r, status: 'Completed' as RequestStatus, is_paid: true };
             }
             return r;
         });
@@ -899,7 +899,7 @@ export async function settleTableRequests(hotelId: string, roomNumber: string) {
     // 1. Mark all requests as paid and completed
     const { error: reqError } = await supabase
         .from('requests')
-        .update({ status: 'Completed', isPaid: true })
+        .update({ status: 'Completed', is_paid: true })
         .eq('hotel_id', hotelId)
         .eq('room', roomNumber)
         .neq('status', 'Completed');
@@ -957,6 +957,7 @@ export async function saveHotelBranding(id: string, updates: Partial<HotelBrandi
             checkout_message: updates.checkoutMessage,
             google_review_link: updates.googleReviewLink,
             welcome_message: updates.welcomeMessage,
+            address: updates.address,
         })
         .eq('id', id);
 

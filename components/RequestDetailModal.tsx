@@ -21,7 +21,7 @@ export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: Re
     // Aggregate all requests for this specific table that are not completed or not paid
     const tableRequests = allRequests.filter(r => 
         r.room === targetRoom && 
-        (r.status !== 'Completed' || !r.isPaid) &&
+        (r.status !== 'Completed' || !r.is_paid) &&
         (r.price || 0) > 0 &&
         r.type !== 'Checkout Requested' // Don't sum the checkout signals themselves
     );

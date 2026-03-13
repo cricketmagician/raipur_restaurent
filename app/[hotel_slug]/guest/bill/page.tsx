@@ -36,15 +36,15 @@ export default function BillPage() {
         r.timestamp >= checkedInAt &&
         r.type !== "Checkout Requested"
     ) : [];
-    const unpaidRequests = roomRequests.filter(r => !r.isPaid);
+    const unpaidRequests = roomRequests.filter(r => !r.is_paid);
     const totalAmount = roomRequests.reduce((sum, r) => sum + (r.total || 0), 0);
     const amountDue = unpaidRequests.reduce((sum, r) => sum + (r.total || 0), 0);
     
     const taxAmount = amountDue * 0.12; // 12% mock tax
     const grandTotal = amountDue + taxAmount;
 
-    // Check if the guest has already paid (all requests are isPaid: true)
-    const isFullyPaid = roomRequests.length > 0 && roomRequests.every(r => r.isPaid);
+    // Check if the guest has already paid (all requests are is_paid: true)
+    const isFullyPaid = roomRequests.length > 0 && roomRequests.every(r => r.is_paid);
 
     const handleCheckout = async () => {
         if (!branding?.id) return;
@@ -166,7 +166,7 @@ export default function BillPage() {
                                         </div>
                                         <div className="text-right">
                                             <div className="font-black text-slate-900 text-sm">₹{req.total?.toLocaleString() || "0"}</div>
-                                            {req.isPaid && (
+                                            {req.is_paid && (
                                                 <div className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">PAID</div>
                                             )}
                                         </div>

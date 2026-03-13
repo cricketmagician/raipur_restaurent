@@ -644,16 +644,15 @@ export function useHotelBranding(slug: string | undefined) {
                         address: data.address,
                     });
                 } else if (isDemoMode()) {
-                    // Mock branding fallback ONLY in demo mode
-                    const demoHotels: Record<string, any> = {
-                        'grand-royale': { id: '00000000-0000-0000-0000-000000000001', name: 'The Grand Royale', primaryColor: '#1e293b', accentColor: '#2563eb', address: '123 Luxury Ave, London' },
-                        'azure-bay': { id: '00000000-0000-0000-0000-000000000002', name: 'Azure Bay Resort', primaryColor: '#0891b2', accentColor: '#0ea5e9', address: 'Sunny Beach, Miami' },
-                        'mountain-lodge': { id: '00000000-0000-0000-0000-000000000003', name: 'Mountain Lodge', primaryColor: '#166534', accentColor: '#22c55e', address: 'Green Peak, Alps' },
-                        'babylon': { id: '00000000-0000-0000-0000-000000000004', name: 'Babylon Raipur', primaryColor: '#1e3a8a', accentColor: '#3b82f6', address: 'VIP Road, Raipur, Chhattisgarh' }
+                    console.warn(`[useHotelBranding] Using DEMO fallback for: ${slug}`);
+                    const demoHotels: Record<string, Partial<HotelBranding>> = {
+                        'coffeemagic': { id: 'demo-coffeemagic', name: 'Coffee Magic', primaryColor: '#6366f1', accentColor: '#4f46e5', address: 'VIP Road, Raipur' },
+                        'terracota': { id: 'demo-terracota', name: 'Terracota', primaryColor: '#6366f1', accentColor: '#4f46e5', address: 'India' },
+                        'coffeedudes': { id: 'demo-coffeedudes', name: 'Coffee Dudes', primaryColor: '#F55D2C', accentColor: '#FFBD59', address: 'Raipur' }
                     };
 
                     if (demoHotels[slug]) {
-                        setBranding({ ...demoHotels[slug], slug: slug });
+                        setBranding({ ...demoHotels[slug], slug: slug } as HotelBranding);
                     } else {
                         setBranding({
                             id: `demo-${slug}`,
@@ -667,10 +666,11 @@ export function useHotelBranding(slug: string | undefined) {
                         });
                     }
                 } else {
+                    console.error(`[useHotelBranding] No hotel found in PROD for slug: ${slug}`);
                     setBranding(null); // Invalid slug in production
                 }
             } catch (err) {
-                console.error("Critical error fetching branding:", err);
+                console.error("[useHotelBranding] Critical error:", err);
                 setBranding(null);
             } finally {
                 setLoading(false);
@@ -849,10 +849,11 @@ export async function addSupabaseRequest(hotelId: string, request: Partial<Hotel
         .single();
 
     if (error) {
-        console.error("Supabase Error Adding Request:");
-        console.error("Message:", error.message);
-        console.error("Details:", error.details);
-        console.error("Hint:", error.hint);
+        console.error("Supabase Error Adding Request:", error.message);
+        if (error.code === '42501' || error.message.includes('row-level security')) {
+            console.error("CRITICAL: RLS Policy blocking INSERT. User must run fix_supabase.sql");
+            return { data: null, error: { ...error, message: "Sync Blocked: Database permissions are missing. Please contact Admin to run SQL Fix." } };
+        }
     }
 
     return { data, error };

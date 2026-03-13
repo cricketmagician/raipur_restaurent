@@ -26,12 +26,12 @@ export const startAdminAlert = () => {
     if (isAdminAlerting || !audioContext) return;
     isAdminAlerting = true;
 
-    // A discrete, premium pulsing chime (E major triad)
-    const freqs = [329.63, 415.30, 493.88]; // E4, G#4, B4
+    // A sophisticated "Operational Sonar" ping (A minor 9th)
+    const freqs = [440, 523.25, 659.25, 830.61]; // A4, C5, E5, G#5
     const oscillators: OscillatorNode[] = [];
     const gainNode = audioContext.createGain();
 
-    freqs.forEach(freq => {
+    freqs.forEach((freq, idx) => {
         const osc = audioContext!.createOscillator();
         osc.type = "sine";
         osc.frequency.setValueAtTime(freq, audioContext!.currentTime);
@@ -40,12 +40,13 @@ export const startAdminAlert = () => {
         oscillators.push(osc);
     });
 
-    // Create a periodic pulsing gain envelope (on for 0.4s, off for 0.6s)
+    // Create a periodic "ping" with a long tail (every 2.5 seconds)
     const now = audioContext.currentTime;
-    for (let i = 0; i < 300; i++) { // Pulse for 5 mins max
-        const pulseStart = now + (i * 1.0);
-        gainNode.gain.setTargetAtTime(0.4, pulseStart, 0.05);
-        gainNode.gain.setTargetAtTime(0, pulseStart + 0.4, 0.05);
+    for (let i = 0; i < 150; i++) { // Max 150 pulses
+        const pulseStart = now + (i * 2.5);
+        gainNode.gain.setValueAtTime(0, pulseStart);
+        gainNode.gain.linearRampToValueAtTime(0.3, pulseStart + 0.05); // Rapid attack
+        gainNode.gain.exponentialRampToValueAtTime(0.001, pulseStart + 2.0); // Long decay
     }
 
     gainNode.connect(audioContext.destination);

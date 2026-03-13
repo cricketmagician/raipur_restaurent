@@ -46,6 +46,7 @@ export interface UserProfile {
     id: string;
     user_id: string;
     hotel_id: string;
+    full_name?: string;
     role: 'admin' | 'reception' | 'kitchen' | 'housekeeping' | 'staff' | 'waiter';
 }
 

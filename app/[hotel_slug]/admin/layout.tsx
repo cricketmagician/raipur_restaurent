@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Inbox, Hotel, Utensils, Settings, Users, BarChart, Receipt, Shirt, ConciergeBell, ShieldAlert, Loader2 } from "lucide-react";
+import { LayoutDashboard, Inbox, Hotel, Utensils, Settings, Users, BarChart3, Receipt, Shirt, ConciergeBell, ShieldAlert, Loader2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useAuth, getUserProfile, UserProfile, isDemoMode } from "@/utils/store";
@@ -49,6 +49,7 @@ export default function AdminLayout({
 
     const navItems = [
         { id: 'dashboard', name: "Dashboard", href: `/${hotelSlug}/admin/dashboard`, icon: <Inbox className="w-5 h-5" />, roles: ['admin', 'reception', 'kitchen', 'housekeeping', 'waiter'] },
+        { id: 'analytics', name: "Analytics", href: `/${hotelSlug}/admin/analytics`, icon: <BarChart3 className="w-5 h-5" />, roles: ['admin'] },
         { id: 'rooms', name: "Tables & QR", href: `/${hotelSlug}/admin/rooms`, icon: <Hotel className="w-5 h-5" />, roles: ['admin', 'reception'] },
         { id: 'menu', name: "Menu Management", href: `/${hotelSlug}/admin/menu`, icon: <Utensils className="w-5 h-5" />, roles: ['admin', 'kitchen'] },
         { id: 'staff', name: "Staff Management", href: `/${hotelSlug}/admin/staff`, icon: <Users className="w-5 h-5" />, roles: ['admin'] },
@@ -100,53 +101,91 @@ export default function AdminLayout({
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-900 flex">
-            <aside className="w-72 bg-white border-r hidden md:flex flex-col h-screen sticky top-0 shadow-sm transition-all duration-300">
-                <div className="p-8 border-b">
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tighter">
-                        Restaurant <span className="text-blue-600">Admin</span>
-                    </h1>
-                    <div className="flex items-center mt-2 px-3 py-1 bg-slate-100 rounded-full w-fit">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{userRole}</span>
+        <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex font-sans selection:bg-blue-100 selection:text-blue-900">
+            {/* Minimalist Sidebar */}
+            <aside className="w-64 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 hidden md:flex flex-col h-screen sticky top-0 z-40 transition-all duration-500 ease-in-out">
+                <div className="p-7 mb-2">
+                    <div className="flex items-center space-x-3 mb-6">
+                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 transform transition-transform hover:scale-105 duration-300">
+                            <Hotel className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none">
+                                Dine<span className="text-indigo-600 italic">Flow</span>
+                            </h1>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">OS v2.0</p>
+                        </div>
+                    </div>
+                    
+                    <div className="inline-flex items-center px-2.5 py-1 bg-emerald-50 rounded-full border border-emerald-100/50">
+                        <motion.div 
+                            animate={{ opacity: [1, 0.5, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 shadow-[0_0_8px_rgba(16,185,129,0.5)]" 
+                        />
+                        <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600">{userRole} Online</span>
                     </div>
                 </div>
 
-                <nav className="p-4 space-y-1.5 flex-1 overflow-y-auto">
+                <nav className="px-4 space-y-1 flex-1 overflow-y-auto custom-scrollbar">
+                    <p className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 mt-2">Navigation</p>
                     {filteredNavItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link
-                                key={item.name}
+                                key={item.id}
                                 href={item.href}
-                                className={`flex items-center px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 group ${isActive
-                                    ? 'bg-blue-50 text-blue-600 shadow-sm shadow-blue-100'
+                                className={`flex items-center px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 group ${isActive
+                                    ? 'bg-slate-900 text-white shadow-xl shadow-slate-200'
                                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                                     }`}
                             >
-                                <div className={`mr-3.5 transition-colors duration-200 ${isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-900'}`}>
-                                    {isActive ? React.cloneElement(item.icon, { className: "w-5 h-5" }) : item.icon}
+                                <div className={`mr-3.5 transition-all duration-300 ${isActive ? 'text-white scale-110' : 'text-slate-400 group-hover:text-slate-900'}`}>
+                                    {React.cloneElement(item.icon as React.ReactElement<any>, { className: "w-5 h-5 stroke-[2.5px]" })}
                                 </div>
-                                {item.name}
+                                <span className="tracking-tight">{item.name}</span>
                                 {isActive && (
-                                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
+                                    <motion.div 
+                                        layoutId="activeNav"
+                                        className="ml-auto w-1 h-4 bg-indigo-400 rounded-full" 
+                                    />
                                 )}
                             </Link>
                         );
                     })}
                 </nav>
 
-                <div className="p-4 border-t bg-slate-50/50">
-                    <button
-                        onClick={() => router.push(`/${hotelSlug}/guest/dashboard`)}
-                        className="w-full flex items-center justify-center px-4 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all shadow-sm active:scale-[0.98]"
-                    >
-                        Switch to Guest View
-                    </button>
+                <div className="p-4 mt-auto">
+                    <div className="bg-slate-50 rounded-2xl p-4 mb-4 border border-slate-100">
+                        <div className="flex items-center mb-3">
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
+                                <Users className="w-4 h-4 text-indigo-600" />
+                            </div>
+                            <div className="overflow-hidden">
+                                <p className="text-xs font-black text-slate-900 truncate">{profile?.full_name || 'Staff Member'}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase truncate">Verified Account</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => router.push(`/${hotelSlug}/guest/dashboard`)}
+                            className="w-full flex items-center justify-center py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all shadow-sm active:scale-95 group"
+                        >
+                            <LayoutDashboard className="w-3 h-3 mr-2 opacity-60 group-hover:opacity-100" />
+                            Guest View
+                        </button>
+                    </div>
                 </div>
             </aside>
-            <main className="flex-1 overflow-x-hidden w-full bg-slate-50/30">
-                {children}
+
+            {/* Main Content Area */}
+            <main className="flex-1 min-h-screen overflow-x-hidden relative">
+                {/* Modern subtle background patterns */}
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-50/50 rounded-full blur-[120px] -z-10 translate-x-1/2 -translate-y-1/2" />
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-50/50 rounded-full blur-[100px] -z-10 -translate-x-1/2 translate-y-1/2" />
+                
+                <div className="relative z-10 h-full">
+                    {children}
+                </div>
             </main>
         </div>
     );

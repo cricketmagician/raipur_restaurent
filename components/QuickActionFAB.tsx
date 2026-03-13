@@ -79,14 +79,14 @@ export function QuickActionFAB() {
 
     return (
         <>
-            <div className="fixed bottom-32 right-6 z-[110] flex flex-col items-end w-[calc(100%-3rem)] max-w-[320px]">
+            <div className="fixed bottom-32 right-6 z-[110] flex flex-col items-end w-[calc(100%-3rem)] max-w-[320px] pointer-events-none">
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="flex flex-col items-end space-y-4 mb-6 w-full"
+                            className="flex flex-col items-end space-y-4 mb-6 w-full pointer-events-auto"
                         >
                             {actions.map((action, index) => (
                                 <motion.div
@@ -173,7 +173,7 @@ export function QuickActionFAB() {
                         isOpen 
                             ? 'bg-slate-900 border-slate-800' 
                             : 'bg-[#F55D2C] border-[#F55D2C] shadow-[#F55D2C]/30'
-                    } border-4 text-white hover:scale-105 active:scale-95`}
+                    } border-4 text-white hover:scale-105 active:scale-95 pointer-events-auto`}
                 >
                     <AnimatePresence mode="wait">
                         {isOpen ? (

@@ -482,7 +482,7 @@ export default function GuestDashboard() {
                         initial={{ y: 200, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 200, opacity: 0 }}
-                        className="fixed bottom-28 left-6 right-6 z-[60]"
+                        className="fixed bottom-28 left-6 right-6 z-[150] pointer-events-auto"
                     >
                         {/* Acknowledge Psychology: Floating Hint */}
                         <motion.div 

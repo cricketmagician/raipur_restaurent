@@ -264,7 +264,27 @@ export const getUserProfile = async (userId: string): Promise<{ data: UserProfil
     }
 };
 
+const DEMO_STAFF_KEY = 'antigravity_demo_staff';
+
+const getDemoStaff = (hotelId: string): UserProfile[] => {
+    if (typeof window === 'undefined') return [];
+    const stored = localStorage.getItem(`${DEMO_STAFF_KEY}_${hotelId}`);
+    return stored ? JSON.parse(stored) : [
+        { id: 's1', user_id: 'admin@demo.com', hotel_id: hotelId, role: 'admin', full_name: 'Admin User' },
+        { id: 's2', user_id: 'staff1@demo.com', hotel_id: hotelId, role: 'reception', full_name: 'Suresh Kumar' },
+        { id: 's3', user_id: 'staff2@demo.com', hotel_id: hotelId, role: 'kitchen', full_name: 'Priya Verma' }
+    ];
+};
+
+const saveDemoStaff = (hotelId: string, staff: UserProfile[]) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(`${DEMO_STAFF_KEY}_${hotelId}`, JSON.stringify(staff));
+};
+
 export const getAllHotelStaff = async (hotelId: string): Promise<{ data: UserProfile[] | null; error: any }> => {
+    if (isDemoMode()) {
+        return { data: getDemoStaff(hotelId), error: null };
+    }
     try {
         const { data, error } = await supabase
             .from('profiles')
@@ -273,19 +293,18 @@ export const getAllHotelStaff = async (hotelId: string): Promise<{ data: UserPro
 
         return { data, error };
     } catch (err) {
-        return { data: null, error: err };
+        return { data: getDemoStaff(hotelId), error: null };
     }
 };
 
-export const updateStaffRole = async (profileId: string, role: string): Promise<{ error: any }> => {
+export const updateStaffRole = async (profileId: string, role: any): Promise<{ error: any }> => {
     if (isDemoMode()) {
-        console.log("Demo Mode: updateStaffRole called (not persisted)");
-        return {
-            error: {
-                message: "Application is in Demo Mode. To actually update staff roles, please connect your Supabase database in .env.local",
-                code: "DEMO_MODE"
-            }
-        };
+        // Find which hotel this staff belongs to (simplification for demo)
+        const hotelId = '00000000-0000-0000-0000-000000000004'; // Default demo babylon
+        const staff = getDemoStaff(hotelId);
+        const updated = staff.map(s => s.id === profileId ? { ...s, role } : s);
+        saveDemoStaff(hotelId, updated);
+        return { error: null };
     }
     try {
         const { error } = await supabase

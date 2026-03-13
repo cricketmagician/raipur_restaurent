@@ -205,15 +205,16 @@ export default function AdminHub() {
                     </button>
 
                     <button
-                        onClick={() => {
-                            if (window.confirm("Clear all recent request data?")) {
-                                localStorage.clear();
-                                window.location.reload();
+                        onClick={async () => {
+                            if (window.confirm("Are you sure you want to log out?")) {
+                                await signOut();
+                                router.push(`/${hotelSlug}/admin/login`);
                             }
                         }}
                         className="flex items-center px-5 py-2.5 rounded-2xl font-bold bg-white text-red-600 border border-red-100 hover:bg-red-50 transition-all shadow-sm active:scale-95"
                     >
-                        Reset Data
+                        <LogOut className="w-5 h-5 mr-2" />
+                        Logout
                     </button>
                 </div>
             </div>

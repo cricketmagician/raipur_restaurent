@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { updatePassword, isDemoMode } from "@/utils/store";
+import { updatePassword } from "@/utils/store";
 import { Lock, Loader2, CheckCircle2, ShieldCheck, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -31,13 +31,8 @@ function UpdatePasswordContent() {
         setError("");
 
         try {
-            // In demo mode, mock the success
-            if (isDemoMode()) {
-                await new Promise(resolve => setTimeout(resolve, 1500));
-            } else {
-                const { error: updateError } = await updatePassword(password);
-                if (updateError) throw updateError;
-            }
+            const { error: updateError } = await updatePassword(password);
+            if (updateError) throw updateError;
             setSuccess(true);
             setTimeout(() => {
                 router.push('/');

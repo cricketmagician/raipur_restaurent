@@ -101,7 +101,6 @@ export interface MenuItem {
 }
 
 // --- Utilities ---
-export const isDemoMode = () => false; // Enforce Production Mode only
 
 /**
  * Sanitizes a phone number for WhatsApp links (wa.me)
@@ -278,9 +277,6 @@ const saveDemoStaff = (hotelId: string, staff: UserProfile[]) => {
 };
 
 export const getAllHotelStaff = async (hotelId: string): Promise<{ data: UserProfile[] | null; error: any }> => {
-    if (isDemoMode()) {
-        return { data: getDemoStaff(hotelId), error: null };
-    }
     try {
         const { data, error } = await supabase
             .from('profiles')
@@ -289,19 +285,11 @@ export const getAllHotelStaff = async (hotelId: string): Promise<{ data: UserPro
 
         return { data, error };
     } catch (err) {
-        return { data: getDemoStaff(hotelId), error: null };
+        return { data: null, error: err };
     }
 };
 
 export const updateStaffRole = async (profileId: string, role: any): Promise<{ error: any }> => {
-    if (isDemoMode()) {
-        // Find which hotel this staff belongs to (simplification for demo)
-        const hotelId = '00000000-0000-0000-0000-000000000004'; // Default demo babylon
-        const staff = getDemoStaff(hotelId);
-        const updated = staff.map(s => s.id === profileId ? { ...s, role } : s);
-        saveDemoStaff(hotelId, updated);
-        return { error: null };
-    }
     try {
         const { error } = await supabase
             .from('profiles')
@@ -320,26 +308,6 @@ export const signIn = async (email: string, password: string) => {
 
 // --- Guest Management ---
 export const addGuest = async (guestData: Omit<Guest, 'id' | 'status'>) => {
-    if (isDemoMode()) {
-        const guests = getDemoGuests(guestData.hotel_id);
-        const newGuest: Guest = {
-            ...guestData,
-            id: 'local-' + Math.random().toString(36).substr(2, 9),
-            status: 'active'
-        };
-        // Replace existing guest for the same room in demo mode
-        const filteredGuests = guests.filter(g => g.room_number !== guestData.room_number);
-        saveDemoGuests(guestData.hotel_id, [...filteredGuests, newGuest]);
-
-        // Update demo room status
-        const rooms = getDemoRooms(guestData.hotel_id);
-        const updatedRooms = rooms.map(r =>
-            r.room_number === guestData.room_number ? { ...r, is_occupied: true } : r
-        );
-        saveDemoRooms(guestData.hotel_id, updatedRooms);
-
-        return { data: newGuest, error: null };
-    }
 
     try {
         const { data, error } = await supabase
@@ -377,9 +345,6 @@ export const addGuest = async (guestData: Omit<Guest, 'id' | 'status'>) => {
 };
 
 export const getHotelGuests = async (hotelId: string) => {
-    if (isDemoMode()) {
-        return { data: getDemoGuests(hotelId), error: null };
-    }
 
     try {
         const { data, error } = await supabase
@@ -390,26 +355,17 @@ export const getHotelGuests = async (hotelId: string) => {
 
         if (error) {
             if (error.code === 'PGRST204' || error.message.includes('not found')) {
-                return { data: getDemoGuests(hotelId), error: null };
+                return { data: [], error: null };
             }
             throw error;
         }
         return { data, error };
     } catch (err) {
-        return { data: getDemoGuests(hotelId), error: null };
+        return { data: [], error: err };
     }
 };
 
 export const deleteGuest = async (guestId: string, hotelId: string, roomNumber: string) => {
-    if (isDemoMode() || guestId.startsWith('local-')) {
-        const guests = getDemoGuests(hotelId);
-        saveDemoGuests(hotelId, guests.filter(g => g.id !== guestId));
-
-        const rooms = getDemoRooms(hotelId);
-        saveDemoRooms(hotelId, rooms.map(r => r.room_number === roomNumber ? { ...r, is_occupied: false } : r));
-
-        return { error: null };
-    }
 
     try {
         const { error } = await supabase
@@ -418,14 +374,6 @@ export const deleteGuest = async (guestId: string, hotelId: string, roomNumber: 
             .eq('id', guestId);
 
         if (error) {
-            if (error.code === 'PGRST204' || error.message.includes('not found')) {
-                // Table doesn't exist yet, fallback to local for demo purposes
-                const guests = getDemoGuests(hotelId);
-                saveDemoGuests(hotelId, guests.filter(g => g.id !== guestId));
-                const rooms = getDemoRooms(hotelId);
-                saveDemoRooms(hotelId, rooms.map(r => r.room_number === roomNumber ? { ...r, is_occupied: false } : r));
-                return { error: null };
-            }
             throw error;
         }
 
@@ -437,9 +385,6 @@ export const deleteGuest = async (guestId: string, hotelId: string, roomNumber: 
 };
 
 export const getHotelRooms = async (hotelId: string) => {
-    if (isDemoMode()) {
-        return { data: getDemoRooms(hotelId), error: null };
-    }
 
     try {
         const { data, error } = await supabase
@@ -449,15 +394,12 @@ export const getHotelRooms = async (hotelId: string) => {
             .order('room_number', { ascending: true });
 
         if (error) {
-            if (error.code === 'PGRST204' || error.message.includes('not found')) {
-                return { data: getDemoRooms(hotelId), error: null };
-            }
             throw error;
         }
         return { data, error: null };
     } catch (err: any) {
-        console.error("Error fetching rooms, falling back to demo:", err);
-        return { data: getDemoRooms(hotelId), error: null };
+        console.error("Error fetching rooms:", err);
+        return { data: null, error: err };
     }
 };
 
@@ -533,8 +475,7 @@ export function useHotelRooms(hotelId: string | undefined) {
             if (data && data.length > 0) {
                 setRooms(data);
             } else if (data && data.length === 0) {
-                // Only clear if in production mode; in demo, we prefer defaults
-                if (!isDemoMode()) setRooms([]);
+                setRooms([]);
             }
         } catch (err) {
             console.error("useHotelRooms: Fetch failed", err);
@@ -550,28 +491,9 @@ export function useHotelRooms(hotelId: string | undefined) {
             return;
         }
 
-        console.log(`[useHotelRooms] Subscribing to: ${hotelId} (Mode: ${isDemoMode() ? 'DEMO' : 'PROD'})`);
+        console.log(`[useHotelRooms] Subscribing to: ${hotelId}`);
         fetchRooms();
 
-        if (isDemoMode()) {
-            const interval = setInterval(() => {
-                fetchRooms();
-            }, 5000); // Relaxed polling for demo
-
-            const handleUpdate = (e: any) => {
-                if (e.detail?.hotelId === hotelId || e.type === 'storage') {
-                    fetchRooms();
-                }
-            };
-            window.addEventListener('demo_rooms_updated', handleUpdate);
-            window.addEventListener('storage', handleUpdate);
-
-            return () => {
-                clearInterval(interval);
-                window.removeEventListener('demo_rooms_updated', handleUpdate);
-                window.removeEventListener('storage', handleUpdate);
-            };
-        }
 
         const subscription = supabase
             .channel(`rooms_channel_${hotelId}`)
@@ -639,31 +561,9 @@ export function useHotelBranding(slug: string | undefined) {
                         bgPattern: data.bg_pattern,
                         address: data.address,
                     });
-                } else if (isDemoMode()) {
-                    console.warn(`[useHotelBranding] Using DEMO fallback for: ${slug}`);
-                    const demoHotels: Record<string, Partial<HotelBranding>> = {
-                        'coffeemagic': { id: 'demo-coffeemagic', name: 'Coffee Magic', primaryColor: '#6366f1', accentColor: '#4f46e5', address: 'VIP Road, Raipur' },
-                        'terracota': { id: 'demo-terracota', name: 'Terracota', primaryColor: '#6366f1', accentColor: '#4f46e5', address: 'India' },
-                        'coffeedudes': { id: 'demo-coffeedudes', name: 'Coffee Dudes', primaryColor: '#F55D2C', accentColor: '#FFBD59', address: 'Raipur' }
-                    };
-
-                    if (demoHotels[slug]) {
-                        setBranding({ ...demoHotels[slug], slug: slug } as HotelBranding);
-                    } else {
-                        setBranding({
-                            id: `demo-${slug}`,
-                            slug: slug,
-                            name: slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' '),
-                            primaryColor: '#2563eb',
-                            accentColor: '#3b82f6',
-                            receptionPhone: '+91 99999 99999',
-                            bgPattern: undefined,
-                            address: 'India',
-                        });
-                    }
                 } else {
-                    console.error(`[useHotelBranding] No hotel found in PROD for slug: ${slug}`);
-                    setBranding(null); // Invalid slug in production
+                    console.error(`[useHotelBranding] No hotel found for slug: ${slug}`);
+                    setBranding(null);
                 }
             } catch (err) {
                 console.error("[useHotelBranding] Critical error:", err);
@@ -754,24 +654,6 @@ export function useSupabaseRequests(hotelId?: string, roomNumber?: string, check
 
         fetchRequests();
 
-        if (isDemoMode()) {
-            const handleUpdate = (e: any) => {
-                if (e.detail?.hotelId === hotelId || e.type === 'storage') {
-                    const allReqs = getDemoRequests(hotelId);
-                    let filtered = roomNumber ? allReqs.filter(r => r.room === roomNumber) : allReqs;
-                    if (checkedInAt) {
-                        filtered = filtered.filter(r => r.timestamp >= checkedInAt);
-                    }
-                    setRequests(filtered);
-                }
-            };
-            window.addEventListener('demo_requests_updated', handleUpdate);
-            window.addEventListener('storage', handleUpdate);
-            return () => {
-                window.removeEventListener('demo_requests_updated', handleUpdate);
-                window.removeEventListener('storage', handleUpdate);
-            };
-        }
 
         // Subscribe to changes
         const subscription = supabase
@@ -799,7 +681,7 @@ export function useSupabaseRequests(hotelId?: string, roomNumber?: string, check
  */
 export async function addSupabaseRequest(hotelId: string, request: Partial<HotelRequest>) {
     // Basic validation: UUIDs in Supabase are long. Demo IDs can be short (e.g. "demo-desai").
-    if (!isDemoMode() && (!hotelId || hotelId.length < 20)) {
+    if (!hotelId || hotelId.length < 20) {
         console.error("Critical: Invalid Hotel ID provided for production request submission:", hotelId);
         return { data: null, error: { message: "Invalid Hotel Configuration (Production)" } };
     }
@@ -816,8 +698,6 @@ export async function addSupabaseRequest(hotelId: string, request: Partial<Hotel
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         is_paid: request.is_paid || false
     };
-
-    // Demo blocks removed to enforce production only
 
     // In production, we omit the 'id' and let Supabase generate a proper UUID
     const { data, error } = await supabase
@@ -841,7 +721,6 @@ export async function addSupabaseRequest(hotelId: string, request: Partial<Hotel
  * Update request status in Supabase
  */
 export async function updateSupabaseRequestStatus(id: string, status: RequestStatus) {
-    // Demo toggle removed
 
     const { data, error } = await supabase
         .from('requests')
@@ -856,7 +735,6 @@ export async function updateSupabaseRequestStatus(id: string, status: RequestSta
  * Settle all requests for a specific table (Mark as Paid & Complete)
  */
 export async function settleTableRequests(hotelId: string, roomNumber: string) {
-    // Demo settle removed
 
     // 1. Mark all requests as paid and completed
     const { error: reqError } = await supabase
@@ -884,16 +762,6 @@ export async function settleTableRequests(hotelId: string, roomNumber: string) {
  * Update hotel branding in Supabase
  */
 export async function saveHotelBranding(id: string, updates: Partial<HotelBranding>) {
-    if (isDemoMode()) {
-        console.log("Demo Mode: saveHotelBranding called (not persisted)", updates);
-        return {
-            data: null,
-            error: {
-                message: "Application is in Demo Mode. To save real branding changes, please set your Supabase credentials in the .env.local file.",
-                code: "DEMO_MODE"
-            } as any // eslint-disable-line @typescript-eslint/no-explicit-any
-        };
-    }
 
     const { data, error } = await supabase
         .from('hotels')
@@ -919,6 +787,7 @@ export async function saveHotelBranding(id: string, updates: Partial<HotelBrandi
             checkout_message: updates.checkoutMessage,
             google_review_link: updates.googleReviewLink,
             welcome_message: updates.welcomeMessage,
+            bgPattern: updates.bgPattern,
             address: updates.address,
         })
         .eq('id', id);
@@ -931,14 +800,6 @@ export async function saveHotelBranding(id: string, updates: Partial<HotelBrandi
  * Mark all requests for a specific room and hotel as paid
  */
 export async function settleRoomRequests(hotelId: string, room: string) {
-    if (isDemoMode()) {
-        const requests = getDemoRequests(hotelId);
-        const updatedRequests = requests.map(r =>
-            r.room === room ? { ...r, is_paid: true } : r
-        );
-        saveDemoRequests(hotelId, updatedRequests);
-        return { data: null, error: null };
-    }
 
     const { data, error } = await supabase
         .from('requests')
@@ -954,25 +815,6 @@ export async function settleRoomRequests(hotelId: string, room: string) {
  * Add a new room to the hotel
  */
 export async function addRoom(hotelId: string, roomNumber: string) {
-    if (isDemoMode()) {
-        const rooms = getDemoRooms(hotelId);
-
-        // Check if room number already exists
-        if (rooms.some(r => r.room_number === roomNumber)) {
-            return { data: null, error: { message: "Room already exists" } };
-        }
-
-        const newRoom: Room = {
-            id: 'r-' + Math.random().toString(36).substr(2, 9),
-            hotel_id: hotelId,
-            room_number: roomNumber,
-            is_occupied: false,
-            booking_pin: null,
-            created_at: new Date().toISOString()
-        };
-        saveDemoRooms(hotelId, [...rooms, newRoom]);
-        return { data: newRoom, error: null };
-    }
 
     const { data, error } = await supabase
         .from('rooms')
@@ -991,12 +833,6 @@ export async function addRoom(hotelId: string, roomNumber: string) {
  * Delete a room from the hotel
  */
 export async function deleteRoom(roomId: string, hotelId: string) {
-    if (isDemoMode()) {
-        const rooms = getDemoRooms(hotelId);
-        const updatedRooms = rooms.filter(r => r.id !== roomId);
-        saveDemoRooms(hotelId, updatedRooms);
-        return { error: null };
-    }
 
     const { error } = await supabase
         .from('rooms')
@@ -1016,22 +852,6 @@ export async function deleteRoom(roomId: string, hotelId: string) {
 export async function checkInRoom(roomId: string, hotelId: string, checkoutDate?: string, checkoutTime?: string, numGuests: number = 1) {
     const pin = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit PIN
 
-    if (isDemoMode()) {
-        const rooms = getDemoRooms(hotelId);
-        const updatedRooms = rooms.map(r =>
-            r.id === roomId ? {
-                ...r,
-                is_occupied: true,
-                booking_pin: pin,
-                checkout_date: checkoutDate,
-                checkout_time: checkoutTime,
-                num_guests: numGuests,
-                checked_in_at: Date.now()
-            } : r
-        );
-        saveDemoRooms(hotelId, updatedRooms);
-        return { data: null, error: null, pin };
-    }
 
     const { data, error } = await supabase
         .from('rooms')
@@ -1054,20 +874,6 @@ export async function checkInRoom(roomId: string, hotelId: string, checkoutDate?
  * Check-out a room: clear the PIN
  */
 export async function checkOutRoom(roomId: string, hotelId: string) {
-    if (isDemoMode()) {
-        const rooms = getDemoRooms(hotelId);
-        const updatedRooms = rooms.map(r =>
-            r.id === roomId ? {
-                ...r,
-                is_occupied: false,
-                booking_pin: null,
-                checkout_date: undefined,
-                checkout_time: undefined
-            } : r
-        );
-        saveDemoRooms(hotelId, updatedRooms);
-        return { data: null, error: null };
-    }
 
     const { data, error } = await supabase
         .from('rooms')
@@ -1090,20 +896,6 @@ export async function checkOutRoom(roomId: string, hotelId: string) {
  * Check-out a room by its room number: clear the PIN
  */
 export async function checkOutRoomByNumber(hotelId: string, roomNumber: string) {
-    if (isDemoMode()) {
-        const rooms = getDemoRooms(hotelId);
-        const updatedRooms = rooms.map(r =>
-            r.room_number === roomNumber ? {
-                ...r,
-                is_occupied: false,
-                booking_pin: null,
-                checkout_date: undefined,
-                checkout_time: undefined
-            } : r
-        );
-        saveDemoRooms(hotelId, updatedRooms);
-        return { data: null, error: null };
-    }
 
     const { data, error } = await supabase
         .from('rooms')
@@ -1126,12 +918,6 @@ export async function checkOutRoomByNumber(hotelId: string, roomNumber: string) 
  * Get the currently active guest for a given room
  */
 export async function getActiveGuestByRoom(hotelId: string, roomNumber: string) {
-    if (isDemoMode()) {
-        const guests = getDemoGuests(hotelId);
-        const guest = guests.find(g => g.room_number === roomNumber && g.status === 'active');
-        return { data: guest || null, error: null };
-    }
-
     const { data, error } = await supabase
         .from('guests')
         .select('*')
@@ -1150,22 +936,6 @@ export async function getActiveGuestByRoom(hotelId: string, roomNumber: string) 
  * Verify a room's booking PIN. Useful for the guest UI.
  */
 export async function verifyBookingPin(hotelId: string, roomNumber: string, pin: string) {
-    if (isDemoMode()) {
-        const rooms = getDemoRooms(hotelId);
-        console.log(`Demo Mode: Verifying PIN for Room ${roomNumber}. Expected PIN found in storage:`,
-            rooms.find(r => r.room_number === roomNumber)?.booking_pin || "NOT FOUND");
-
-        const match = rooms.find(r => r.room_number === roomNumber && r.booking_pin === pin && r.is_occupied);
-
-        if (match) {
-            console.log("Demo Mode: PIN Verified Successfully!");
-            return { success: true, data: match };
-        }
-        console.warn("Demo Mode: Invalid PIN or Room Not Occupied.");
-        return { success: false, data: null };
-    }
-
-
     console.log(`AuthStore: Querying Supabase for Room ${roomNumber} in Hotel ${hotelId}`);
     const { data, error } = await supabase
         .from('rooms')
@@ -1246,7 +1016,6 @@ export function useSpecialOffers(hotelId?: string) {
  * Save or add a special offer
  */
 export async function saveSpecialOffer(hotelId: string, offer: Partial<SpecialOffer>) {
-    if (isDemoMode()) return { data: null, error: null };
 
     if (offer.id) {
         return await supabase
@@ -1269,7 +1038,6 @@ export async function saveSpecialOffer(hotelId: string, offer: Partial<SpecialOf
  * Delete a special offer
  */
 export async function deleteSpecialOffer(id: string) {
-    if (isDemoMode()) return { data: null, error: null };
     return await supabase.from('special_offers').delete().eq('id', id);
 }
 

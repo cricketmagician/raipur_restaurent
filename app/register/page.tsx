@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Building2, ArrowRight, Check, Loader2, Sparkles, Layout, Palette, Globe, Mail, Lock, User } from "lucide-react";
-import { isDemoMode } from "@/utils/store";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function RegisterHotelPage() {
@@ -45,14 +44,6 @@ export default function RegisterHotelPage() {
         setError("");
 
         try {
-            // Check if we should use demo mode
-            if (isDemoMode()) {
-                // Mock success for demo purposes if Supabase is not configured or in force demo
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                console.log("Using mock success for demo.", formData);
-                router.push(`/${formData.slug}/admin/dashboard`);
-                return;
-            }
 
             // 1. Sign Up the User
             let { data: authData, error: authError } = await supabase.auth.signUp({

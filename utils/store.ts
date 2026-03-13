@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { useState, useEffect } from 'react';
-export { supabase } from '@/lib/supabaseClient';
-import { supabase } from '@/lib/supabaseClient';
+export { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { RequestStatus } from '@/components/StatusBadge';
 
 // --- Types ---
@@ -101,17 +101,9 @@ export interface MenuItem {
 
 // --- Utilities ---
 export const isDemoMode = () => {
-    // Check if demo mode is explicitly forced via env var or if credentials are missing
+    // Check if demo mode is explicitly forced via env var or if credentials are missing/invalid
     if (process.env.NEXT_PUBLIC_FORCE_DEMO === 'true') return true;
-
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    // Demo Mode is active only if credentials are completely missing or placeholders
-    const isMissing = !url || !key;
-    const isPlaceholder = url?.includes('your-project-id') || key?.includes('your-anon-key');
-
-    return isMissing || isPlaceholder;
+    return !isSupabaseConfigured;
 };
 
 /**

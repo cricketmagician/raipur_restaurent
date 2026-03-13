@@ -289,7 +289,11 @@ export function StaffDashboard({ hotelSlug, department, allowedTypes, title, ico
                 </div>
             </div>
 
-            <RequestDetailModal request={selectedRequest} onClose={() => setSelectedRequest(null)} />
+            <RequestDetailModal 
+                request={selectedRequest} 
+                onClose={() => setSelectedRequest(null)} 
+                hotelId={branding?.id || ""}
+            />
         </div>
     );
 }

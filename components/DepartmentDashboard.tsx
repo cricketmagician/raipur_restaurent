@@ -293,7 +293,11 @@ export function DepartmentDashboard({ department, title, icon }: DepartmentDashb
                 </table>
             </div>
 
-            <RequestDetailModal request={selectedRequest} onClose={() => setSelectedRequest(null)} />
+            <RequestDetailModal 
+                request={selectedRequest} 
+                onClose={() => setSelectedRequest(null)} 
+                hotelId={branding?.id || ""}
+            />
         </div>
     );
 }

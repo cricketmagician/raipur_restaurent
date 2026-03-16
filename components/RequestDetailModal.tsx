@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, MapPin, Clock, Info, Utensils, Bell, ShoppingBag, CreditCard, CheckCircle } from "lucide-react";
 import { StatusBadge, RequestStatus } from "./StatusBadge";
-import { HotelRequest, useSupabaseRequests, settleTableRequests } from "@/utils/store";
+import { HotelRequest, useSupabaseRequests, settleTableRequests, isDiningRequest } from "@/utils/store";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface RequestDetailModalProps {
@@ -28,7 +28,7 @@ export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: Re
 
     const totalBill = tableRequests.reduce((sum, r) => sum + (r.total || 0), 0);
 
-    const isRestaurant = request?.type.toLowerCase().includes("restaurant") || request?.type.toLowerCase().includes("room service");
+    const isRestaurant = request ? isDiningRequest(request.type) : false;
     const isTakeaway = targetRoom.toLowerCase() === "takeaway";
 
     const handleSettle = async () => {

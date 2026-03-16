@@ -100,6 +100,30 @@ export interface MenuItem {
     created_at?: string;
 }
 
+const REQUEST_TYPE_KEYWORDS = {
+    dining: ['dining order', 'restaurant order', 'restaurant', 'food order', 'room service', 'breakfast', 'lunch', 'dinner'],
+    beverages: ['water', 'mineral water', 'tea', 'coffee', 'beverage'],
+    housekeeping: ['towel', 'cleaning', 'housekeeping', 'laundry', 'dry cleaning'],
+    service: ['waiter call', 'reception', 'concierge', 'checkout requested'],
+} as const;
+
+export function requestTypeMatches(requestType: string, allowedTypes: string[]) {
+    const normalized = requestType.toLowerCase();
+    return allowedTypes.some((allowedType) => normalized.includes(allowedType.toLowerCase()));
+}
+
+export function isDiningRequest(requestType: string) {
+    return requestTypeMatches(requestType, [...REQUEST_TYPE_KEYWORDS.dining, ...REQUEST_TYPE_KEYWORDS.beverages]);
+}
+
+export function isHousekeepingRequest(requestType: string) {
+    return requestTypeMatches(requestType, [...REQUEST_TYPE_KEYWORDS.housekeeping]);
+}
+
+export function isServiceRequest(requestType: string) {
+    return requestTypeMatches(requestType, [...REQUEST_TYPE_KEYWORDS.service]);
+}
+
 // --- Utilities ---
 
 /**

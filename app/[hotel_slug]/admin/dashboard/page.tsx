@@ -7,7 +7,7 @@ import { useRouter, useParams } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
 import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, LayoutDashboard, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequests, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequests, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms, isDiningRequest, isHousekeepingRequest, isServiceRequest, requestTypeMatches } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
 import { RequestDetailModal } from "@/components/RequestDetailModal";
 
@@ -109,7 +109,7 @@ export default function AdminHub() {
     const getAllowedTypesForRole = (role: string) => {
         const lowerRole = role.toLowerCase();
         if (lowerRole === 'admin' || lowerRole === 'reception') return null;
-        if (lowerRole === 'kitchen') return ["Dining Order", "Restaurant Order", "Mineral Water", "Water", "Waiter Call", "Tea", "Coffee"];
+        if (lowerRole === 'kitchen') return ["Dining Order", "Restaurant Order", "Water", "Tea", "Coffee"];
         if (lowerRole === 'housekeeping') return ["Towel", "Cleaning", "Laundry", "Room Service"];
         return ["Waiter Call"];
     };
@@ -118,7 +118,16 @@ export default function AdminHub() {
 
     const roleFilteredRequests = sortedRequests.filter(r => {
         if (!allowedTypes) return true;
-        return allowedTypes.some(type => r.type.toLowerCase().includes(type.toLowerCase()));
+        if (profile?.role?.toLowerCase() === 'kitchen') {
+            return isDiningRequest(r.type) || requestTypeMatches(r.type, allowedTypes);
+        }
+        if (profile?.role?.toLowerCase() === 'housekeeping') {
+            return isHousekeepingRequest(r.type) || requestTypeMatches(r.type, allowedTypes);
+        }
+        if (profile?.role?.toLowerCase() === 'waiter' || profile?.role?.toLowerCase() === 'staff') {
+            return isServiceRequest(r.type) || requestTypeMatches(r.type, allowedTypes);
+        }
+        return requestTypeMatches(r.type, allowedTypes);
     });
 
     const filteredBySearch = roleFilteredRequests.filter(r =>

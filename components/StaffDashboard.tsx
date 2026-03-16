@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
 import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, Clock, Shirt, Brush, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequests, updateSupabaseRequestStatus, HotelRequest, signOut } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequests, updateSupabaseRequestStatus, HotelRequest, signOut, isDiningRequest, isHousekeepingRequest, isServiceRequest, requestTypeMatches } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
 import { RequestDetailModal } from "@/components/RequestDetailModal";
 
@@ -56,9 +56,16 @@ export function StaffDashboard({ hotelSlug, department, allowedTypes, title, ico
 
     // Role-based filtering of requests
     const deptRequests = requests.filter(r => {
-        const type = r.type.toLowerCase();
-        // Check if the request type matches any of the allowed types for this department
-        return allowedTypes.some(allowed => type.includes(allowed.toLowerCase()));
+        if (department === 'kitchen') {
+            return isDiningRequest(r.type) || requestTypeMatches(r.type, allowedTypes);
+        }
+        if (department === 'housekeeping') {
+            return isHousekeepingRequest(r.type) || requestTypeMatches(r.type, allowedTypes);
+        }
+        if (department === 'waiter' || department === 'reception') {
+            return isServiceRequest(r.type) || requestTypeMatches(r.type, allowedTypes);
+        }
+        return requestTypeMatches(r.type, allowedTypes);
     });
 
     useEffect(() => {

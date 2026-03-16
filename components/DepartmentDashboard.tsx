@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
 import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, Shirt, ConciergeBell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequests, updateSupabaseRequestStatus, HotelRequest } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequests, updateSupabaseRequestStatus, HotelRequest, isDiningRequest, isHousekeepingRequest } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
 import { RequestDetailModal } from "@/components/RequestDetailModal";
 
@@ -33,15 +33,15 @@ export function DepartmentDashboard({ department, title, icon }: DepartmentDashb
         return requests.filter(r => {
             const type = r.type.toLowerCase();
             if (department === 'kitchen') {
-                return type.includes('restaurant') || type.includes('room service') || type.includes('breakfast');
+                return isDiningRequest(r.type);
             }
             if (department === 'laundry') {
                 return type.includes('laundry') || type.includes('dry cleaning');
             }
             if (department === 'reception') {
                 // Catch-all for reception or specific ones
-                const isKitchen = type.includes('restaurant') || type.includes('room service') || type.includes('breakfast');
-                const isLaundry = type.includes('laundry') || type.includes('dry cleaning');
+                const isKitchen = isDiningRequest(r.type);
+                const isLaundry = isHousekeepingRequest(r.type);
                 return !isKitchen && !isLaundry;
             }
             return true;

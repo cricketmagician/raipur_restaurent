@@ -52,6 +52,22 @@ export interface UserProfile {
     role: 'admin' | 'reception' | 'kitchen' | 'housekeeping' | 'staff' | 'waiter';
 }
 
+const VALID_USER_ROLES = ['admin', 'reception', 'kitchen', 'housekeeping', 'staff', 'waiter'] as const;
+
+export function normalizeUserRole(role: string | null | undefined): UserProfile['role'] {
+    const normalized = role?.trim().toLowerCase();
+    if (normalized && VALID_USER_ROLES.includes(normalized as UserProfile['role'])) {
+        return normalized as UserProfile['role'];
+    }
+
+    return 'staff';
+}
+
+const normalizeUserProfile = (profile: any): UserProfile => ({
+    ...profile,
+    role: normalizeUserRole(profile?.role),
+});
+
 export interface HotelRequest {
     id: string;
     hotel_id: string;
@@ -298,10 +314,11 @@ export function useProfile(userId?: string) {
                 .from('profiles')
                 .select('*')
                 .eq('user_id', userId)
-                .single();
+                .order('id', { ascending: true })
+                .limit(1);
 
             if (!error) {
-                setProfile(data);
+                setProfile(data?.[0] ? normalizeUserProfile(data[0]) : null);
             }
             setLoading(false);
         }
@@ -319,9 +336,10 @@ export const getUserProfile = async (userId: string): Promise<{ data: UserProfil
             .from('profiles')
             .select('*')
             .eq('user_id', userId)
-            .single();
+            .order('id', { ascending: true })
+            .limit(1);
 
-        return { data, error };
+        return { data: data?.[0] ? normalizeUserProfile(data[0]) : null, error };
     } catch (err) {
         return { data: null, error: err };
     }

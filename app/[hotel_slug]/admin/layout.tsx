@@ -4,7 +4,7 @@ import Link from "next/link";
 import { LayoutDashboard, Inbox, Hotel, Utensils, Settings, Users, BarChart3, Receipt, Shirt, ConciergeBell, ShieldAlert, Loader2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { useAuth, getUserProfile, UserProfile, useHotelBranding } from "@/utils/store";
+import { useAuth, getUserProfile, UserProfile, useHotelBranding, normalizeUserRole } from "@/utils/store";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminLayout({
@@ -65,12 +65,13 @@ export default function AdminLayout({
     ];
 
     // Filtered nav items based on role
-    const userRole = profile?.role || 'staff';
+    const userRole = normalizeUserRole(profile?.role);
     const filteredNavItems = navItems.filter(item => item.roles.includes(userRole));
 
     // Check if current path is allowed
     const isPathAllowed = () => {
         if (userRole === 'admin') return true;
+        if (pathname === `/${hotelSlug}/admin/dashboard`) return true;
         const currentItem = navItems.find(item => pathname === item.href);
         if (!currentItem) return true; // Internal or unknown routes
         return currentItem.roles.includes(userRole);

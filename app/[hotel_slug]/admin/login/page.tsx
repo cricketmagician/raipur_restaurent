@@ -3,13 +3,13 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, Suspense } from "react";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { signIn, useHotelBranding, getUserProfile, resetPasswordForEmail } from "@/utils/store";
 import { isSupabaseConfigured, supabase } from "@/lib/supabaseClient";
 import { Lock, Mail, Loader2, Hotel, ShieldCheck, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const waitForAuthSession = async (userId: string, attempts = 5) => {
+const waitForAuthSession = async (userId: string, attempts = 8) => {
     for (let attempt = 0; attempt < attempts; attempt += 1) {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.id === userId) {
@@ -23,7 +23,6 @@ const waitForAuthSession = async (userId: string, attempts = 5) => {
 };
 
 function LoginContent() {
-    const router = useRouter();
     const params = useParams();
     const searchParams = useSearchParams();
     const hotelSlug = params?.hotel_slug as string;
@@ -67,26 +66,31 @@ function LoginContent() {
                 throw authError;
             }
 
-            if (data.user) {
-                console.log("Sign-in successful, user ID:", data.user.id);
-
-                // Fetch profile to determine role-based redirection
-                const { data: profile } = await getUserProfile(data.user.id);
-
-                console.log("User profile loaded, role:", profile?.role);
-
-                let redirectPath = `/${hotelSlug}/admin/dashboard`;
-                if (profile?.role === 'kitchen') {
-                    redirectPath = `/${hotelSlug}/admin/kitchen`;
-                } else if (profile?.role === 'housekeeping') {
-                    redirectPath = `/${hotelSlug}/admin/housekeeping`;
-                }
-
-                await waitForAuthSession(data.user.id);
-                console.log("Redirecting to:", redirectPath);
-                router.replace(redirectPath);
-                router.refresh();
+            if (!data.user) {
+                throw new Error("Login completed but no user session was returned. Please try again.");
             }
+
+            console.log("Sign-in successful, user ID:", data.user.id);
+
+            const sessionReady = await waitForAuthSession(data.user.id);
+            if (!sessionReady) {
+                throw new Error("Login session could not be established. Please try again in a moment.");
+            }
+
+            // Fetch profile to determine role-based redirection
+            const { data: profile } = await getUserProfile(data.user.id);
+
+            console.log("User profile loaded, role:", profile?.role);
+
+            let redirectPath = `/${hotelSlug}/admin/dashboard`;
+            if (profile?.role === 'kitchen') {
+                redirectPath = `/${hotelSlug}/admin/kitchen`;
+            } else if (profile?.role === 'housekeeping') {
+                redirectPath = `/${hotelSlug}/admin/housekeeping`;
+            }
+
+            console.log("Redirecting to:", redirectPath);
+            window.location.assign(redirectPath);
         } catch (err: any) {
             console.error("Catch block error during login:", err);
             setError(err.message || "Invalid credentials. Please try again.");
@@ -285,7 +289,7 @@ function LoginContent() {
                         Authorized Personnel Only
                     </p>
                     <button
-                        onClick={() => router.push('/register')}
+                        onClick={() => window.location.assign('/register')}
                         className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline cursor-pointer"
                     >
                         Register a New Property

@@ -5,9 +5,22 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { signIn, useHotelBranding, getUserProfile, resetPasswordForEmail } from "@/utils/store";
-import { isSupabaseConfigured } from "@/lib/supabaseClient";
+import { isSupabaseConfigured, supabase } from "@/lib/supabaseClient";
 import { Lock, Mail, Loader2, Hotel, ShieldCheck, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const waitForAuthSession = async (userId: string, attempts = 5) => {
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id === userId) {
+            return true;
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, 200));
+    }
+
+    return false;
+};
 
 function LoginContent() {
     const router = useRouter();
@@ -69,8 +82,10 @@ function LoginContent() {
                     redirectPath = `/${hotelSlug}/admin/housekeeping`;
                 }
 
+                await waitForAuthSession(data.user.id);
                 console.log("Redirecting to:", redirectPath);
-                window.location.href = redirectPath;
+                router.replace(redirectPath);
+                router.refresh();
             }
         } catch (err: any) {
             console.error("Catch block error during login:", err);

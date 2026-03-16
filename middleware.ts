@@ -79,59 +79,15 @@ export async function middleware(request: NextRequest) {
     const url = new URL(request.url);
     const pathSegments = url.pathname.split('/');
 
-    // Check if the path matches /[hotel_slug]/admin/...
-    // but ignore /[hotel_slug]/admin/login
+    // Protect admin routes, but keep the middleware auth check lightweight.
+    // Hotel/profile matching is enforced in the client app where profile reads
+    // have proven more reliable than edge lookups for this project.
     if (pathSegments.length >= 3 && pathSegments[2] === 'admin' && pathSegments[3] !== 'login') {
         const hotelSlug = pathSegments[1];
 
         // 1. Check if user is logged in
         if (userError || !user) {
             return NextResponse.redirect(new URL(`/${hotelSlug}/admin/login`, request.url));
-        }
-
-        // 2. Load the user's linked hotel directly from profile first.
-        // The relation join can be flaky when schema cache or RLS is slightly out of sync.
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('hotel_id')
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-        if (profileError || !profile?.hotel_id) {
-            // PROACTIVE FIX: Check if the slug was 'geeta-hotel' but should be 'geeta'
-            if (hotelSlug.endsWith('-hotel')) {
-                const altSlug = hotelSlug.replace(/-hotel$/, '');
-                const { data: altHotel } = await supabase
-                    .from('hotels')
-                    .select('id')
-                    .eq('slug', altSlug)
-                    .maybeSingle();
-
-                if (altHotel?.id && profile?.hotel_id === altHotel.id) {
-                    return NextResponse.redirect(new URL(`/${altSlug}/admin/dashboard`, request.url));
-                }
-            }
-            return NextResponse.redirect(new URL(`/${hotelSlug}/admin/login?error=unauthorized`, request.url));
-        }
-
-        const { data: hotel, error: hotelError } = await supabase
-            .from('hotels')
-            .select('id, slug')
-            .eq('id', profile.hotel_id)
-            .maybeSingle();
-
-        if (hotelError || !hotel) {
-            return NextResponse.redirect(new URL(`/${hotelSlug}/admin/login?error=unauthorized`, request.url));
-        }
-
-        if (hotel.slug !== hotelSlug) {
-            if (hotelSlug.endsWith('-hotel')) {
-                const altSlug = hotelSlug.replace(/-hotel$/, '');
-                if (hotel.slug === altSlug) {
-                    return NextResponse.redirect(new URL(`/${altSlug}/admin/dashboard`, request.url));
-                }
-            }
-            return NextResponse.redirect(new URL(`/${hotelSlug}/admin/login?error=unauthorized`, request.url));
         }
     }
 

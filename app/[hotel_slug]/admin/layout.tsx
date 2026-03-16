@@ -4,7 +4,7 @@ import Link from "next/link";
 import { LayoutDashboard, Inbox, Hotel, Utensils, Settings, Users, BarChart3, Receipt, Shirt, ConciergeBell, ShieldAlert, Loader2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { useAuth, getUserProfile, UserProfile } from "@/utils/store";
+import { useAuth, getUserProfile, UserProfile, useHotelBranding } from "@/utils/store";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminLayout({
@@ -17,6 +17,7 @@ export default function AdminLayout({
     const router = useRouter();
     const hotelSlug = (params?.hotel_slug as string) || '';
     const { user, loading: authLoading } = useAuth();
+    const { branding, loading: brandingLoading } = useHotelBranding(hotelSlug);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [profileLoading, setProfileLoading] = useState(true);
 
@@ -44,6 +45,16 @@ export default function AdminLayout({
         }
     }, [user, authLoading, hotelSlug, isLoginPage, router]);
 
+    useEffect(() => {
+        if (isLoginPage || authLoading || profileLoading || brandingLoading) {
+            return;
+        }
+
+        if (user && profile && branding && profile.hotel_id !== branding.id) {
+            router.replace(`/${hotelSlug}/admin/login?error=unauthorized`);
+        }
+    }, [authLoading, branding, brandingLoading, hotelSlug, isLoginPage, profile, profileLoading, router, user]);
+
     const navItems = [
         { id: 'dashboard', name: "Dashboard", href: `/${hotelSlug}/admin/dashboard`, icon: <Inbox className="w-5 h-5" />, roles: ['admin', 'reception', 'kitchen', 'housekeeping', 'waiter'] },
         { id: 'analytics', name: "Analytics", href: `/${hotelSlug}/admin/analytics`, icon: <BarChart3 className="w-5 h-5" />, roles: ['admin'] },
@@ -69,7 +80,7 @@ export default function AdminLayout({
         return <main className="min-h-screen bg-slate-50">{children}</main>;
     }
 
-    if (authLoading || profileLoading) {
+    if (authLoading || profileLoading || brandingLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />

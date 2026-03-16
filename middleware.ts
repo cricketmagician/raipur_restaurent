@@ -72,8 +72,9 @@ export async function middleware(request: NextRequest) {
     );
 
     const {
-        data: { session },
-    } = await supabase.auth.getSession();
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
 
     const url = new URL(request.url);
     const pathSegments = url.pathname.split('/');
@@ -84,7 +85,7 @@ export async function middleware(request: NextRequest) {
         const hotelSlug = pathSegments[1];
 
         // 1. Check if user is logged in
-        if (!session) {
+        if (userError || !user) {
             return NextResponse.redirect(new URL(`/${hotelSlug}/admin/login`, request.url));
         }
 
@@ -93,7 +94,7 @@ export async function middleware(request: NextRequest) {
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('hotel_id')
-            .eq('user_id', session.user.id)
+            .eq('user_id', user.id)
             .maybeSingle();
 
         if (profileError || !profile?.hotel_id) {

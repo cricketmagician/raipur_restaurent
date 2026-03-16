@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 export { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { RequestStatus } from '@/components/StatusBadge';
+import { useRealtimeCollection, type RealtimeSyncStatus } from '@/utils/realtime';
 
 // --- Types ---
 export interface HotelBranding {
@@ -40,6 +41,7 @@ export interface SpecialOffer {
     description: string;
     image_url: string;
     is_active: boolean;
+    created_at?: string;
 }
 
 export interface UserProfile {
@@ -123,6 +125,48 @@ export function isHousekeepingRequest(requestType: string) {
 export function isServiceRequest(requestType: string) {
     return requestTypeMatches(requestType, [...REQUEST_TYPE_KEYWORDS.service]);
 }
+
+export type SyncStatus = RealtimeSyncStatus;
+
+const sortRoomsByNumber = (left: Room, right: Room) =>
+    left.room_number.localeCompare(right.room_number, undefined, { numeric: true, sensitivity: 'base' });
+
+const sortRequestsByTimestamp = (left: HotelRequest, right: HotelRequest) => right.timestamp - left.timestamp;
+
+const sortMenuItems = (left: MenuItem, right: MenuItem) =>
+    left.category.localeCompare(right.category, undefined, { sensitivity: 'base' }) ||
+    left.title.localeCompare(right.title, undefined, { sensitivity: 'base' });
+
+const sortByCreatedAtDesc = <T extends { created_at?: string }>(left: T, right: T) =>
+    new Date(right.created_at || 0).getTime() - new Date(left.created_at || 0).getTime();
+
+const mapHotelBrandingRow = (data: any): HotelBranding => ({
+    id: data.id,
+    slug: data.slug,
+    name: data.name,
+    logo: data.logo,
+    logoImage: data.logo_image,
+    primaryColor: data.primary_color,
+    accentColor: data.accent_color,
+    wifiName: data.wifi_name,
+    wifiPassword: data.wifi_password,
+    receptionPhone: data.reception_phone,
+    breakfastStart: data.breakfast_start,
+    breakfastEnd: data.breakfast_end,
+    lunchStart: data.lunch_start,
+    lunchEnd: data.lunch_end,
+    dinnerStart: data.dinner_start,
+    dinnerEnd: data.dinner_end,
+    lateCheckoutPhone: data.late_checkout_phone,
+    lateCheckoutCharge1: data.late_checkout_charge_1,
+    lateCheckoutCharge2: data.late_checkout_charge_2,
+    lateCheckoutCharge3: data.late_checkout_charge_3,
+    checkoutMessage: data.checkout_message,
+    googleReviewLink: data.google_review_link,
+    welcomeMessage: data.welcome_message,
+    bgPattern: data.bg_pattern,
+    address: data.address,
+});
 
 // --- Utilities ---
 
@@ -482,222 +526,93 @@ export async function signOut() {
 }
 
 /**
- * Hook to fetch and subscribe to hotel branding in real-time
- */
-/**
  * Custom hook to fetch and subscribe to hotel rooms for a specific hotel ID.
- * Returns the rooms list, loading state, and a manual refresh function.
+ * Returns the rooms list, loading state, sync health, and a manual refresh function.
  */
 export function useHotelRooms(hotelId: string | undefined) {
-    const [rooms, setRooms] = useState<Room[]>([]);
-    const [loading, setLoading] = useState(true);
+    const state = useRealtimeCollection<Room>({
+        table: 'rooms',
+        consumer: 'hotel-rooms',
+        scopeKey: hotelId || 'no-hotel',
+        enabled: !!hotelId,
+        fetchFilters: hotelId ? [{ column: 'hotel_id', value: hotelId }] : [],
+        channelFilter: hotelId ? { column: 'hotel_id', value: hotelId } : undefined,
+        orderBy: { column: 'room_number', ascending: true },
+        sort: sortRoomsByNumber,
+        enablePollingFallback: true,
+    });
 
-    const fetchRooms = async () => {
-        if (!hotelId) return;
-        try {
-            const { data } = await getHotelRooms(hotelId);
-            if (data && data.length > 0) {
-                setRooms(data);
-            } else if (data && data.length === 0) {
-                setRooms([]);
-            }
-        } catch (err) {
-            console.error("useHotelRooms: Fetch failed", err);
-        } finally {
-            setLoading(false);
-        }
+    return {
+        rooms: state.data,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+        fetchError: state.fetchError,
+        lastSyncedAt: state.lastSyncedAt,
     };
-
-    useEffect(() => {
-        if (!hotelId) {
-            setLoading(false);
-            setRooms([]);
-            return;
-        }
-
-        console.log(`[useHotelRooms] Subscribing to: ${hotelId}`);
-        fetchRooms();
-
-
-        const subscription = supabase
-            .channel(`rooms_channel_${hotelId}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'rooms',
-                filter: `hotel_id=eq.${hotelId}`
-            }, () => {
-                fetchRooms();
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(subscription);
-        };
-    }, [hotelId]);
-
-    return { rooms, loading, refresh: fetchRooms };
 }
 
 export function useHotelBranding(slug: string | undefined) {
-    const [branding, setBranding] = useState<HotelBranding | null>(null);
-    const [loading, setLoading] = useState(true);
+    const state = useRealtimeCollection<HotelBranding>({
+        table: 'hotels',
+        consumer: 'hotel-branding',
+        scopeKey: slug || 'no-slug',
+        enabled: !!slug,
+        fetchFilters: slug ? [{ column: 'slug', value: slug }] : [],
+        channelFilter: slug ? { column: 'slug', value: slug } : undefined,
+        mapRow: mapHotelBrandingRow,
+        enablePollingFallback: true,
+    });
 
-    useEffect(() => {
-        if (!slug) {
-            setLoading(false);
-            return;
-        }
-
-        const fetchBranding = async () => {
-            try {
-                const { data, error } = await supabase
-                    .from('hotels')
-                    .select('*')
-                    .eq('slug', slug)
-                    .single();
-
-                if (data) {
-                    setBranding({
-                        id: data.id,
-                        slug: data.slug,
-                        name: data.name,
-                        logo: data.logo,
-                        logoImage: data.logo_image,
-                        primaryColor: data.primary_color,
-                        accentColor: data.accent_color,
-                        wifiName: data.wifi_name,
-                        wifiPassword: data.wifi_password,
-                        receptionPhone: data.reception_phone,
-                        breakfastStart: data.breakfast_start,
-                        breakfastEnd: data.breakfast_end,
-                        lunchStart: data.lunch_start,
-                        lunchEnd: data.lunch_end,
-                        dinnerStart: data.dinner_start,
-                        dinnerEnd: data.dinner_end,
-                        lateCheckoutPhone: data.late_checkout_phone,
-                        lateCheckoutCharge1: data.late_checkout_charge_1,
-                        lateCheckoutCharge2: data.late_checkout_charge_2,
-                        lateCheckoutCharge3: data.late_checkout_charge_3,
-                        checkoutMessage: data.checkout_message,
-                        googleReviewLink: data.google_review_link,
-                        welcomeMessage: data.welcome_message,
-                        bgPattern: data.bg_pattern,
-                        address: data.address,
-                    });
-                } else {
-                    console.error(`[useHotelBranding] No hotel found for slug: ${slug}`);
-                    setBranding(null);
-                }
-            } catch (err) {
-                console.error("[useHotelBranding] Critical error:", err);
-                setBranding(null);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchBranding();
-
-        // Subscribe to changes
-        const subscription = supabase
-            .channel(`hotel_branding_${slug}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'hotels',
-                filter: `slug=eq.${slug}`
-            }, (payload) => {
-                const data = payload.new as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-                setBranding({
-                    id: data.id,
-                    slug: data.slug,
-                    name: data.name,
-                    logo: data.logo,
-                    logoImage: data.logo_image,
-                    primaryColor: data.primary_color,
-                    accentColor: data.accent_color,
-                    wifiName: data.wifi_name,
-                    wifiPassword: data.wifi_password,
-                    receptionPhone: data.reception_phone,
-                    breakfastStart: data.breakfast_start,
-                    breakfastEnd: data.breakfast_end,
-                    lunchStart: data.lunch_start,
-                    lunchEnd: data.lunch_end,
-                    dinnerStart: data.dinner_start,
-                    dinnerEnd: data.dinner_end,
-                    lateCheckoutPhone: data.late_checkout_phone,
-                    lateCheckoutCharge1: data.late_checkout_charge_1,
-                    lateCheckoutCharge2: data.late_checkout_charge_2,
-                    lateCheckoutCharge3: data.late_checkout_charge_3,
-                    checkoutMessage: data.checkout_message,
-                    googleReviewLink: data.google_review_link,
-                    welcomeMessage: data.welcome_message,
-                    bgPattern: data.bg_pattern,
-                    address: data.address,
-                });
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(subscription);
-        };
-    }, [slug]);
-
-    return { branding, loading };
+    return {
+        branding: state.data[0] || null,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+        fetchError: state.fetchError,
+        lastSyncedAt: state.lastSyncedAt,
+    };
 }
 
 /**
  * Hook to fetch and subscribe to requests for a specific hotel in real-time
  */
+export function useSupabaseRequestsState(hotelId?: string, roomNumber?: string, checkedInAt?: number | null) {
+    const state = useRealtimeCollection<HotelRequest>({
+        table: 'requests',
+        consumer: roomNumber ? 'guest-requests' : 'admin-requests',
+        scopeKey: hotelId || 'no-hotel',
+        enabled: !!hotelId,
+        fetchFilters: hotelId ? [{ column: 'hotel_id', value: hotelId }] : [],
+        channelFilter: hotelId ? { column: 'hotel_id', value: hotelId } : undefined,
+        orderBy: { column: 'timestamp', ascending: false },
+        sort: sortRequestsByTimestamp,
+        enablePollingFallback: !roomNumber,
+    });
+
+    const requests = state.data.filter((request) => {
+        if (roomNumber && request.room !== roomNumber) {
+            return false;
+        }
+        if (checkedInAt && request.timestamp < checkedInAt) {
+            return false;
+        }
+        return true;
+    });
+
+    return {
+        requests,
+        allRequests: state.data,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+        fetchError: state.fetchError,
+        lastSyncedAt: state.lastSyncedAt,
+    };
+}
+
 export function useSupabaseRequests(hotelId?: string, roomNumber?: string, checkedInAt?: number | null) {
-    const [requests, setRequests] = useState<HotelRequest[]>([]);
-
-    useEffect(() => {
-        if (!hotelId) return;
-
-        const fetchRequests = async () => {
-
-            let query = supabase
-                .from('requests')
-                .select('*')
-                .eq('hotel_id', hotelId);
-
-            if (roomNumber) {
-                query = query.eq('room', roomNumber);
-            }
-
-            if (checkedInAt) {
-                query = query.gte('timestamp', checkedInAt);
-            }
-
-            const { data } = await query.order('timestamp', { ascending: false });
-
-            if (data) setRequests(data);
-        };
-
-        fetchRequests();
-
-
-        // Subscribe to changes
-        const subscription = supabase
-            .channel(`hotel_requests_${hotelId}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'requests',
-                filter: `hotel_id=eq.${hotelId}`
-            }, () => {
-                fetchRequests(); // Refresh on any change
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(subscription);
-        };
-    }, [hotelId, roomNumber, checkedInAt]);
-
-    return requests;
+    return useSupabaseRequestsState(hotelId, roomNumber, checkedInAt).requests;
 }
 
 /**
@@ -733,7 +648,7 @@ export async function addSupabaseRequest(hotelId: string, request: Partial<Hotel
     if (error) {
         console.error("Supabase Error Adding Request:", error.message);
         if (error.code === '42501' || error.message.includes('row-level security')) {
-            console.error("CRITICAL: RLS Policy blocking INSERT. User must run fix_supabase.sql");
+            console.error("CRITICAL: RLS Policy blocking INSERT. User must run fix_supabase_schema.sql");
             return { data: null, error: { ...error, message: "Sync Blocked: Database permissions are missing. Please contact Admin to run SQL Fix." } };
         }
     }
@@ -811,7 +726,7 @@ export async function saveHotelBranding(id: string, updates: Partial<HotelBrandi
             checkout_message: updates.checkoutMessage,
             google_review_link: updates.googleReviewLink,
             welcome_message: updates.welcomeMessage,
-            bgPattern: updates.bgPattern,
+            bg_pattern: updates.bgPattern,
             address: updates.address,
         })
         .eq('id', id);
@@ -990,50 +905,26 @@ export async function verifyBookingPin(hotelId: string, roomNumber: string, pin:
  * Hook to fetch and subscribe to special offers for a specific hotel
  */
 export function useSpecialOffers(hotelId?: string) {
-    const [offers, setOffers] = useState<SpecialOffer[]>([]);
-    const [loading, setLoading] = useState(true);
+    const state = useRealtimeCollection<SpecialOffer>({
+        table: 'special_offers',
+        consumer: 'special-offers',
+        scopeKey: hotelId || 'no-hotel',
+        enabled: !!hotelId,
+        fetchFilters: hotelId ? [{ column: 'hotel_id', value: hotelId }] : [],
+        channelFilter: hotelId ? { column: 'hotel_id', value: hotelId } : undefined,
+        orderBy: { column: 'created_at', ascending: false },
+        sort: sortByCreatedAtDesc,
+        enablePollingFallback: true,
+    });
 
-    useEffect(() => {
-        const fetchOffers = async () => {
-            if (!hotelId) {
-                setLoading(false);
-                return;
-            }
-
-
-            const { data } = await supabase
-                .from('special_offers')
-                .select('*')
-                .eq('hotel_id', hotelId)
-                .order('created_at', { ascending: false });
-
-            if (data) setOffers(data);
-            setLoading(false);
-        };
-
-        fetchOffers();
-
-        if (hotelId) {
-            // Subscribe to changes
-            const subscription = supabase
-                .channel(`special_offers_${hotelId}`)
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'special_offers',
-                    filter: `hotel_id=eq.${hotelId}`
-                }, () => {
-                    fetchOffers();
-                })
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(subscription);
-            };
-        }
-    }, [hotelId]);
-
-    return { offers, loading };
+    return {
+        offers: state.data,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+        fetchError: state.fetchError,
+        lastSyncedAt: state.lastSyncedAt,
+    };
 }
 
 /**
@@ -1069,49 +960,26 @@ export async function deleteSpecialOffer(id: string) {
  * Hook to fetch and subscribe to menu items for a specific hotel
  */
 export function useSupabaseMenuItems(hotelId?: string) {
-    const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-    const [loading, setLoading] = useState(true);
+    const state = useRealtimeCollection<MenuItem>({
+        table: 'menu_items',
+        consumer: 'menu-items',
+        scopeKey: hotelId || 'no-hotel',
+        enabled: !!hotelId,
+        fetchFilters: hotelId ? [{ column: 'hotel_id', value: hotelId }] : [],
+        channelFilter: hotelId ? { column: 'hotel_id', value: hotelId } : undefined,
+        orderBy: { column: 'category', ascending: true },
+        sort: sortMenuItems,
+        enablePollingFallback: true,
+    });
 
-    useEffect(() => {
-        const fetchMenuItems = async () => {
-            if (!hotelId) {
-                setLoading(false);
-                return;
-            }
-
-
-            const { data } = await supabase
-                .from('menu_items')
-                .select('*')
-                .eq('hotel_id', hotelId)
-                .order('category', { ascending: true });
-
-            if (data) setMenuItems(data);
-            setLoading(false);
-        };
-
-        fetchMenuItems();
-
-        if (hotelId) {
-            const subscription = supabase
-                .channel(`menu_items_${hotelId}`)
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'menu_items',
-                    filter: `hotel_id=eq.${hotelId}`
-                }, () => {
-                    fetchMenuItems();
-                })
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(subscription);
-            };
-        }
-    }, [hotelId]);
-
-    return { menuItems, loading };
+    return {
+        menuItems: state.data,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+        fetchError: state.fetchError,
+        lastSyncedAt: state.lastSyncedAt,
+    };
 }
 
 /**

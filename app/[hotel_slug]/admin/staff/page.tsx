@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useHotelBranding, getAllHotelStaff, updateStaffRole, UserProfile } from "@/utils/store";
 import { Users, Shield, Utensils, Shirt, Bell, Check, Loader2, Search, ArrowLeft, MoreVertical, Edit2, UserPlus } from "lucide-react";
@@ -16,29 +16,28 @@ export default function StaffManagement() {
     const [searchQuery, setSearchQuery] = useState("");
     const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-    const loadStaff = async () => {
-        if (!branding?.id) return;
+    const loadStaff = useCallback(async (hotelId: string) => {
         setLoading(true);
-        const { data, error } = await getAllHotelStaff(branding.id);
+        const { data, error } = await getAllHotelStaff(hotelId);
         if (error) {
             console.error("Failed to load staff:", error);
             // Don't alert on UUID mismatch in demo mode to avoid spam, but log it
         }
         if (data) setStaff(data);
         setLoading(false);
-    };
+    }, []);
 
     useEffect(() => {
         if (branding?.id) {
-            loadStaff();
+            void loadStaff(branding.id);
         }
-    }, [branding?.id]);
+    }, [branding?.id, loadStaff]);
 
     const handleRoleUpdate = async (profileId: string, newRole: string) => {
         setUpdatingId(profileId);
         const { error } = await updateStaffRole(profileId, newRole);
-        if (!error) {
-            await loadStaff();
+        if (!error && branding?.id) {
+            await loadStaff(branding.id);
         }
         setUpdatingId(null);
     };

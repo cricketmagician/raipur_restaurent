@@ -7,19 +7,92 @@ import { useRouter, useParams } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
 import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, LayoutDashboard, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequests, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms, isDiningRequest, isHousekeepingRequest, isServiceRequest, requestTypeMatches } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequestsState, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms, isDiningRequest, isHousekeepingRequest, isServiceRequest, requestTypeMatches, type SyncStatus } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
 import { RequestDetailModal } from "@/components/RequestDetailModal";
+
+function SyncHealth({ status, error, lastSyncedAt }: { status: SyncStatus; error: string | null; lastSyncedAt: number | null }) {
+    const lastSeen = lastSyncedAt
+        ? new Date(lastSyncedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+        : "Awaiting first sync";
+
+    if (status === "subscribed" && !error) {
+        return (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 mb-2 shadow-sm">
+                <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
+                        <CheckCircle className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <div>
+                        <h4 className="font-black text-emerald-900 leading-none mb-1">LIVE SYNC ONLINE</h4>
+                        <p className="text-xs font-bold text-emerald-700/80 uppercase tracking-wider">Realtime updates are healthy. Last sync at {lastSeen}.</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const isHardFailure = status === "error" || !!error;
+
+    return (
+        <div className={`${isHardFailure ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"} border rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 mb-2 shadow-sm`}>
+            <div className="flex items-center space-x-4">
+                <div className={`w-12 h-12 ${isHardFailure ? "bg-red-100" : "bg-amber-100"} rounded-2xl flex items-center justify-center`}>
+                    {isHardFailure ? (
+                        <ShieldAlert className="w-6 h-6 text-red-600" />
+                    ) : (
+                        <RefreshCw className="w-6 h-6 text-amber-600 animate-spin" />
+                    )}
+                </div>
+                <div>
+                    <h4 className={`font-black leading-none mb-1 ${isHardFailure ? "text-red-900" : "text-amber-900"}`}>
+                        {isHardFailure ? "LIVE SYNC NEEDS ATTENTION" : "LIVE SYNC DEGRADED"}
+                    </h4>
+                    <p className={`text-xs font-bold uppercase tracking-wider ${isHardFailure ? "text-red-700/80" : "text-amber-700/80"}`}>
+                        {error || "Realtime subscription is unstable. Auto refresh fallback is active, so the admin panel should still update without manual reload."}
+                    </p>
+                    <p className={`text-[10px] font-black uppercase tracking-widest mt-2 ${isHardFailure ? "text-red-500/80" : "text-amber-500/80"}`}>
+                        Last sync: {lastSeen}
+                    </p>
+                </div>
+            </div>
+            <div className="flex items-center space-x-3">
+                <button
+                    onClick={() => window.alert("Run the 'fix_supabase_schema.sql' script in Supabase SQL Editor, then reload this admin page.")}
+                    className={`${isHardFailure ? "bg-red-600 shadow-red-200 hover:bg-red-700" : "bg-amber-600 shadow-amber-200 hover:bg-amber-700"} text-white px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95`}
+                >
+                    SQL Repair
+                </button>
+            </div>
+        </div>
+    );
+}
 
 export default function AdminHub() {
     const router = useRouter();
     const params = useParams();
     const hotelSlug = params?.hotel_slug as string;
-    const { branding, loading: brandingLoading } = useHotelBranding(hotelSlug);
+    const {
+        branding,
+        loading: brandingLoading,
+        syncStatus: brandingSyncStatus,
+        fetchError: brandingError,
+        lastSyncedAt: brandingLastSyncedAt,
+    } = useHotelBranding(hotelSlug);
     const { user, loading: authLoading } = useAuth();
     const { profile, loading: profileLoading } = useProfile(user?.id);
-    const requests = useSupabaseRequests(branding?.id);
-    const { rooms, loading: roomsLoading } = useHotelRooms(branding?.id);
+    const {
+        requests,
+        syncStatus: requestsSyncStatus,
+        fetchError: requestsError,
+        lastSyncedAt: requestsLastSyncedAt,
+    } = useSupabaseRequestsState(branding?.id);
+    const {
+        rooms,
+        syncStatus: roomsSyncStatus,
+        fetchError: roomsError,
+        lastSyncedAt: roomsLastSyncedAt,
+    } = useHotelRooms(branding?.id);
 
     const [audioEnabled, setAudioEnabled] = useState(true);
     const [audioInitialized, setAudioInitialized] = useState(false);
@@ -28,6 +101,16 @@ export default function AdminHub() {
     const [searchQuery, setSearchQuery] = useState("");
 
     const loading = brandingLoading || authLoading || profileLoading;
+    const syncStates: SyncStatus[] = [brandingSyncStatus, requestsSyncStatus, roomsSyncStatus];
+    const syncStatus = syncStates.includes("error")
+        ? "error"
+        : syncStates.includes("degraded")
+            ? "degraded"
+            : syncStates.includes("connecting")
+                ? "connecting"
+                : "subscribed";
+    const syncError = requestsError || roomsError || brandingError || null;
+    const syncLastSyncedAt = Math.max(brandingLastSyncedAt || 0, requestsLastSyncedAt || 0, roomsLastSyncedAt || 0) || null;
 
     useEffect(() => {
         if (!brandingLoading && branding) {
@@ -104,7 +187,7 @@ export default function AdminHub() {
         }
     };
 
-    const sortedRequests = [...requests].sort((a, b) => b.timestamp - a.timestamp);
+    const sortedRequests = requests;
 
     const getAllowedTypesForRole = (role: string) => {
         const lowerRole = role.toLowerCase();
@@ -142,66 +225,6 @@ export default function AdminHub() {
     const billedRequests = requests.filter(r => (r.price || 0) > 0);
     const totalRevenue = billedRequests.reduce((sum, r) => sum + (r.total || 0), 0);
 
-/**
- * Diagnostic component to check if the database allows insertions (RLS Check)
- */
-function SyncHealth({ hotelId }: { hotelId: string }) {
-    const [status, setStatus] = useState<'checking' | 'pass' | 'fail'>('checking');
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        async function checkRLS() {
-            if (!hotelId || hotelId.startsWith('demo-')) return;
-            const { supabase } = await import('@/lib/supabaseClient');
-            
-            // Try a "dry-run" insert into a temp request (we'll delete it immediately)
-            const testId = `diag-${Date.now()}`;
-            const { error } = await supabase.from('requests').insert([{
-                id: '00000000-0000-0000-0000-000000000000', // invalid uuid but check if policy blocks it
-                hotel_id: hotelId,
-                room: 'DIAGNOSTIC',
-                type: 'DIAGNOSTIC',
-                timestamp: 0,
-                time: '00:00'
-            }]);
-
-            if (error && (error.code === '42501' || error.message.includes('row-level security'))) {
-                setStatus('fail');
-                setError(error.message);
-            } else {
-                setStatus('pass');
-            }
-        }
-        checkRLS();
-    }, [hotelId]);
-
-    if (status === 'fail') {
-        return (
-            <div className="bg-red-50 border border-red-200 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 mb-2 shadow-sm">
-                <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center">
-                        <ShieldAlert className="w-6 h-6 text-red-600" />
-                    </div>
-                    <div>
-                        <h4 className="font-black text-red-900 leading-none mb-1">REAL-TIME SYNC BLOCKED</h4>
-                        <p className="text-xs font-bold text-red-600/70 uppercase tracking-wider">Database permissions (RLS) are preventing guest orders from appearing.</p>
-                    </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                    <button 
-                        onClick={() => window.alert("Please run the 'fix_supabase.sql' script in your Supabase SQL Editor to enable syncing.")}
-                        className="bg-red-600 text-white px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95"
-                    >
-                        How to Fix
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    return null;
-}
-
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
             <motion.div 
@@ -216,7 +239,7 @@ function SyncHealth({ hotelId }: { hotelId: string }) {
         <div className="p-8 max-w-[1600px] mx-auto space-y-12 pb-20">
             {/* Sync Status Banner */}
             {branding && branding.id && !branding.id.toString().startsWith('demo-') && (
-                <SyncHealth hotelId={branding.id} />
+                <SyncHealth status={syncStatus} error={syncError} lastSyncedAt={syncLastSyncedAt} />
             )}
 
             {/* Audio Awareness Banner */}

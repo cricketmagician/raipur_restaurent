@@ -46,7 +46,7 @@ export default function RegisterHotelPage() {
         try {
 
             // 1. Sign Up the User
-            let { data: authData, error: authError } = await supabase.auth.signUp({
+            const { data: initialAuthData, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
                 password: formData.password,
                 options: {
@@ -57,6 +57,8 @@ export default function RegisterHotelPage() {
             });
 
             // If user already exists, try to sign them in instead to complete database setup
+            let authData = initialAuthData;
+
             if (authError && authError.message.includes("already registered")) {
                 console.log("User already registered, attempting sign in to complete hotel setup...");
                 const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({

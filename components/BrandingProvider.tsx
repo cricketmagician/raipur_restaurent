@@ -18,12 +18,13 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
         }
     }, [branding]);
 
+    const cssVars = {
+        "--primary": branding?.primaryColor || "#3b82f6",
+        "--primary-accent": branding?.accentColor || "#60a5fa",
+    } as React.CSSProperties;
+
     return (
-        <div style={{
-            //@ts-ignore
-            "--primary": branding?.primaryColor || "#3b82f6",
-            "--primary-accent": branding?.accentColor || "#60a5fa"
-        } as React.CSSProperties}>
+        <div style={cssVars}>
             {children}
         </div>
     );

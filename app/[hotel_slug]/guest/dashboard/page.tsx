@@ -25,11 +25,12 @@ import {
     ChevronLeft,
     Music,
     MapPin,
-    ShoppingBag
+    ShoppingBag,
+    RefreshCw
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequests, addSupabaseRequest, useSpecialOffers } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequests, addSupabaseRequest, useSpecialOffers, useCart } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { Toast } from "@/components/Toast";
 import { ComboCard } from "@/components/ComboCard";
@@ -37,6 +38,8 @@ import { CategoryScroll } from "@/components/CategoryScroll";
 import { MenuListItem } from "@/components/MenuListItem";
 import { BottomNav } from "@/components/BottomNav";
 import { FoodStory } from "@/components/FoodStory";
+import { CartOverlay } from "@/components/CartOverlay";
+import { SHARED_MENU_ITEMS, SHARED_COMBOS } from "@/utils/constants";
 
 // Helper to safely render icons with className
 const renderIcon = (icon: React.ReactNode, className: string) => {
@@ -52,14 +55,17 @@ export default function GuestDashboard() {
 
     const { roomNumber: tableNumber, checkedInAt } = useGuestRoom();
     const { branding, loading } = useHotelBranding(hotelSlug);
+    const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id);
     const requests = useSupabaseRequests(branding?.id, tableNumber, checkedInAt);
 
     const [scrolled, setScrolled] = useState(false);
     const [activeCategory, setActiveCategory] = useState("all");
-    const [cart, setCart] = useState<Record<string, number>>({});
     const [hungerMode, setHungerMode] = useState(false);
     const [upsellItem, setUpsellItem] = useState<{ id: string; title: string } | null>(null);
     const [submittingType, setSubmittingType] = React.useState<string | null>(null);
+    const [showCart, setShowCart] = useState(false);
+    const [isOrdering, setIsOrdering] = useState(false);
+    const [orderComplete, setOrderComplete] = useState(false);
     const [toast, setToast] = React.useState<{ message: string; type: "success" | "error"; isVisible: boolean }>({
         message: "",
         type: "success",
@@ -83,92 +89,7 @@ export default function GuestDashboard() {
         { id: "desserts", name: "Desserts", icon: "🍰" },
     ];
 
-    const menuItems = [
-        { 
-            id: "m1", 
-            category: "burgers", 
-            title: "Ultra Crispy Buttermilk Chicken Burger", 
-            description: "Ultra-crispy hand-breaded chicken, spicy jalapeños, and smoky chipotle mayo on a toasted brioche bun.", 
-            price: 180, 
-            rating: 4.8, 
-            reviews: 156, 
-            image: "/images/menu/buttermilk_chicken_burger_1773233570467.png", 
-            isBestseller: true 
-        },
-        { 
-            id: "m2", 
-            category: "burgers", 
-            title: "Gourmet Garden Burger", 
-            description: "Hand-crafted veggie patty with melted cheddar, fresh arugula, and herb aioli.", 
-            price: 160, 
-            rating: 4.5, 
-            reviews: 92, 
-            image: "/images/menu/veggie_burger_1773233586101.png" 
-        },
-        { 
-            id: "m3", 
-            category: "fries", 
-            title: "Loaded Peri-Peri Fries", 
-            description: "Crispy thin-cut fries topped with liquid cheese, peri-peri seasoning, and spring onions.", 
-            price: 140, 
-            rating: 4.9, 
-            reviews: 210, 
-            image: "/images/menu/loaded_fries_hero_1773232655179.png", 
-            isBestseller: true 
-        },
-        { 
-            id: "m4", 
-            category: "fries", 
-            title: "Golden Classic Salted Fries", 
-            description: "Lightly salted, thin-cut fries, served golden brown and crispy.", 
-            price: 90, 
-            rating: 4.4, 
-            reviews: 320, 
-            image: "/images/menu/classic_fries_1773233603370.png" 
-        },
-        { 
-            id: "m5", 
-            category: "sides", 
-            title: "Cheesy Garlic Bread", 
-            description: "Toasted brioche slices infused with garlic butter, parsley, and melted mozzarella.", 
-            price: 120, 
-            rating: 4.7, 
-            reviews: 110, 
-            image: "/images/menu/garlic_bread_1773233624069.png" 
-        },
-        { 
-            id: "m6", 
-            category: "sides", 
-            title: "Premium Caesar Salad", 
-            description: "Crisp romaine, crunchy croutons, and parmesan shavings with a creamy Caesar dressing.", 
-            price: 210, 
-            rating: 4.3, 
-            reviews: 85, 
-            image: "/images/menu/caesar_salad_1773233640332.png" 
-        },
-        { 
-            id: "m7", 
-            category: "drinks", 
-            title: "Iced Whipped Coffee", 
-            description: "Velvety smooth cold brew topped with thick whipped cream and chocolate drizzle.", 
-            price: 130, 
-            rating: 4.8, 
-            reviews: 240, 
-            image: "/images/menu/cold_coffee_premium_1773233658375.png", 
-            isBestseller: true 
-        },
-        { 
-            id: "m8", 
-            category: "desserts", 
-            title: "Molten Lava Cake", 
-            description: "Warm chocolate cake with a gooey center, served with premium vanilla bean ice cream.", 
-            price: 190, 
-            rating: 4.9, 
-            reviews: 380, 
-            image: "/images/menu/choco_lava_cake_1773233674857.png", 
-            isBestseller: true 
-        },
-    ];
+    const menuItems = SHARED_MENU_ITEMS;
 
 
     const stories = [
@@ -178,25 +99,14 @@ export default function GuestDashboard() {
         { id: "s4", image: "/images/menu/garlic_bread_1773233624069.png", label: "Special", type: "New" },
     ];
 
-    const updateQuantity = (id: string, q: number) => {
-        const isNewItem = q > (cart[id] || 0) && q === 1;
-        setCart(prev => ({
-            ...prev,
-            [id]: Math.max(0, q)
-        }));
-
-        // Trigger upsell only for individual items, not combos
-        if (isNewItem && !id.includes("combo")) {
-            const item = menuItems.find(m => m.id === id);
-            if (item) setUpsellItem({ id: item.id, title: item.title });
-        }
-    };
+        // No change needed to updateQuantity itself as it's now from useCart
 
     const cartTotal = Object.entries(cart).reduce((sum, [id, q]) => {
         const item = menuItems.find(m => m.id === id);
-        return sum + (item?.price || 0) * q;
+        const comboItem = (id.includes("combo") || id === "king_size") ? SHARED_COMBOS.find(c => c.id === id) : null;
+        
+        return sum + ((item?.price || comboItem?.price || 0) * q);
     }, 0);
-    const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);
     
     // Calculate REAL sales data from requests
     const menuItemsWithSales = React.useMemo(() => {
@@ -204,7 +114,7 @@ export default function GuestDashboard() {
         
         // Parse "Dining Order" notes to count item sales
         requests.forEach(req => {
-            if (req.type === "Dining Order" && req.notes) {
+            if (req.type?.includes("Dining Order") && req.notes) {
                 // Regex matches patterns like "2x Item Name" or "1x Item Name"
                 const matches = req.notes.matchAll(/(\d+)x\s+([^,]+)/g);
                 for (const match of matches) {
@@ -219,16 +129,53 @@ export default function GuestDashboard() {
         const enriched = menuItems.map(item => ({
             ...item,
             salesCount: salesMap[item.title] || 0,
-            // Dynamically mark as bestseller if it has at least 5 sales (mock threshold for demo)
-            // or if it's in the top 20% of sales
-            isBestseller: (salesMap[item.title] || 0) >= 5 
+            isBestseller: (salesMap[item.title] || 0) >= 5 || !!item.isPopular
         }));
 
-        return enriched;
-    }, [requests]);
+        return enriched as any[];
+    }, [requests, menuItems]);
 
     const filteredItems = (activeCategory === "all" ? menuItemsWithSales : menuItemsWithSales.filter(i => i.category === activeCategory))
         .filter(item => !hungerMode || item.price > 150);
+
+    const handleOrder = async () => {
+        if (!branding?.id) return;
+        setIsOrdering(true);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const cartItems = Object.entries(cart).map(([id, q]) => {
+            let item = menuItems.find(m => m.id === id);
+            if (!item && (id.includes("combo") || id === "king_size")) {
+                const foundCombo = [
+                    { id: "monster_combo", title: "Monster Combo Burger", price: 199 },
+                    { id: "king_size", title: "King Size Platter", price: 299 }
+                ].find(c => c.id === id);
+                if (foundCombo) item = foundCombo as any;
+            }
+            if (!item) return null;
+            return { ...item, quantity: q };
+        }).filter(item => item !== null);
+
+        const { error } = await addSupabaseRequest(branding.id, {
+            room: tableNumber,
+            type: `Dining Order (${cartCount} items)`,
+            notes: cartItems.map((item: any) => `${item.quantity}x ${item.title}`).join(", "),
+            status: "Pending",
+            price: cartTotal,
+            total: cartTotal
+        });
+
+        setIsOrdering(false);
+
+        if (error) {
+            setToast({ message: `Order Failed: ${error.message}`, type: "error", isVisible: true });
+        } else {
+            setOrderComplete(true);
+            clearCart();
+            setShowCart(false);
+            setToast({ message: "Order Placed Successfully!", type: "success", isVisible: true });
+        }
+    };
 
     const handleQuickRequest = async (type: string, notes: string) => {
         if (!branding?.id || submittingType) return;
@@ -477,7 +424,7 @@ export default function GuestDashboard() {
 
             {/* 8. Sticky Cart Bar (With Psychology Hint) */}
             <AnimatePresence>
-                {cartCount > 0 && !upsellItem && (
+                {cartCount > 0 && !upsellItem && !showCart && (
                     <motion.div 
                         initial={{ y: 200, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -496,7 +443,7 @@ export default function GuestDashboard() {
                         </motion.div>
 
                         <button 
-                            onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
+                            onClick={() => setShowCart(true)}
                             className="w-full bg-[#F55D2C] text-white p-6 rounded-[2.5rem] flex items-center justify-between shadow-[0_20px_50px_rgba(245,93,44,0.3)] relative z-10 group overflow-hidden active:scale-95 transition-all"
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
@@ -518,13 +465,41 @@ export default function GuestDashboard() {
                 )}
             </AnimatePresence>
 
-
-            <Toast
-                message={toast.message}
-                type={toast.type}
-                isVisible={toast.isVisible}
-                onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
+            {/* Shared Cart Overlay */}
+            <CartOverlay 
+                isOpen={showCart}
+                onClose={() => setShowCart(false)}
+                cart={cart}
+                updateQuantity={updateQuantity}
+                cartTotal={cartTotal}
+                isOrdering={isOrdering}
+                onOrder={handleOrder}
+                hotelId={branding?.id}
             />
+
+            {/* Success Screen */}
+            {orderComplete && (
+                <div className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center p-10 text-center">
+                    <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-8">
+                        <ShoppingBag className="w-12 h-12" />
+                    </div>
+                    <h2 className="text-4xl font-serif font-black italic mb-4">Order Placed!</h2>
+                    <p className="text-slate-500 mb-10">Your meal is being prepared with care.</p>
+                    <button 
+                        onClick={() => router.push(`/${hotelSlug}/guest/status`)} 
+                        className="bg-[#F55D2C] text-white px-10 py-5 rounded-[2rem] font-black uppercase italic tracking-widest shadow-xl"
+                    >
+                        Track Status
+                    </button>
+                    <button 
+                        onClick={() => setOrderComplete(false)} 
+                        className="mt-6 text-slate-400 font-bold"
+                    >
+                        Back to Menu
+                    </button>
+                </div>
+            )}
+            <BottomNav />
         </div>
     );
 }

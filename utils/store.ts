@@ -1135,3 +1135,55 @@ export async function deleteSupabaseMenuItem(id: string, hotelId: string) {
     return await supabase.from('menu_items').delete().eq('id', id);
 }
 
+/**
+ * Shared Cart Hook for Guest Ordering
+ * Persists to localStorage to share state between Dashboard and Restaurant pages
+ */
+export function useCart(hotelId: string | undefined) {
+    const [cart, setCart] = useState<Record<string, number>>({});
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    const STORAGE_KEY = `cart_${hotelId}`;
+
+    useEffect(() => {
+        if (!hotelId) return;
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                setCart(JSON.parse(stored));
+            } catch (e) {
+                console.error("Failed to parse cart from storage", e);
+            }
+        }
+        setIsInitialized(true);
+    }, [hotelId]);
+
+    useEffect(() => {
+        if (isInitialized && hotelId) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+            // Trigger storage event for cross-tab or same-page synchronization if needed
+            window.dispatchEvent(new Event('storage'));
+        }
+    }, [cart, hotelId, isInitialized]);
+
+    const updateQuantity = (id: string, q: number) => {
+        setCart(prev => {
+            const newCart = { ...prev };
+            if (q <= 0) {
+                delete newCart[id];
+            } else {
+                newCart[id] = q;
+            }
+            return newCart;
+        });
+    };
+
+    const clearCart = () => {
+        setCart({});
+        if (hotelId) localStorage.removeItem(STORAGE_KEY);
+    };
+
+    const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);
+
+    return { cart, updateQuantity, clearCart, cartCount, isInitialized };
+}

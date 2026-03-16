@@ -96,6 +96,22 @@ CREATE TABLE IF NOT EXISTS menu_items (
     price DECIMAL(10, 2) NOT NULL,
     image_url TEXT,
     is_available BOOLEAN DEFAULT true,
+    is_popular BOOLEAN DEFAULT false,
+    is_recommended BOOLEAN DEFAULT false,
+    upsell_items UUID[] DEFAULT '{}',
+    badge_text TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 6.1 Offers (Cart Value Unlock)
+CREATE TABLE IF NOT EXISTS offers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    hotel_id UUID REFERENCES hotels(id) ON DELETE CASCADE,
+    target_amount DECIMAL(10, 2) NOT NULL,
+    offer_text TEXT NOT NULL,
+    unlocked_item_id UUID REFERENCES menu_items(id),
+    offer_price DECIMAL(10, 2) DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -121,6 +137,7 @@ ALTER TABLE guests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE menu_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE special_offers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
 
 -- Basic Public Read Policy (Example for Hotels)
 CREATE POLICY "Allow public read hotels" ON hotels FOR SELECT USING (true);
@@ -129,5 +146,6 @@ CREATE POLICY "Allow public read guests" ON guests FOR SELECT USING (true);
 CREATE POLICY "Allow public read requests" ON requests FOR SELECT USING (true);
 CREATE POLICY "Allow public read menu_items" ON menu_items FOR SELECT USING (true);
 CREATE POLICY "Allow public read special_offers" ON special_offers FOR SELECT USING (true);
+CREATE POLICY "Allow public read offers" ON offers FOR SELECT USING (true);
 
 -- Admin/Staff policies should be added here...

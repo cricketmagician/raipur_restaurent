@@ -4,9 +4,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: #F55D2C; /* Vibrant Orange */
-  --color-secondary: #0F1B2D; /* Deep Slate */
-  --color-accent: #C58B2A; /* Gold Accent */
+  --color-primary: #D4AF37; /* Metallic Gold */
+  --color-secondary: #000000; /* Rich Black */
+  --color-accent: #1A1A1A; /* Deep Charcoal */
 
   --font-serif: var(--font-playfair), serif;
   --font-sans: var(--font-inter), sans-serif;
@@ -55,8 +55,8 @@
 }
 
 :root {
-  --background: #F6F3EF;
-  --foreground: #0F1B2D;
+  --background: #FDFBF4; /* Luxury Cream */
+  --foreground: #000000; /* Rich Black */
 }
 
 @utility bg-noise {

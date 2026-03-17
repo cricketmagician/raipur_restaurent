@@ -21,6 +21,9 @@ import { SHARED_COMBOS } from "@/utils/constants";
 import { getTimeTheme, CATEGORY_THEMES } from "@/utils/themes";
 import { StoryOverlay } from "@/components/StoryOverlay";
 import { GlobalHeader } from "@/components/GlobalHeader";
+import { TrendingNow } from "@/components/TrendingNow";
+import { PerfectPairs } from "@/components/PerfectPairs";
+import { MoodSection } from "@/components/MoodSection";
 
 
 // Helper to safely render icons with className
@@ -86,6 +89,32 @@ export default function GuestDashboard() {
         { id: "s2", image: "/images/menu_demo/fries.png", label: "Peri Peri Rush", type: "Viral", menuItemId: "f1137704-58a3-48b4-8395-8120387e7f6e", price: 159 },
         { id: "s3", image: "/images/menu_demo/burger.png", label: "Cheddar King", type: "Hot", menuItemId: "b1137704-58a3-48b4-8395-8120387e7f6e", price: 299 },
         { id: "s4", image: "/images/menu_demo/pizza.png", label: "Garden Special", type: "New", menuItemId: "a1137704-58a3-48b4-8395-8120387e7f6e", price: 349 },
+    ];
+
+    const trendingItems = [
+        { 
+            id: "t1", 
+            title: "The OG Combo", 
+            description: "Classic Cold Coffee + Choco Lava Cake", 
+            image: "/images/menu_demo/coffee.png", // Using coffee as primary image
+            price: 359, 
+            tag: "Bestseller",
+            menuItemId: "c1137704-58a3-48b4-8395-8120387e7f6e"
+        },
+        { 
+            id: "t2", 
+            title: "Weekend Vibe", 
+            description: "Premium Burger + Peri Peri Fries", 
+            image: "/images/menu_demo/burger.png", 
+            price: 399, 
+            tag: "Trending",
+            menuItemId: "b1137704-58a3-48b4-8395-8120387e7f6e"
+        }
+    ];
+
+    const perfectPairs = [
+        { id: "p1", title: "Espresso + Cookie", subtitle: "Handcrafted Pairing", image: "/images/menu_demo/coffee.png", price: 199, originalId: "537a0ee4-7b8a-42b9-8a34-3ebdd0b47c47" },
+        { id: "p2", title: "Mojito + Fries", subtitle: "Summer Favorite", image: "/images/menu_demo/mojito.png", price: 279, originalId: "e1137704-58a3-48b4-8395-8120387e7f6e" }
     ];
 
         // No change needed to updateQuantity itself as it's now from useCart
@@ -267,82 +296,78 @@ export default function GuestDashboard() {
             </header>
 
             <div className="space-y-12">
-                {/* 2. Primary Action */}
-                <motion.button 
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                    className="w-full bg-[#00704A] text-white py-8 rounded-[1.75rem] shadow-2xl shadow-[#00704A]/20 flex items-center justify-between px-8 group overflow-hidden relative"
-                >
-                    <span className="text-2xl font-black tracking-tighter relative z-10">Order Your Favorites</span>
-                    <ArrowUpRight className="w-8 h-8 relative z-10 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                </motion.button>
+                {/* 2. 🔥 Trending Now (Combo-focused) */}
+                <TrendingNow 
+                    items={trendingItems} 
+                    onItemClick={(id) => {
+                        const trend = trendingItems.find(t => t.id === id);
+                        if (trend) router.push(`/${hotelSlug}/guest/item/${trend.menuItemId}`);
+                    }} 
+                />
 
-                {/* 3. 🔥 Seasonal Collection */}
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between px-2">
-                        <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em]">
-                            ✨ Seasonal Collection
-                        </h3>
-                    </div>
+                {/* 3. 🤤 Perfect Pairs (AOV Booster) */}
+                <PerfectPairs 
+                    pairs={perfectPairs}
+                    onAdd={(id) => {
+                        const item = menuItems.find(m => m.id === id);
+                        if (item) addToCart(item);
+                        setToast({ message: "Excellent Choice! Added to Bag ✨", type: "success", isVisible: true });
+                    }}
+                />
 
-                    <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-6 -mx-2 px-2">
-                        {stories.map((story, index) => (
-                            <motion.div 
-                                key={story.id}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setStoryConfig({ isVisible: true, initialIndex: index })}
-                                className="flex-none w-72 bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-[#00704A]/5 border border-[#00704A]/5 cursor-pointer group"
-                            >
-                                <div className="aspect-[4/5] overflow-hidden relative">
-                                    <img src={story.image} alt={story.label} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#1E3932]/60 via-transparent to-transparent" />
-                                    <div className="absolute bottom-6 left-6 right-6">
-                                        <div className="bg-[#D4E9E2] text-[#00704A] inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest mb-3">
-                                            {story.type}
-                                        </div>
-                                        <h4 className="text-2xl font-black text-white leading-tight">{story.label}</h4>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
+                {/* 4. 🌈 Mood Section (Decision Shortcut) */}
+                <MoodSection onMoodClick={(id) => router.push(`/${hotelSlug}/guest/restaurant?mood=${id}`)} />
 
-                {/* 4. ⚡ Quick Picks */}
+                {/* 5. ⚡ Quick Picks (Refactored Visual Hierarchy) */}
                 <div className="space-y-6">
                     <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em] px-2">⚡ Quick Picks</h3>
-                    <div className="flex flex-nowrap overflow-x-auto pb-4 gap-4 no-scrollbar -mx-2 px-2">
+                    <div className="flex flex-nowrap overflow-x-auto pb-6 gap-4 no-scrollbar -mx-2 px-2">
                         {[
                             { label: 'Coffee', icon: '☕' },
                             { label: 'Burgers', icon: '🍔' },
-                            { label: 'Snacks', icon: '🍟' },
+                            { label: 'Sides', icon: '🍟' },
                             { label: 'Desserts', icon: '🍰' }
                         ].map((chip) => (
                             <button 
                                 key={chip.label}
                                 onClick={() => router.push(`/${hotelSlug}/guest/restaurant?cat=${chip.label.toLowerCase()}`)}
-                                className="flex-none px-8 py-4 rounded-full border border-[#00704A]/10 shadow-sm active:scale-90 transition-all flex items-center space-x-3 bg-white hover:bg-[#D4E9E2] group"
+                                className="flex-none px-10 py-5 rounded-[1.5rem] border border-[#00704A]/5 shadow-xl shadow-[#00704A]/5 active:scale-95 hover:shadow-2xl hover:shadow-[#00704A]/10 transition-all flex items-center space-x-4 bg-white group"
                             >
-                                <span className="text-xl group-hover:scale-125 transition-transform">{chip.icon}</span>
-                                <span className="font-black text-xs uppercase tracking-widest text-[#1E3932]">{chip.label}</span>
+                                <span className="text-2xl group-hover:scale-125 transition-transform duration-500">{chip.icon}</span>
+                                <span className="font-black text-[10px] uppercase tracking-widest text-[#1E3932]">{chip.label}</span>
                             </button>
                         ))}
                     </div>
                 </div>
 
-                {/* 5. Current Tab Summary */}
+                {/* 6. 🍽 Categories / Navigation */}
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em]">
+                            🍽 Browse Menu
+                        </h3>
+                    </div>
+                    <motion.button 
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
+                        className="w-full bg-[#00704A] text-white py-8 rounded-[1.75rem] shadow-2xl shadow-[#00704A]/20 flex items-center justify-between px-8 group overflow-hidden relative"
+                    >
+                        <span className="text-2xl font-black tracking-tighter relative z-10">All Categories</span>
+                        <ArrowUpRight className="w-8 h-8 relative z-10 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                    </motion.button>
+                </div>
+
+                {/* 7. 🧾 Current Tab (Discovery First, Bill Last) */}
                 <AnimatePresence>
                     {requests.some(r => (r.total || 0) > 0) && (
                         <div className="space-y-6">
                             <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em] px-2">🧾 Current Tab</h3>
                             <button 
                                 onClick={() => router.push(`/${hotelSlug}/guest/bill`)}
-                                className="w-full bg-[#D4E9E2]/30 rounded-[2rem] p-8 border border-[#00704A]/5 flex items-center justify-between group active:scale-[0.98] transition-all"
+                                className="w-full bg-[#D4E9E2]/30 rounded-[2rem] p-8 border border-[#00704A]/5 flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative"
                             >
-                                <div className="flex items-center">
+                                <div className="flex items-center relative z-10">
                                     <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mr-6 shadow-sm">
                                         <Receipt className="w-6 h-6 text-[#00704A]" />
                                     </div>
@@ -353,11 +378,37 @@ export default function GuestDashboard() {
                                         </span>
                                     </div>
                                 </div>
-                                <ChevronRight className="w-8 h-8 text-[#00704A]/30 group-hover:text-[#00704A] transition-all" />
+                                <ChevronRight className="w-8 h-8 text-[#00704A]/30 group-hover:text-[#00704A] transition-all relative z-10" />
+                                <div className="absolute bottom-0 right-0 w-40 h-40 bg-[#00704A]/5 rounded-full blur-2xl translate-y-1/4 translate-x-1/4" />
                             </button>
                         </div>
                     )}
                 </AnimatePresence>
+
+                {/* Seasonal Collection (Optionalized at bottom or integrated elsewhere) */}
+                <div className="space-y-6 pt-10 border-t border-[#00704A]/5">
+                    <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em] px-2 opacity-40">
+                        ✨ Seasonal Stories
+                    </h3>
+                    <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-6 -mx-2 px-2">
+                        {stories.map((story, index) => (
+                            <motion.div 
+                                key={story.id}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setStoryConfig({ isVisible: true, initialIndex: index })}
+                                className="flex-none w-48 bg-white rounded-[2rem] overflow-hidden shadow-lg border border-[#00704A]/5 cursor-pointer group grayscale-0 hover:grayscale-0 transition-all opacity-80 hover:opacity-100"
+                            >
+                                <div className="aspect-square overflow-hidden relative">
+                                    <img src={story.image} alt={story.label} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#1E3932]/40 to-transparent" />
+                                    <div className="absolute bottom-4 left-4 right-4">
+                                        <h4 className="text-xs font-black text-white leading-tight truncate">{story.label}</h4>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             <BottomNav />

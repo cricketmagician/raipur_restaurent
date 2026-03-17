@@ -5,11 +5,26 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
-import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, LayoutDashboard, ShieldAlert, BarChart3, Sparkles, Palette, CreditCard, PlayCircle } from "lucide-react";
+import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, LayoutDashboard, ShieldAlert, BarChart3, Sparkles, Palette, CreditCard, PlayCircle, Phone, UserRound, Gem, Clock3 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequestsState, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms, isDiningRequest, isHousekeepingRequest, isServiceRequest, isBillRequest, requestTypeMatches, type SyncStatus } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequestsState, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms, useHotelGuests, useHotelGuestLoyalty, isDiningRequest, isHousekeepingRequest, isServiceRequest, isBillRequest, requestTypeMatches, type SyncStatus } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
 import { RequestDetailModal } from "@/components/RequestDetailModal";
+
+const normalizePhone = (phone?: string | null) => (phone || "").replace(/\D/g, "");
+
+const formatLastSeen = (value?: string | null) => {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+
+    return date.toLocaleString(undefined, {
+        day: "numeric",
+        month: "short",
+        hour: "numeric",
+        minute: "2-digit",
+    });
+};
 
 function SyncHealth({ status, error, lastSyncedAt }: { status: SyncStatus; error: string | null; lastSyncedAt: number | null }) {
     const lastSeen = lastSyncedAt
@@ -93,6 +108,8 @@ export default function AdminHub() {
         fetchError: roomsError,
         lastSyncedAt: roomsLastSyncedAt,
     } = useHotelRooms(branding?.id);
+    const { guests } = useHotelGuests(branding?.id);
+    const { guestLoyalty } = useHotelGuestLoyalty(branding?.id);
 
     const [audioEnabled, setAudioEnabled] = useState(true);
     const [audioInitialized, setAudioInitialized] = useState(false);
@@ -230,6 +247,28 @@ export default function AdminHub() {
         completed: roleFilteredRequests.filter(r => r.status === "Completed").length,
         bills: openBillRequests.length,
     };
+    const roomGuestMap = useMemo(() => {
+        const map = new Map<string, typeof guests[number]>();
+        guests
+            .filter((guest) => guest.status !== "deleted")
+            .forEach((guest) => {
+                const existing = map.get(guest.room_number);
+                if (!existing || existing.status !== "active") {
+                    map.set(guest.room_number, guest);
+                }
+            });
+        return map;
+    }, [guests]);
+    const loyaltyByPhone = useMemo(() => {
+        const map = new Map<string, typeof guestLoyalty[number]>();
+        guestLoyalty.forEach((profile) => {
+            const phone = normalizePhone(profile.phone);
+            if (phone) {
+                map.set(phone, profile);
+            }
+        });
+        return map;
+    }, [guestLoyalty]);
 
     const billedRequests = requests.filter(r => (r.price || 0) > 0);
     const totalRevenue = billedRequests.reduce((sum, r) => sum + (r.total || 0), 0);
@@ -544,6 +583,52 @@ export default function AdminHub() {
                             ) : (
                                 (activeTab === 'queue' ? queueRequests : (activeTab === 'active' ? activeRequests : historyRequests)).map((req) => {
                                     const billRequest = isBillRequest(req.type);
+                                    const isTakeaway = req.room.toLowerCase() === 'takeaway';
+                                    const guest = req.status === "Completed" ? null : roomGuestMap.get(req.room);
+                                    const loyalty = guest ? loyaltyByPhone.get(normalizePhone(guest.phone)) : null;
+                                    const guestName = loyalty?.name || guest?.name || null;
+                                    const guestPhone = guest?.phone || loyalty?.phone || null;
+                                    const guestLastSeen = formatLastSeen(loyalty?.last_visit_at || guest?.check_in_date);
+                                    const isKnownGuest = !!loyalty || !!guestName;
+                                    const accent = billRequest
+                                        ? {
+                                            tint: '#ECFDF5',
+                                            edge: '#10B981',
+                                            iconBg: '#D1FAE5',
+                                            iconColor: '#047857',
+                                            amountBg: '#ECFDF5',
+                                            amountColor: '#047857',
+                                            badgeText: 'Bill Desk',
+                                        }
+                                        : isTakeaway
+                                            ? {
+                                                tint: '#F5F3FF',
+                                                edge: '#8B5CF6',
+                                                iconBg: '#E9D5FF',
+                                                iconColor: '#7C3AED',
+                                                amountBg: '#F5F3FF',
+                                                amountColor: '#6D28D9',
+                                                badgeText: 'Takeaway',
+                                            }
+                                            : isDiningRequest(req.type)
+                                                ? {
+                                                    tint: '#EEF2FF',
+                                                    edge: '#4F46E5',
+                                                    iconBg: '#E0E7FF',
+                                                    iconColor: '#4338CA',
+                                                    amountBg: '#EEF2FF',
+                                                    amountColor: '#4338CA',
+                                                    badgeText: 'Dining',
+                                                }
+                                                : {
+                                                    tint: '#FFF7ED',
+                                                    edge: '#F59E0B',
+                                                    iconBg: '#FEF3C7',
+                                                    iconColor: '#B45309',
+                                                    amountBg: '#FFF7ED',
+                                                    amountColor: '#B45309',
+                                                    badgeText: 'Service',
+                                                };
 
                                     return (
                                     <motion.div
@@ -552,67 +637,158 @@ export default function AdminHub() {
                                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                         animate={{ opacity: 1, scale: 1, y: 0 }}
                                         exit={{ opacity: 0, scale: 0.9, x: -20 }}
-                                        className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-lg shadow-slate-100/50 hover:shadow-2xl hover:shadow-slate-200/40 transition-all border-l-4 border-l-indigo-600 relative group overflow-hidden"
+                                        className="rounded-[2rem] p-6 border backdrop-blur-xl transition-all relative group overflow-hidden"
+                                        style={{
+                                            background: `linear-gradient(180deg, ${accent.tint} 0%, rgba(255,255,255,0.98) 34%, rgba(255,255,255,0.98) 100%)`,
+                                            borderColor: `${accent.edge}26`,
+                                            boxShadow: `0 28px 70px -42px ${accent.edge}55`,
+                                        }}
                                     >
-                                        <div className="flex items-start justify-between mb-6">
+                                        <div
+                                            className="absolute inset-x-0 top-0 h-1.5"
+                                            style={{ background: `linear-gradient(90deg, ${accent.edge}, ${accent.edge}55, transparent)` }}
+                                        />
+                                        <div className="absolute right-0 top-0 h-28 w-28 rounded-full blur-3xl opacity-40" style={{ backgroundColor: accent.tint }} />
+
+                                        <div className="relative z-10 flex items-start justify-between mb-5">
                                             <div className="flex items-center">
-                                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl mr-4 shadow-xl ${req.room.toLowerCase() === 'takeaway' ? 'bg-purple-600 text-white' : 'bg-slate-900 text-white'}`}>
-                                                    {req.room.toLowerCase() === 'takeaway' ? <ShoppingBag className="w-6 h-6"/> : req.room}
+                                                <div
+                                                    className="w-14 h-14 rounded-[1.35rem] flex items-center justify-center font-black text-xl mr-4 shadow-xl"
+                                                    style={{ backgroundColor: accent.iconBg, color: accent.iconColor }}
+                                                >
+                                                    {billRequest ? <CreditCard className="w-6 h-6" /> : (isTakeaway ? <ShoppingBag className="w-6 h-6" /> : req.room)}
                                                 </div>
-                                                <div>
-                                                    <span className="font-black text-slate-900 block text-lg leading-tight">
-                                                        {req.room.toLowerCase() === 'takeaway' ? 'Takeaway' : `Table ${req.room}`}
+                                                <div className="min-w-0">
+                                                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                        <span className="font-black text-slate-900 block text-[1.7rem] leading-none tracking-tight">
+                                                            {isTakeaway ? 'Takeaway' : `Table ${req.room}`}
+                                                        </span>
+                                                        <span
+                                                            className="text-[9px] font-black uppercase tracking-[0.18em] px-2.5 py-1 rounded-full border"
+                                                            style={{ backgroundColor: accent.amountBg, color: accent.amountColor, borderColor: `${accent.edge}20` }}
+                                                        >
+                                                            {accent.badgeText}
+                                                        </span>
+                                                        {isKnownGuest && (
+                                                            <span className="text-[9px] font-black uppercase tracking-[0.18em] px-2.5 py-1 rounded-full border bg-slate-900 text-white border-slate-900">
+                                                                Known Guest
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-400 block">
+                                                        {req.type}
                                                     </span>
-                                                    <div className="flex items-center space-x-2">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{req.time}</span>
+                                                    <div className="flex items-center space-x-2 mt-2">
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                                                            <Clock3 className="w-3 h-3 mr-1.5" />
+                                                            {req.time}
+                                                        </span>
                                                         {(req.total || 0) > 0 && (
-                                                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100/50">
+                                                            <span
+                                                                className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border"
+                                                                style={{ backgroundColor: accent.amountBg, color: accent.amountColor, borderColor: `${accent.edge}18` }}
+                                                            >
                                                                 ₹{req.total}
                                                             </span>
                                                         )}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <button 
+                                            <button
                                                 onClick={() => setSelectedRequest(req)}
-                                                className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                className="w-10 h-10 rounded-full bg-white/80 border border-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow-sm"
                                             >
                                                 <Eye className="w-4 h-4 text-slate-400" />
                                             </button>
                                         </div>
 
-                                        <div className="space-y-4">
-                                            <div className="flex items-center p-3 bg-slate-50 rounded-xl">
-                                                <Utensils className="w-4 h-4 mr-3 text-indigo-600" />
-                                                <span className="font-bold text-slate-900 text-sm">{req.type}</span>
-                                            </div>
-                                            {req.notes && (
-                                                <div className="text-xs text-slate-500 font-medium italic border-l-2 border-slate-200 pl-3 py-1">
-                                                    "{req.notes}"
+                                        <div className="relative z-10 space-y-4">
+                                            <div className="grid grid-cols-[auto_1fr] gap-3 items-start">
+                                                <div className="w-11 h-11 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                                                    {billRequest ? (
+                                                        <CreditCard className="w-4 h-4" style={{ color: accent.iconColor }} />
+                                                    ) : isTakeaway ? (
+                                                        <ShoppingBag className="w-4 h-4" style={{ color: accent.iconColor }} />
+                                                    ) : isDiningRequest(req.type) ? (
+                                                        <Utensils className="w-4 h-4" style={{ color: accent.iconColor }} />
+                                                    ) : (
+                                                        <Bell className="w-4 h-4" style={{ color: accent.iconColor }} />
+                                                    )}
                                                 </div>
-                                            )}
+                                                <div className="min-w-0 rounded-[1.35rem] border border-white bg-white/75 px-4 py-3 shadow-sm">
+                                                    <div className="flex items-center justify-between gap-3 mb-1">
+                                                        <span className="text-sm font-black text-slate-900 truncate">{req.type}</span>
+                                                        <StatusBadge status={req.status} />
+                                                    </div>
+                                                    <p className="text-xs font-medium text-slate-500 leading-5 line-clamp-2">
+                                                        {req.notes || "No extra note added for this request."}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="rounded-[1.4rem] border border-slate-100/80 bg-white/80 px-4 py-3 shadow-sm">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Guest Snapshot</p>
+                                                        {guestName ? (
+                                                            <div className="space-y-1.5">
+                                                                <div className="flex items-center gap-2 text-sm font-black text-slate-900">
+                                                                    <UserRound className="w-4 h-4 text-slate-400" />
+                                                                    <span className="truncate">{guestName}</span>
+                                                                </div>
+                                                                {guestPhone && (
+                                                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                                                                        <Phone className="w-3.5 h-3.5" />
+                                                                        <span>{guestPhone}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-sm font-medium text-slate-400">No guest profile linked to this session yet.</p>
+                                                        )}
+                                                    </div>
+
+                                                    {isKnownGuest && (
+                                                        <div className="text-right shrink-0">
+                                                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-[0.18em] border border-emerald-100">
+                                                                <Gem className="w-3 h-3" />
+                                                                Returning
+                                                            </div>
+                                                            {guestLastSeen && (
+                                                                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400 mt-2">
+                                                                    Last visit {guestLastSeen}
+                                                                </p>
+                                                            )}
+                                                            {typeof loyalty?.points === "number" && loyalty.points > 0 && (
+                                                                <p className="text-[11px] font-black text-slate-900 mt-1">{loyalty.points} pts</p>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <div className="mt-8 flex space-x-2">
+                                        <div className="relative z-10 mt-6 flex space-x-2">
                                             {billRequest ? (
-                                                <button onClick={() => setSelectedRequest(req)} className="flex-1 bg-emerald-600 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center">
+                                                <button onClick={() => setSelectedRequest(req)} className="flex-1 bg-slate-900 text-white py-3.5 rounded-[1.1rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95 flex items-center justify-center shadow-lg">
                                                     <CheckCircle className="w-4 h-4 mr-2" /> Settle Bill
                                                 </button>
                                             ) : (
                                                 <>
                                                     {req.status === "Pending" && (
-                                                        <button onClick={() => updateStatus(req.id, "Assigned")} className="flex-1 bg-slate-900 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95">
-                                                            Accept Access
+                                                        <button onClick={() => updateStatus(req.id, "Assigned")} className="flex-1 bg-slate-900 text-white py-3.5 rounded-[1.1rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95 shadow-lg">
+                                                            Accept
                                                         </button>
                                                     )}
                                                     {req.status === "Assigned" && (
-                                                        <button onClick={() => updateStatus(req.id, "In Progress")} className="flex-1 bg-indigo-600 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all active:scale-95">
-                                                            Initialize Process
+                                                        <button onClick={() => updateStatus(req.id, "In Progress")} className="flex-1 py-3.5 rounded-[1.1rem] font-black text-[10px] uppercase tracking-[0.2em] transition-all active:scale-95 shadow-lg text-white"
+                                                            style={{ backgroundColor: accent.edge }}>
+                                                            Start
                                                         </button>
                                                     )}
                                                     {req.status === "In Progress" && (
-                                                        <button onClick={() => updateStatus(req.id, "Completed")} className="flex-1 bg-emerald-600 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center">
-                                                            <CheckCircle className="w-4 h-4 mr-2" /> Complete Cycle
+                                                        <button onClick={() => updateStatus(req.id, "Completed")} className="flex-1 bg-emerald-600 text-white py-3.5 rounded-[1.1rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center shadow-lg shadow-emerald-100">
+                                                            <CheckCircle className="w-4 h-4 mr-2" /> Complete
                                                         </button>
                                                     )}
                                                 </>

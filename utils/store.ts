@@ -107,6 +107,19 @@ export interface Guest {
     check_in_date: string;
     check_out_date?: string;
     status: 'active' | 'checked_out' | 'deleted';
+    created_at?: string;
+}
+
+export interface GuestLoyaltyProfile {
+    id: string;
+    hotel_id: string;
+    phone: string;
+    name?: string;
+    points?: number;
+    last_visit_at?: string | null;
+    last_order_at?: string | null;
+    last_order_mode?: string | null;
+    created_at?: string;
 }
 
 export interface MenuItem {
@@ -175,6 +188,10 @@ const sortRoomsByNumber = (left: Room, right: Room) =>
     left.room_number.localeCompare(right.room_number, undefined, { numeric: true, sensitivity: 'base' });
 
 const sortRequestsByTimestamp = (left: HotelRequest, right: HotelRequest) => right.timestamp - left.timestamp;
+const sortGuestsByCheckIn = (left: Guest, right: Guest) =>
+    new Date(right.check_in_date || right.created_at || 0).getTime() - new Date(left.check_in_date || left.created_at || 0).getTime();
+const sortGuestLoyaltyByLastVisit = (left: GuestLoyaltyProfile, right: GuestLoyaltyProfile) =>
+    new Date(right.last_visit_at || right.created_at || 0).getTime() - new Date(left.last_visit_at || left.created_at || 0).getTime();
 
 const sortMenuItems = (left: MenuItem, right: MenuItem) =>
     normalizeCategoryKey(left.category).localeCompare(normalizeCategoryKey(right.category), undefined, { sensitivity: 'base' }) ||
@@ -651,6 +668,55 @@ export function useHotelRooms(hotelId: string | undefined) {
 
     return {
         rooms: state.data,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+        fetchError: state.fetchError,
+        lastSyncedAt: state.lastSyncedAt,
+    };
+}
+
+export function useHotelGuests(hotelId: string | undefined) {
+    const state = useRealtimeCollection<Guest>({
+        table: 'guests',
+        consumer: 'hotel-guests',
+        scopeKey: hotelId || 'no-hotel',
+        enabled: !!hotelId,
+        fetchFilters: hotelId ? [
+            { column: 'hotel_id', value: hotelId },
+            { column: 'status', value: 'active' }
+        ] : [],
+        channelFilter: hotelId ? { column: 'hotel_id', value: hotelId } : undefined,
+        orderBy: { column: 'check_in_date', ascending: false },
+        sort: sortGuestsByCheckIn,
+        enablePollingFallback: true,
+    });
+
+    return {
+        guests: state.data,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+        fetchError: state.fetchError,
+        lastSyncedAt: state.lastSyncedAt,
+    };
+}
+
+export function useHotelGuestLoyalty(hotelId: string | undefined) {
+    const state = useRealtimeCollection<GuestLoyaltyProfile>({
+        table: 'guest_loyalty',
+        consumer: 'hotel-guest-loyalty',
+        scopeKey: hotelId || 'no-hotel',
+        enabled: !!hotelId,
+        fetchFilters: hotelId ? [{ column: 'hotel_id', value: hotelId }] : [],
+        channelFilter: hotelId ? { column: 'hotel_id', value: hotelId } : undefined,
+        orderBy: { column: 'last_visit_at', ascending: false },
+        sort: sortGuestLoyaltyByLastVisit,
+        enablePollingFallback: true,
+    });
+
+    return {
+        guestLoyalty: state.data,
         loading: state.loading,
         refresh: state.refresh,
         syncStatus: state.syncStatus,

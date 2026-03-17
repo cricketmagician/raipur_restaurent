@@ -71,6 +71,16 @@ export const SHARED_MENU_ITEMS = [
         image: "/images/menu/choco_lava_cake_1773233674857.png", 
         isPopular: true 
     },
+    {
+        id: "m9",
+        category: "pizzas",
+        title: "Artisanal Wood-Fired Margherita",
+        description: "Hand-stretched dough, San Marzano tomatoes, fresh fior di latte, and aromatic basil leaves. Finished with cold-pressed olive oil.",
+        price: 349,
+        image: "/artifacts/margherita_pizza_premium_1773728335123.png",
+        isPopular: true,
+        upsellIds: ["m3", "m7"]
+    }
 ];
 
 export const SHARED_COMBOS = [

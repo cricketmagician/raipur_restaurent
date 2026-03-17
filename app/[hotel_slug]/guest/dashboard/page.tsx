@@ -118,10 +118,11 @@ export default function GuestDashboard() {
 
 
     const stories = [
-        { id: "s1", image: "/images/menu_demo/dessert.png", label: "Choco Lava Delight", type: "Sweet", menuItemId: "d1137704-58a3-48b4-8395-8120387e7f6e", price: 219 },
-        { id: "s2", image: "/images/menu_demo/fries.png", label: "Peri Peri Rush", type: "Viral", menuItemId: "f1137704-58a3-48b4-8395-8120387e7f6e", price: 159 },
-        { id: "s3", image: "/images/menu_demo/burger.png", label: "Cheddar King", type: "Hot", menuItemId: "b1137704-58a3-48b4-8395-8120387e7f6e", price: 299 },
-        { id: "s4", image: "/images/menu_demo/pizza.png", label: "Garden Special", type: "New", menuItemId: "a1137704-58a3-48b4-8395-8120387e7f6e", price: 349 },
+        { id: "s1", image: "/images/menu_demo/dessert.png", label: "Midnight Choco", type: "Viral", menuItemId: "d1137704-58a3-48b4-8395-8120387e7f6e", price: 219 },
+        { id: "s2", image: "/images/menu_demo/fries.png", label: "Peri Peri Rush", type: "Trending", menuItemId: "f1137704-58a3-48b4-8395-8120387e7f6e", price: 159 },
+        { id: "s3", image: "/images/menu_demo/burger.png", label: "Cheddar King", type: "New", menuItemId: "b1137704-58a3-48b4-8395-8120387e7f6e", price: 299 },
+        { id: "s4", image: "/images/menu_demo/pizza.png", label: "Garden Fresh", type: "Must try", menuItemId: "a1137704-58a3-48b4-8395-8120387e7f6e", price: 349 },
+        { id: "s5", image: "/images/menu_demo/coffee.png", label: "Cold Brew", type: "Classic", menuItemId: "c1137704-58a3-48b4-8395-8120387e7f6e", price: 189 },
     ];
 
     const trendingItems = useMemo(() => {
@@ -343,6 +344,14 @@ export default function GuestDashboard() {
         >
             {/* 1. Starbucks Style Greeting & Rewards */}
             <header className="mb-10">
+                {/* 1.1 Instagram-Style Status/Stories (Top Priority) */}
+                <div className="mb-8 -mx-2">
+                    <FoodStory 
+                        stories={stories} 
+                        onStoryClick={(id, index) => setStoryConfig({ isVisible: true, initialIndex: index })} 
+                    />
+                </div>
+
                 <div className="flex items-center justify-between mb-8">
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
@@ -356,32 +365,6 @@ export default function GuestDashboard() {
                         </p>
                     </motion.div>
                 </div>
-
-                {/* Hunger Mode Toggle */}
-                <div className="mb-10 px-2">
-                    <div className="flex items-center justify-between mb-4">
-                        <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Your Appetite</span>
-                        <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100 flex items-center">
-                             {hungerLevel === 'light' ? '😌 Just a bite' : hungerLevel === 'hungry' ? '😋 Getting hungry' : '🔥 Starving'}
-                        </span>
-                    </div>
-                    <div className="bg-white/50 backdrop-blur-sm p-1.5 rounded-full border border-black/5 flex items-center shadow-inner">
-                        {(['light', 'hungry', 'very-hungry'] as const).map((level) => (
-                            <button
-                                key={level}
-                                onClick={() => setHungerLevel(level)}
-                                className={`flex-1 py-3 px-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 relative z-10`}
-                                style={{ 
-                                    color: hungerLevel === level ? 'white' : `${theme.text}44`,
-                                    backgroundColor: hungerLevel === level ? theme.primary : 'transparent'
-                                }}
-                            >
-                                {level.replace('-', ' ')}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
             </header>
 
             <div className="space-y-12">

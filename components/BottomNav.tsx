@@ -19,13 +19,14 @@ export function BottomNav() {
     ];
 
     return (
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] px-4 pb-6 pt-3 bg-white/70 backdrop-blur-xl border-t border-white/20 flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.06)] rounded-t-[2rem]">
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] px-4 pb-safe pt-3 bg-white/80 backdrop-blur-2xl border-t border-white/20 flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.04)] rounded-t-[2.5rem]">
             {navItems.map((item) => {
                 const isActive = pathname === item.path;
                 
                 return (
-                    <button
+                    <motion.button
                         key={item.id}
+                        whileTap={{ scale: 0.92 }}
                         onClick={() => router.push(item.path)}
                         className="flex flex-col items-center justify-center space-y-1.5 relative group min-w-[64px]"
                     >
@@ -53,7 +54,7 @@ export function BottomNav() {
                                 className="absolute -bottom-1 w-1.5 h-1.5 bg-[#F55D2C] rounded-full shadow-[0_0_12px_rgba(245,93,44,0.6)]"
                             />
                         )}
-                    </button>
+                    </motion.button>
                 );
             })}
         </div>

@@ -202,298 +202,107 @@ export default function GuestDashboard() {
         </div>
     );
 
+    const tableNumberDisplay = tableNumber;
+
     return (
         <div className="pb-40 px-5 pt-6 min-h-screen bg-noise max-w-[520px] mx-auto overflow-x-hidden font-sans">
             {/* Header is handled by GlobalHeader in GuestLayout */}
 
-            {/* 1. Hospitality Greeting */}
-            <header className="mb-12 pt-14">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                >
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-2 font-sans">Welcome back</p>
-                    <h1 className="text-5xl font-serif italic text-slate-900 leading-[0.9] tracking-tighter mb-4">
-                        Good Evening,<br />{branding?.name || 'Guest'}
-                    </h1>
-                    <p className="text-slate-500 font-serif italic text-lg leading-relaxed max-w-[280px]">
-                        “Ready for a delightful<br />dining experience?”
-                    </p>
-                </motion.div>
-            </header>
-
-            {/* 2. Central Action (Explore Menu) */}
-            <section className="mb-16">
-                <motion.button
-                    whileHover={{ scale: 1.02, boxShadow: "0 30px 60px rgba(0,0,0,0.1)" }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                        const menuSection = document.getElementById('menu-experience');
-                        menuSection?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="w-full bg-slate-900 text-[#FAF7F2] py-10 rounded-[2.5rem] flex flex-col items-center justify-center relative overflow-hidden group shadow-2xl transition-all"
-                >
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform">
-                        <Utensils className="w-24 h-24" />
-                    </div>
-                    <span className="text-xs font-black uppercase tracking-[0.4em] mb-4 text-[#D4AF37]">The Collection</span>
-                    <span className="text-4xl font-serif italic mb-6">Explore Menu</span>
-                    <ChevronRight className="w-8 h-8 text-[#D4AF37] animate-bounce-x" />
-                </motion.button>
-            </section>
-
-            {/* 3. Hero Slider (House Collections) */}
-            <section id="menu-experience" className="mb-20 -mx-5 px-5">
-                <div className="flex items-center justify-between mb-8 px-1">
-                    <div className="flex flex-col">
-                        <h3 className="text-3xl font-serif text-slate-900 italic tracking-tight">Curated for You</h3>
-                        <p className="text-[11px] text-slate-400 font-medium italic mt-1">Thoughtfully paired for the perfect balance</p>
-                    </div>
-                </div>
-                <div className="flex overflow-x-auto space-x-6 pb-8 no-scrollbar snap-x">
-                    <div className="flex space-x-6">
-                        <ComboCard 
-                            title="The Signature Collection"
-                            items={["2x Buttermilk Burger", "Truffle Batons", "Velvet Coffee"]}
-                            price={199}
-                            originalPrice={349}
-                            trendingCount={0}
-                            image="/images/menu/monster_combo_hero_1773232637404.png"
-                            quantity={cart["monster_combo"] || 0}
-                            onUpdateQuantity={(q) => updateQuantity("monster_combo", q)}
-                        />
-                        <ComboCard 
-                            title="Grand Platter Experience"
-                            items={["Heritage Burger", "Classic Batons", "Velvet Coffee", "Molten Ganache"]}
-                            price={299}
-                            originalPrice={449}
-                            trendingCount={0}
-                            image="https://images.unsplash.com/photo-1594212699903-ec8a3ecc50f1?q=80&w=800"
-                            quantity={cart["king_size"] || 0}
-                            onUpdateQuantity={(q) => updateQuantity("king_size", q)}
-                        />
-                    </div>
-                </div>
-            </section>
-
-            {/* 3. Food Categories (Tactile Row) */}
-            <section className="mb-12">
-                <CategoryScroll 
-                    categories={categories}
-                    activeCategory={activeCategory}
-                    onCategoryChange={setActiveCategory}
-                />
-            </section>
-
-            {/* 4. Hungry Mode Filter (Emotional UI) */}
-            <section className="mb-12 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-[0_8px_25px_rgba(0,0,0,0.04)]">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h4 className="text-lg font-serif font-black text-slate-900 leading-none mb-1">😋 I'm Very Hungry</h4>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Show big meals & combos</p>
-                    </div>
-                    <button 
-                        onClick={() => setHungerMode(!hungerMode)}
-                        className={`w-14 h-8 rounded-full transition-all duration-500 relative flex items-center px-1 ${hungerMode ? 'bg-[#F55D2C]' : 'bg-slate-200'}`}
-                    >
+            <div className="space-y-12 py-10">
+                {/* 1. The Entrance Header (Luxury Centered Spec) */}
+                <div className="flex flex-col items-center text-center space-y-6">
+                    {branding?.logoImage || branding?.logo ? (
                         <motion.div 
-                            animate={{ x: hungerMode ? 24 : 0 }}
-                            className="w-6 h-6 bg-white rounded-full shadow-md"
-                        />
-                    </button>
-                </div>
-            </section>
-
-            {/* 5. Food Stories */}
-            <section className="mb-12">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-serif font-black text-slate-900 italic tracking-tight">Today's Special</h3>
-                    <div className="h-[1px] flex-1 bg-slate-100 mx-4"></div>
-                    <div className="text-[10px] font-black text-[#F55D2C] uppercase tracking-widest">Live Now</div>
-                </div>
-                <FoodStory stories={stories} />
-            </section>
-
-            {/* 6. Popular Right Now (Modern Grid with Anchoring) */}
-            <section className="mb-14">
-                <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-2xl font-serif text-slate-900 italic">Chef’s Selection</h3>
-                    <div className="h-[1px] flex-1 bg-slate-100 mx-6"></div>
-                </div>
-
-                {/* Anchoring: First item is dramatically larger */}
-                {filteredItems.length > 0 && (
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        className="mb-10"
-                    >
-                        <div className="relative group">
-                            <div className="absolute -inset-4 bg-[#722F37]/5 rounded-[3.5rem] -z-10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <MenuListItem 
-                                {...filteredItems[0]}
-                                isLarge={true} // New prop for visual hierarchy
-                                trendingCount={(filteredItems[0].salesCount || 0)}
-                                quantity={cart[filteredItems[0].id] || 0}
-                                onUpdateQuantity={(q) => updateQuantity(filteredItems[0].id, q)}
-                            />
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="w-20 h-20 rounded-[1.25rem] overflow-hidden shadow-2xl border border-white p-1 bg-white"
+                        >
+                            <img src={branding.logoImage || branding.logo} alt="Hotel Logo" className="w-full h-full object-cover rounded-[1rem]" />
+                        </motion.div>
+                    ) : (
+                        <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center">
+                            <Utensils className="text-[#FAF7F2] w-8 h-8" />
                         </div>
-                    </motion.div>
-                )}
-
-                <motion.div 
-                    initial="hidden"
-                    animate="show"
-                    variants={{
-                        show: {
-                            transition: {
-                                staggerChildren: 0.1
-                            }
-                        }
-                    }}
-                    className="grid grid-cols-2 gap-4"
-                >
-                    {filteredItems.slice(1, 5).map((item) => (
-                        <MenuListItem 
-                            key={item.id}
-                            {...item}
-                            trendingCount={(item.salesCount || 0)}
-                            quantity={cart[item.id] || 0}
-                            onUpdateQuantity={(q) => updateQuantity(item.id, q)}
-                        />
-                    ))}
-                </motion.div>
-            </section>
-
-            {/* Assistant section removed - actions are now in global header */}
-
-            {/* Upsell Modal */}
-            <AnimatePresence>
-                {upsellItem && (
-                    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-md p-6">
-                        <motion.div 
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white w-full max-w-[400px] rounded-[3.5rem] p-10 shadow-2xl relative overflow-hidden"
+                    )}
+                    
+                    <div className="space-y-2">
+                        <motion.h2 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-4xl font-serif text-slate-900 italic tracking-tighter"
                         >
-                            <button 
-                                onClick={() => setUpsellItem(null)}
-                                className="absolute top-6 right-8 text-slate-300 hover:text-slate-900 transition-colors"
-                            >
-                                <Zap className="w-5 h-5 rotate-45" />
-                            </button>
-                            
-                            <div className="flex flex-col items-center text-center">
-                                <div className="w-28 h-28 bg-amber-50 rounded-full flex items-center justify-center text-5xl mb-8 shadow-inner">🍟</div>
-                                <h4 className="text-2xl font-serif font-black text-slate-900 leading-tight mb-2">Make it a Combo?</h4>
-                                <p className="text-sm font-bold text-slate-400 mb-6 italic">Add Medium Fries + Coke</p>
-                                <div className="bg-[#F55D2C]/10 px-4 py-2 rounded-full mb-10">
-                                    <p className="text-xl font-black text-[#F55D2C]">Only ₹59 extra</p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <button 
-                                    onClick={() => setUpsellItem(null)}
-                                    className="p-4 rounded-2xl border-2 border-slate-100 font-black text-[10px] uppercase tracking-widest text-slate-400"
-                                >
-                                    No, Thanks
-                                </button>
-                                <button 
-                                    onClick={() => {
-                                        updateQuantity("monster_combo", (cart["monster_combo"] || 0) + 1);
-                                        setUpsellItem(null);
-                                    }}
-                                    className="p-4 rounded-2xl bg-[#F55D2C] text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[#F55D2C]/30"
-                                >
-                                    Yes, Upgrade!
-                                </button>
-                            </div>
-                        </motion.div>
+                            Good Evening, {tableNumberDisplay === 'Takeaway' ? 'Guest' : (tableNumberDisplay || 'Guest')}
+                        </motion.h2>
+                        <motion.p 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="text-slate-400 font-sans tracking-[0.2em] uppercase text-[10px] font-bold"
+                        >
+                            Ready for a delightful dining experience?
+                        </motion.p>
                     </div>
-                )}
-            </AnimatePresence>
-
-            {/* 8. Sticky Cart Bar (With Psychology Hint) */}
-            <AnimatePresence>
-                {cartCount > 0 && !upsellItem && !showCart && (
-                    <motion.div 
-                        initial={{ y: 200, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 200, opacity: 0 }}
-                        className="fixed bottom-28 left-6 right-6 z-[150] pointer-events-auto"
-                    >
-                        {/* Acknowledge Psychology: Floating Hint */}
-                        <motion.div 
-                            initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ delay: 0.5, type: "spring", stiffness: 400, damping: 15 }}
-                            className="absolute -top-14 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-2xl flex items-center space-x-2 whitespace-nowrap border border-white/10"
-                        >
-                            <span className="text-[10px] font-black uppercase tracking-[0.1em]">Add ₹120 more for FREE fries 🍟</span>
-                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45 border-r border-b border-white/10" />
-                        </motion.div>
-
-                        <button 
-                            onClick={() => setShowCart(true)}
-                            className="w-full bg-[#F55D2C] text-white p-6 rounded-[2.5rem] flex items-center justify-between shadow-[0_20px_50px_rgba(245,93,44,0.3)] relative z-10 group overflow-hidden active:scale-95 transition-all"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                            <div className="flex items-center space-x-3 relative z-10">
-                                <div className="bg-white/20 px-3 py-1.5 rounded-full text-[10px] font-black border border-white/10">
-                                    {cartCount} ITEMS
-                                </div>
-                                <span className="font-black text-sm uppercase tracking-widest shadow-sm italic">View Bucket</span>
-                            </div>
-                            <div className="flex items-center space-x-4 relative z-10">
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black text-white/50 uppercase leading-none mb-1">Total</p>
-                                    <p className="text-2xl font-serif font-black italic tracking-tighter shadow-sm">₹{cartTotal}</p>
-                                </div>
-                                <ChevronRight className="w-6 h-6 text-white/50" />
-                            </div>
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Shared Cart Overlay */}
-            <CartOverlay 
-                isOpen={showCart}
-                onClose={() => setShowCart(false)}
-                cart={cart}
-                updateQuantity={updateQuantity}
-                cartTotal={cartTotal}
-                isOrdering={isOrdering}
-                onOrder={handleOrder}
-                hotelId={branding?.id}
-            />
-
-            {/* Success Screen */}
-            {orderComplete && (
-                <div className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center p-10 text-center">
-                    <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-8">
-                        <ShoppingBag className="w-12 h-12" />
-                    </div>
-                    <h2 className="text-4xl font-serif font-black italic mb-4">Order Placed!</h2>
-                    <p className="text-slate-500 mb-10">Your meal is being prepared with care.</p>
-                    <button 
-                        onClick={() => router.push(`/${hotelSlug}/guest/status`)} 
-                        className="bg-[#F55D2C] text-white px-10 py-5 rounded-[2rem] font-black uppercase italic tracking-widest shadow-xl"
-                    >
-                        Track Status
-                    </button>
-                    <button 
-                        onClick={() => setOrderComplete(false)} 
-                        className="mt-6 text-slate-400 font-bold"
-                    >
-                        Back to Menu
-                    </button>
                 </div>
-            )}
+
+                {/* 2. The Primary CTA (BIG BUTTON) */}
+                <motion.div 
+                    whileTap={{ scale: 0.98 }}
+                    className="px-2"
+                >
+                    <button 
+                        onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
+                        className="w-full bg-[#8B0000] text-[#FAF7F2] py-8 rounded-[1.25rem] shadow-2xl shadow-[#8B0000]/20 flex items-center justify-center space-x-4 group overflow-hidden relative"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                        <Utensils className="w-6 h-6" />
+                        <span className="text-2xl font-serif italic tracking-tight">Explore Menu</span>
+                        <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                </motion.div>
+
+                {/* 3. Curated Selection (Luxury Spec) */}
+                <div className="space-y-8">
+                    <div className="flex items-center justify-between px-2">
+                        <h3 className="text-xl font-serif italic text-slate-900 tracking-tight">✨ Curated for You</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-8">
+                        {menuItems.slice(0, 2).map((item, idx) => (
+                            <motion.div 
+                                key={item.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 + idx * 0.1 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
+                                className="bg-white rounded-[2rem] overflow-hidden shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)] border border-slate-50 relative group"
+                            >
+                                <div className="aspect-[16/10] overflow-hidden">
+                                    <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                </div>
+                                <div className="p-8">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h4 className="text-2xl font-serif italic text-slate-900">{item.title}</h4>
+                                        <p className="text-xl font-serif text-[#8B0000]">₹{item.price}</p>
+                                    </div>
+                                    <p className="text-slate-400 text-sm font-medium line-clamp-1 italic">
+                                        “{item.description || 'A timeless culinary masterpiece prepared with love.'}”
+                                    </p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 4. Secondary Actions */}
+                <motion.button 
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => router.push(`/${hotelSlug}/guest/status`)}
+                    className="w-full py-6 rounded-[1.25rem] border border-slate-200 text-slate-500 font-serif italic text-lg hover:bg-white transition-colors"
+                >
+                    View My Orders
+                </motion.button>
+            </div>
             <BottomNav />
         </div>
     );

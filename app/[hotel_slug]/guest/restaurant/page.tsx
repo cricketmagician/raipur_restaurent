@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { MenuCard } from "@/components/MenuCard";
-import { CheckCircle, ArrowLeft, Trash2, Plus, RefreshCw, Utensils } from "lucide-react";
+import { CheckCircle, ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles } from "lucide-react";
 import { addSupabaseRequest, useHotelBranding, useCart } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
@@ -165,114 +165,101 @@ export default function RestaurantPage() {
     }
 
     return (
-        <div className="pb-40 px-6 pt-10 min-h-screen bg-[#FDFDFD] text-slate-900">
-            {/* Compact Sticky Header */}
-            {/* Local header removed in favor of GlobalHeader */}
-
-
-            {/* Promo */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-slate-900 rounded-[2.5rem] p-8 mb-10 relative overflow-hidden shadow-2xl shadow-slate-200"
-            >
-                <div className="absolute top-0 right-0 w-40 h-40 bg-[#F55D2C] opacity-20 blur-[60px] rounded-full -mr-10 -mt-10"></div>
-                <div className="relative z-10">
-                    <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-tight mb-2">
-                        I'm<br />Ordering<br />It!
-                    </h2>
-                    <p className="text-[#F55D2C] text-xs font-black uppercase tracking-widest mb-6">Chef's Special Mix</p>
-                    <div className="h-1 w-12 bg-[#F55D2C] rounded-full"></div>
-                </div>
-            </motion.div>
-
-            {/* Categories */}
-            <div className="mb-10 px-0 overflow-x-auto no-scrollbar flex items-center space-x-3">
+        <div className="pb-40 px-5 pt-safe min-h-screen bg-[#FAF7F2] text-slate-900">
+            {/* 1. Refined Categories (Luxury Spec) */}
+            <div className="mb-12 pt-8 overflow-x-auto no-scrollbar flex items-center space-x-6">
                 {categories.map((category) => {
                     const isActive = activeCategory === category.id;
                     return (
-                        <button
+                        <motion.button
                             key={category.id}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => setActiveCategory(category.id)}
-                            className={`px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all flex items-center group ${isActive
-                                ? 'bg-black text-[#D4AF37] shadow-xl shadow-black/10'
-                                : 'bg-white text-slate-400 border border-slate-100 hover:border-slate-200 shadow-sm'
-                                }`}
+                            className="flex flex-col items-center space-y-3 min-w-[70px]"
                         >
-                            <span className="mr-2 text-sm">{category.icon}</span>
-                            {category.name}
-                        </button>
+                            <div className={`w-16 h-16 rounded-[1.25rem] flex items-center justify-center transition-all duration-500 shadow-sm ${
+                                isActive 
+                                ? 'bg-[#8B0000] text-[#FAF7F2] shadow-xl shadow-[#8B0000]/20' 
+                                : 'bg-white text-slate-400 border border-slate-100'
+                            }`}>
+                                <span className="text-2xl">{category.icon}</span>
+                            </div>
+                            <span className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${isActive ? 'text-[#8B0000]' : 'text-slate-400'}`}>
+                                {category.name}
+                            </span>
+                        </motion.button>
                     );
                 })}
             </div>
 
-            {/* Psychological Menu Sections */}
-            {activeCategory === "all" && (
-                <div className="space-y-16 mb-16">
-                    <section>
-                        <div className="flex items-center space-x-4 mb-8">
-                            <h2 className="font-serif text-3xl text-black">Most Popular</h2>
-                            <div className="h-[1px] flex-1 bg-black/5" />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {popularItems.map((item) => (
-                                <MenuCard
-                                    key={item.id}
-                                    {...item}
-                                    onAdd={() => addToCart(item)}
-                                />
-                            ))}
-                        </div>
-                    </section>
-
-                    <section>
-                        <div className="flex items-center space-x-4 mb-8">
-                            <h2 className="font-serif text-3xl text-black">Chef Recommended</h2>
-                            <div className="h-[1px] flex-1 bg-black/5" />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {recommendedItems.map((item) => (
-                                <MenuCard
-                                    key={item.id}
-                                    {...item}
-                                    onAdd={() => addToCart(item)}
-                                />
-                            ))}
-                        </div>
-                    </section>
+            {/* 2. Anchoring Effect (BIG CARD for Featured Item) */}
+            {activeCategory === 'all' && (
+                <div className="mb-14">
+                    <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] mb-6 px-1">Chef's Selection</h2>
+                    {menuItems.slice(0, 1).map((item) => (
+                        <motion.div 
+                            key={item.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => addToCart(item)}
+                            className="bg-white rounded-[2.5rem] overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-50 relative group"
+                        >
+                            <div className="aspect-[16/10] overflow-hidden relative">
+                                <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+                                <div className="absolute top-6 left-6 bg-slate-900/90 backdrop-blur-md text-[#FAF7F2] px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center">
+                                    <Sparkles className="w-3 h-3 mr-2 text-amber-400" />
+                                    Chef's Signature
+                                </div>
+                            </div>
+                            <div className="p-8">
+                                <div className="flex justify-between items-start mb-3">
+                                    <h3 className="text-3xl font-serif italic text-slate-900">{item.title}</h3>
+                                    <p className="text-2xl font-serif text-[#8B0000]">₹{item.price}</p>
+                                </div>
+                                <p className="text-slate-400 text-sm font-medium italic mb-6 leading-relaxed">
+                                    “{item.description || 'A timeless culinary masterpiece prepared with love.'}”
+                                </p>
+                                <button className="w-full py-5 rounded-[1.25rem] bg-slate-900 text-[#FAF7F2] font-serif italic text-lg shadow-xl shadow-slate-200">
+                                    Add to your table
+                                </button>
+                            </div>
+                        </motion.div>
+                    ))}
                 </div>
             )}
 
-            {/* Categorized Menu Items (only if not 'all' or for the remaining items) */}
-            <div className="space-y-12">
-                <section>
-                    <div className="flex items-center space-x-4 mb-8">
-                        <h2 className="font-serif text-3xl text-black capitalize">
-                            {activeCategory === 'all' ? 'The Menu' : categories.find(c => c.id === activeCategory)?.name}
-                        </h2>
-                        <div className="h-[1px] flex-1 bg-black/5" />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
-                        {filteredItems.length === 0 ? (
-                            <div className="col-span-full py-20 text-center">
-                                <Utensils className="w-10 h-10 text-slate-200 mx-auto mb-4" />
-                                <p className="text-slate-400 font-bold font-serif">Selection coming soon...</p>
+            {/* 3. The Selection (Main List) */}
+            <div className="space-y-10">
+                <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] mb-8 px-1">All Items</h2>
+                <div className="space-y-8 pb-20">
+                    {filteredItems.slice(activeCategory === 'all' ? 1 : 0).map((item) => (
+                        <motion.div 
+                            key={item.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => addToCart(item)}
+                            className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-50 flex items-center space-x-6 relative group"
+                        >
+                            <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm border border-slate-50">
+                                <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
                             </div>
-                        ) : (
-                            filteredItems.map((item) => (
-                                <MenuCard
-                                    key={item.id}
-                                    {...item}
-                                    onAdd={() => addToCart(item)}
-                                />
-                            ))
-                        )}
-                    </div>
-                </section>
+                            <div className="flex-1 min-w-0 pr-4">
+                                <h4 className="text-xl font-serif italic text-slate-900 truncate mb-1">{item.title}</h4>
+                                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-4">₹{item.price}</p>
+                                <button className="text-[10px] font-bold uppercase tracking-widest text-[#8B0000] border-b border-[#8B0000]/20 pb-0.5">
+                                    Add to table
+                                </button>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
             </div>
 
-            {/* Floating Cart Entry */}
+            {/* Floating Selection Preview */}
             <AnimatePresence>
                 {cartCount > 0 && !showCart && (
                     <motion.div
@@ -283,21 +270,21 @@ export default function RestaurantPage() {
                     >
                         <button
                             onClick={() => setShowCart(true)}
-                            className="w-full bg-[#F55D2C] text-white p-6 rounded-[2.5rem] flex items-center justify-between shadow-2xl shadow-[#F55D2C]/40 active:scale-95 transition-transform"
+                            className="w-full bg-slate-900 text-[#FAF7F2] p-6 rounded-[1.5rem] flex items-center justify-between shadow-2xl shadow-black/20"
                         >
-                            <div className="flex items-center">
-                                <div className="bg-white/20 px-3 py-1.5 rounded-full mr-4 text-[11px] font-black border border-white/20">
-                                    {cartCount} ITEMS
+                            <div className="flex items-center space-x-4">
+                                <div className="bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-bold">
+                                    {cartCount} JOURNEYS
                                 </div>
-                                <span className="font-black text-sm uppercase tracking-[0.2em]">View Order</span>
+                                <span className="text-sm font-serif italic tracking-tight">View Your Selection</span>
                             </div>
-                            <span className="font-black text-2xl tracking-tighter italic">₹{cartTotal.toFixed(2)}</span>
+                            <span className="text-2xl font-serif italic">₹{cartTotal.toFixed(0)}</span>
                         </button>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Shared Cart Overlay */}
+            {/* Overlays */}
             <CartOverlay 
                 isOpen={showCart}
                 onClose={() => setShowCart(false)}
@@ -314,7 +301,6 @@ export default function RestaurantPage() {
                 onAdd={() => addToCart(upsellItem, true)}
                 onClose={() => setShowUpsell(false)}
             />
-
             <BottomNav />
         </div>
     );

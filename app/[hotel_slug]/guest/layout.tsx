@@ -32,21 +32,21 @@ export default function GuestLayout({
     }, []);
 
     return (
-        <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 antialiased pb-24 overflow-x-hidden">
+        <div className="flex flex-col min-h-[100dvh] bg-[#FAF7F2] text-slate-900 antialiased pb-24 overflow-x-hidden pt-safe">
             <GlobalHeader />
 
-            {/* Ambient Background Gradient */}
-            <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-from),_transparent_50%)] from-blue-50/50 to-transparent"></div>
+            {/* Ambient Background Gradient - Refined for Warm Theme */}
+            <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_#B8860B08,_transparent_60%)]"></div>
 
             <GuestAuthWrapper>
                 <main className="flex-1 w-full max-w-md mx-auto relative px-5 pt-32">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={pathname}
-                            initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -10, scale: 0.98 }}
-                            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                            initial={{ opacity: 0, x: 10, scale: 0.99 }} // Horizontal slide for native feel
+                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                            exit={{ opacity: 0, x: -10, scale: 0.99 }}
+                            transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
                         >
                             {children}
                         </motion.div>

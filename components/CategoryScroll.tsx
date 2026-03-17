@@ -23,26 +23,26 @@ export function CategoryScroll({ categories, activeCategory, onCategoryChange }:
                 return (
                     <motion.button
                         key={category.id}
-                        whileTap={{ scale: 0.9 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => onCategoryChange(category.id)}
-                        className={`snap-start flex flex-col items-center min-w-[90px] px-2`}
+                        className={`snap-start flex flex-col items-center min-w-[100px] px-2 py-2`}
                     >
                         <motion.div 
                             animate={{ 
-                                scale: isActive ? 1.1 : 1,
-                                rotate: isActive ? 6 : 0,
-                                y: isActive ? -4 : 0
+                                scale: isActive ? 1.15 : 1,
+                                rotate: isActive ? 0 : 0, // Removed rotate for cleaner native feel
+                                y: isActive ? -2 : 0
                             }}
-                            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                            className={`w-18 h-18 rounded-[2rem] flex items-center justify-center mb-3 transition-all duration-300 transform ${
+                            transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                            className={`w-20 h-20 rounded-[2.5rem] flex items-center justify-center mb-3 transition-all duration-300 transform ${
                                 isActive 
-                                ? 'bg-[#F55D2C] text-white shadow-[0_12px_24px_rgba(245,93,44,0.3)]' 
-                                : 'bg-slate-100/80 text-slate-400 border border-transparent'
+                                ? 'bg-slate-900 text-[#FAF7F2] shadow-[0_15px_30px_rgba(0,0,0,0.12)]' // Switched to slate-900 for premium consistency
+                                : 'bg-white text-slate-400 border border-slate-100 shadow-sm'
                             }`}
                         >
                             <span className="text-3xl">{category.icon}</span>
                         </motion.div>
-                        <span className={`text-[11px] font-black uppercase tracking-widest text-center transition-colors duration-300 ${isActive ? 'text-[#F55D2C]' : 'text-slate-400'}`}>
+                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] text-center transition-colors duration-300 ${isActive ? 'text-slate-900' : 'text-slate-400'}`}>
                             {category.name}
                         </span>
                     </motion.button>

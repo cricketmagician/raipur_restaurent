@@ -108,20 +108,24 @@ export default function StatusPage() {
     const pastRequests = requests.filter((r) => r.status === "Completed");
 
     return (
-        <div className="pb-40 section-padding pt-10 min-h-screen bg-[#FDFDFD] text-slate-900">
-            <div className="flex items-center justify-between mb-10">
-                <button onClick={() => router.back()} className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-slate-100 active:scale-90 transition-transform">
+        <div className="pb-40 px-5 pt-safe min-h-app bg-[#FAF7F2] text-slate-900 overflow-x-hidden">
+            <div className="flex items-center justify-between mb-10 pt-10">
+                <motion.button 
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => router.back()} 
+                    className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-slate-100 active:scale-90 transition-transform"
+                >
                     <ArrowLeft className="w-6 h-6 text-slate-900" />
-                </button>
-                <h1 className="text-2xl font-serif text-slate-900">Order Status</h1>
+                </motion.button>
+                <h1 className="text-3xl font-serif italic text-slate-900 tracking-tighter">Selection Status</h1>
                 <div className="w-12"></div>
             </div>
 
             <div className="mb-14">
                 <div className="flex items-center justify-between mb-8 px-1">
-                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Live Pulse</h2>
+                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Journey Pulse</h2>
                     {activeRequests.length > 0 && (
-                        <span className="flex items-center text-[9px] font-black text-[#E31837] bg-red-50 px-3 py-1.5 rounded-xl uppercase tracking-wider border border-red-100 shadow-sm animate-pulse">
+                        <span className="flex items-center text-[9px] font-black text-[#722F37] bg-red-50 px-3 py-1.5 rounded-xl uppercase tracking-wider border border-red-100 shadow-sm animate-pulse">
                             <RefreshCcw className="w-3 h-3 mr-1.5 animate-spin-slow" /> Tracking Live
                         </span>
                     )}
@@ -135,12 +139,12 @@ export default function StatusPage() {
                                 <motion.div
                                     key={req.id}
                                     layout
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    className={`${theme.bg} ${theme.border} border-2 p-8 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] relative overflow-hidden group backdrop-blur-md`}
+                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    className={`${theme.bg} ${theme.border} border p-8 rounded-[2.5rem] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.04)] relative overflow-hidden group backdrop-blur-md`}
                                 >
                                     {/* Progress Strip */}
-                                    <div className="absolute top-0 left-0 w-full h-1.5 bg-white/50 overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-white/50 overflow-hidden">
                                         <motion.div
                                             animate={{ x: ['-100%', '100%'] }}
                                             transition={{
@@ -156,9 +160,9 @@ export default function StatusPage() {
                                         <div className="flex-1 pr-6">
                                             <div className="flex items-center mb-1">
                                                 <div className={`w-2 h-2 rounded-full ${theme.accent} mr-2`} />
-                                                <h3 className={`font-serif text-2xl ${theme.text}`}>{req.type}</h3>
+                                                <h3 className={`font-serif italic text-2xl ${theme.text}`}>{req.type}</h3>
                                             </div>
-                                            <div className="flex items-center text-[11px] text-slate-400 font-bold uppercase tracking-tight">
+                                            <div className="flex items-center text-[10px] text-slate-400 font-bold uppercase tracking-tight">
                                                 <Clock className="w-3.5 h-3.5 mr-1.5 opacity-50" />
                                                 Received {req.time} <span className="mx-2 opacity-20">•</span> Room {req.room}
                                             </div>
@@ -167,7 +171,7 @@ export default function StatusPage() {
                                     </div>
 
                                     {req.notes && (
-                                        <p className={`text-[13px] ${theme.text} font-medium opacity-60 leading-relaxed italic`}>
+                                        <p className={`text-[13px] ${theme.text} font-medium opacity-60 leading-relaxed italic mt-4`}>
                                             &ldquo;{req.notes}&rdquo;
                                         </p>
                                     )}
@@ -182,33 +186,33 @@ export default function StatusPage() {
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="bg-white border-2 border-dashed border-slate-100 rounded-[3.5rem] py-32 text-center shadow-inner"
+                        className="bg-white/40 backdrop-blur-sm border-2 border-dashed border-slate-100 rounded-[3.5rem] py-32 text-center shadow-inner"
                     >
                         <Sparkles className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-                        <p className="text-slate-900 font-serif text-xl">Everything Is Perfect</p>
-                        <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2">No active requests found</p>
+                        <p className="text-slate-900 font-serif italic text-2xl">Everything Is Perfect</p>
+                        <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] mt-2">No active selection found</p>
                     </motion.div>
                 )}
             </div>
 
-            <div>
+            <div className="pb-safe">
                 <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-8 px-1">Completed Journeys</h2>
                 <div className="space-y-4">
                     {pastRequests.map((req) => {
                         const theme = getRequestTheme(req.type);
                         return (
-                            <div key={req.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 flex items-center justify-between opacity-60 hover:opacity-100 transition-all duration-500 shadow-sm group">
+                            <div key={req.id} className="bg-white/60 backdrop-blur-sm p-6 rounded-[2.5rem] border border-slate-100 flex items-center justify-between opacity-70 hover:opacity-100 transition-all duration-500 shadow-sm group">
                                 <div className="flex items-center">
                                     <div className={`w-14 h-14 rounded-2xl ${theme.light} ${theme.text} flex items-center justify-center mr-5 shadow-sm border ${theme.border} transition-transform group-hover:scale-110`}>
                                         <CheckCircle2 className="w-7 h-7" />
                                     </div>
                                     <div>
-                                        <h3 className="font-serif text-lg text-slate-900">{req.type}</h3>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-1">{req.time}</p>
+                                        <h3 className="font-serif italic text-lg text-slate-900">{req.type}</h3>
+                                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">{req.time}</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end">
-                                    <span className={`text-[10px] font-black ${theme.text} ${theme.light} px-3 py-1 rounded-full uppercase tracking-tighter italic border ${theme.border}`}>Delivered</span>
+                                    <span className={`text-[9px] font-bold ${theme.text} ${theme.light} px-3 py-1.5 rounded-full uppercase tracking-tighter italic border ${theme.border}`}>Delivered</span>
                                 </div>
                             </div>
                         );

@@ -26,37 +26,37 @@ export function UpsellToast({ item, isVisible, onAdd, onClose }: UpsellToastProp
                     exit={{ y: 100, opacity: 0, scale: 0.9 }}
                     className="fixed bottom-32 left-6 right-6 z-[60]"
                 >
-                    <div className="bg-slate-900 rounded-[2rem] p-4 pr-6 flex items-center shadow-2xl shadow-black/40 border border-white/10">
-                        <div className="w-16 h-16 rounded-2xl overflow-hidden mr-4 shrink-0 border border-white/5">
+                    <div className="bg-white rounded-[2rem] p-5 pr-8 flex items-center shadow-[0_30px_70px_-15px_rgba(0,0,0,0.15)] border border-slate-50 relative overflow-hidden group">
+                        <div className="w-20 h-20 rounded-[1.25rem] overflow-hidden mr-5 shrink-0 shadow-sm border border-slate-50">
                             {item.image ? (
-                                <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                                <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                             ) : (
-                                <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-                                    <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+                                <div className="w-full h-full bg-[#FAF7F2] flex items-center justify-center">
+                                    <Sparkles className="w-8 h-8 text-[#8B0000]/20" />
                                 </div>
                             )}
                         </div>
                         
                         <div className="flex-1 min-w-0 mr-4">
-                            <p className="text-[#B8860B] text-[10px] font-black uppercase tracking-widest mb-1 flex items-center">
-                                <Sparkles className="w-3 h-3 mr-1" /> Pairs Beautifully
+                            <p className="text-[#8B0000] text-[10px] font-bold uppercase tracking-[0.25em] mb-1.5 flex items-center">
+                                <Sparkles className="w-3 h-3 mr-2" /> Pairs Beautifully
                             </p>
-                            <h4 className="text-white font-serif text-lg leading-tight truncate">{item.title}</h4>
-                            <p className="text-slate-400 text-xs font-medium">Add to experience · ₹{item.price.toFixed(0)}</p>
+                            <h4 className="text-slate-900 font-serif text-xl leading-tight truncate italic">{item.title}</h4>
+                            <p className="text-slate-400 text-xs font-medium italic mt-1">₹{item.price.toFixed(0)}</p>
                         </div>
 
                         <div className="flex items-center space-x-2">
                             <button
                                 onClick={onAdd}
-                                className="bg-[#B8860B] text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-transform"
+                                className="bg-slate-900 text-[#FAF7F2] px-6 py-3.5 rounded-xl font-serif italic text-sm active:scale-95 transition-all shadow-lg shadow-slate-200"
                             >
                                 Add
                             </button>
                             <button
                                 onClick={onClose}
-                                className="text-slate-400 p-2 hover:text-white transition-colors"
+                                className="text-slate-300 p-2 hover:text-slate-900 transition-colors"
                             >
-                                <Plus className="w-5 h-5 rotate-45" />
+                                <Plus className="w-6 h-6 rotate-45" />
                             </button>
                         </div>
                     </div>

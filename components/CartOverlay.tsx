@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Plus, Trash2, RefreshCw } from "lucide-react";
+import { Trash2, Plus, Minus, X, RefreshCw, ShoppingBag, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CartProgressBar } from "./CartProgressBar";
 import { UpsellSection } from "./UpsellSection";
@@ -64,21 +64,28 @@ export function CartOverlay({
                         initial={{ y: "100%" }}
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
-                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="fixed bottom-0 left-0 right-0 bg-[#F7F7F7] rounded-t-[3.5rem] p-10 pb-12 z-[130] shadow-2xl overflow-y-auto max-h-[90vh]"
+                        transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
+                        className="fixed bottom-0 left-0 right-0 bg-[#FAF7F2] rounded-t-[3rem] z-[130] shadow-[0_-20px_80px_rgba(0,0,0,0.15)] flex flex-col max-h-[92vh]"
                     >
-                        <div className="flex items-center justify-between mb-10">
-                            <div>
-                                <h2 className="text-4xl font-serif text-slate-900 italic tracking-tighter leading-none">Your</h2>
-                                <h2 className="text-4xl font-serif text-[#722F37] italic tracking-tighter leading-none">Selection</h2>
-                            </div>
-                            <button
-                                onClick={onClose}
-                                className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 shadow-sm border border-slate-100"
-                            >
-                                <Plus className="w-6 h-6 rotate-45" />
-                            </button>
+                        {/* Native Handle Bar */}
+                        <div className="flex justify-center pt-3 pb-1">
+                            <div className="w-12 h-1.5 bg-slate-200 rounded-full" />
                         </div>
+
+                        <div className="p-8 pt-4 overflow-y-auto no-scrollbar pb-safe">
+                            <div className="flex items-center justify-between mb-8">
+                                <div>
+                                    <h2 className="text-3xl font-serif text-slate-900 italic tracking-tighter leading-none">Your</h2>
+                                    <h2 className="text-3xl font-serif text-[#722F37] italic tracking-tighter leading-none">Selection</h2>
+                                </div>
+                                <motion.button
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={onClose}
+                                    className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 shadow-sm border border-slate-100"
+                                >
+                                    <Plus className="w-6 h-6 rotate-45" />
+                                </motion.button>
+                            </div>
 
                         <div className="space-y-4 mb-10 overflow-hidden">
                             {cartItems.map((item) => (
@@ -107,25 +114,37 @@ export function CartOverlay({
                                 <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Selection Total</span>
                                 <span className="font-serif italic text-slate-900">₹{cartTotal.toFixed(0)}</span>
                             </div>
-                            <div className="flex justify-between items-center mb-8">
-                                <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Delivery Bag</span>
-                                <span className="font-bold text-[#B8860B] uppercase text-[10px] tracking-[0.2em] italic">Complementary</span>
+                            <div className="mt-12 p-8 rounded-[2rem] bg-[#FAF7F2] border border-[#8B0000]/5 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform">
+                                    <Sparkles className="w-16 h-16 text-[#8B0000]" />
+                                </div>
+                                <div className="relative z-10">
+                                    <p className="text-[#8B0000] text-[10px] font-bold uppercase tracking-[0.2em] mb-2 flex items-center">
+                                        <Sparkles className="w-3 h-3 mr-2" /> Complete your experience
+                                    </p>
+                                    <h4 className="text-xl font-serif italic text-slate-900 mb-1">Chocolate Brownie</h4>
+                                    <p className="text-slate-400 text-xs font-medium italic mb-6">“The perfect sweet finish to your meal.”</p>
+                                    <button className="flex items-center space-x-2 text-[10px] font-bold uppercase tracking-widest text-[#8B0000] bg-white px-5 py-3 rounded-xl shadow-sm border border-slate-100 active:scale-95 transition-all">
+                                        <Plus className="w-3.5 h-3.5" />
+                                        <span>Add for ₹129</span>
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-900 font-serif text-2xl tracking-tighter italic leading-none">Final</span>
-                                <span className="text-4xl text-slate-900 font-serif tracking-tighter italic leading-none ml-2">Experience</span>
-                                <span className="flex-1" />
-                                <span className="text-4xl text-slate-900 font-serif tracking-tighter italic leading-none">₹{cartTotal.toFixed(0)}</span>
-                            </div>
-                        </div>
 
-                        <button
-                            onClick={onOrder}
-                            disabled={isOrdering}
-                            className="w-full bg-[#722F37] text-white py-6 rounded-[2rem] font-serif text-xl uppercase italic shadow-2xl shadow-[#722F37]/20 disabled:opacity-50 active:scale-95 transition-all flex items-center justify-center tracking-tighter"
-                        >
-                            {isOrdering ? <RefreshCw className="w-8 h-8 animate-spin" /> : "Confirm Experience"}
-                        </button>
+                            <div className="flex justify-between items-center py-10">
+                                <span className="text-slate-400 font-serif italic text-xl">Total</span>
+                                <span className="text-3xl font-serif italic text-slate-900">₹{cartTotal.toFixed(0)}</span>
+                            </div>
+
+                            <button
+                                onClick={onOrder}
+                                disabled={isOrdering}
+                                className="w-full bg-[#8B0000] text-[#FAF7F2] py-8 rounded-[1.25rem] font-serif text-2xl italic shadow-2xl shadow-[#8B0000]/20 disabled:opacity-50 active:scale-95 transition-all flex items-center justify-center tracking-tighter"
+                            >
+                                {isOrdering ? <RefreshCw className="w-8 h-8 animate-spin" /> : "Confirm Experience"}
+                            </button>
+                        </div>
+                    </div>
                     </motion.div>
                 </>
             )}

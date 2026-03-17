@@ -23,6 +23,7 @@ export default function GuestLayout({
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
     const theme = useTheme(branding);
+    const isDashboard = pathname?.endsWith("/dashboard");
 
     useEffect(() => {
         const unlock = () => {
@@ -52,7 +53,7 @@ export default function GuestLayout({
             ></div>
 
             <GuestAuthWrapper>
-                <main className="flex-1 w-full max-w-md mx-auto relative px-5 pt-32">
+                <main className={`flex-1 w-full max-w-md mx-auto relative px-5 ${isDashboard ? 'pt-0' : 'pt-32'}`}>
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={pathname}

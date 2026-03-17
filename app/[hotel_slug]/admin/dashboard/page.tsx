@@ -521,14 +521,17 @@ export default function AdminHub() {
                 {/* TABLE STATUS MAP: Floor Overview */}
                 <div className="xl:col-span-4 space-y-6">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Environment View</h2>
-                        <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100/50">Real-time Map</span>
+                        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Operational Live Map</h2>
+                        <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100/50 shadow-sm flex items-center">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse" />
+                            Active Monitoring
+                        </span>
                     </div>
 
-                    <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-2xl shadow-slate-200/20 relative overflow-hidden">
-                         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-2xl shadow-slate-200/20 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full -mr-24 -mt-24 blur-3xl" />
                          
-                        <div className="grid grid-cols-4 md:grid-cols-5 gap-6 relative z-10">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 relative z-10">
                             {rooms.length > 0 ? (
                                 rooms.map(room => {
                                     const activeReq = requests.filter(r => r.room === room.room_number && r.status !== 'Completed');
@@ -538,103 +541,70 @@ export default function AdminHub() {
                                     return (
                                         <motion.button 
                                             key={room.id}
-                                            whileHover={{ scale: 1.05, translateY: -5 }}
-                                            whileTap={{ scale: 0.95 }}
+                                            whileHover={{ scale: 1.02, translateY: -2 }}
+                                            whileTap={{ scale: 0.98 }}
                                             onClick={() => {
                                                 if (isActive) {
                                                     setSelectedRequest(activeReq[0]);
                                                 }
                                             }}
-                                            className={`aspect-square rounded-[2rem] flex flex-col items-center justify-center transition-all border-2 relative group overflow-hidden shadow-sm ${isActive 
-                                                ? (isRevenue ? 'bg-indigo-600 border-indigo-500 text-white shadow-indigo-200' : 'bg-slate-900 border-slate-800 text-white shadow-slate-200') 
-                                                : (room.is_occupied ? 'bg-white border-slate-200 text-slate-900' : 'bg-slate-50 border-slate-100 hover:border-slate-200 border-dashed')}`}
+                                            className={`aspect-[4/3] rounded-3xl flex flex-col items-center justify-center transition-all border relative group shadow-sm ${isActive 
+                                                ? (isRevenue ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-100' : 'bg-slate-900 border-slate-800 text-white shadow-lg shadow-slate-200') 
+                                                : (room.is_occupied ? 'bg-white border-slate-200 text-slate-900' : 'bg-slate-50/50 border-slate-100 hover:border-slate-200 border-dashed')}`}
                                         >
-                                            <span className={`text-base font-black mb-1 ${!isActive && !room.is_occupied ? 'opacity-20' : 'opacity-100'}`}>{room.room_number}</span>
+                                            <div className="flex flex-col items-center">
+                                                <span className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isActive ? 'text-white/60' : 'text-slate-400'}`}>Table</span>
+                                                <span className={`text-2xl font-black leading-none ${!isActive && !room.is_occupied ? 'opacity-20' : 'opacity-100'}`}>{room.room_number}</span>
+                                            </div>
                                             
                                             {isActive && (
-                                                <div className="flex items-center space-x-1.5">
+                                                <div className="mt-2 flex items-center space-x-1.5 bg-white/10 px-2 py-0.5 rounded-full">
                                                     <motion.div 
                                                         animate={{ scale: [1, 1.4, 1] }}
                                                         transition={{ duration: 1.5, repeat: Infinity }}
-                                                        className={`w-2 h-2 rounded-full ${isRevenue ? 'bg-white' : 'bg-red-500'}`} 
+                                                        className={`w-1.5 h-1.5 rounded-full ${isRevenue ? 'bg-emerald-400' : 'bg-amber-400'}`} 
                                                     />
-                                                    <span className="text-[8px] font-black uppercase tracking-widest">{activeReq.length} SIG</span>
+                                                    <span className="text-[7px] font-black uppercase tracking-widest">{activeReq.length} SIG</span>
                                                 </div>
                                             )}
 
                                             {!isActive && room.is_occupied && (
-                                                <div className="flex items-center space-x-1">
+                                                <div className="mt-2 flex items-center space-x-1 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
                                                     <div className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
-                                                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">LIVE</span>
-                                                </div>
-                                            )}
-
-                                            {isActive && (
-                                                <div className="absolute top-2 right-2">
-                                                    <motion.div 
-                                                        animate={{ opacity: [0, 1, 0] }}
-                                                        transition={{ duration: 2, repeat: Infinity }}
-                                                        className={`w-1.5 h-1.5 rounded-full ${isRevenue ? 'bg-emerald-400' : 'bg-amber-400'}`} 
-                                                    />
+                                                    <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">Occupied</span>
                                                 </div>
                                             )}
                                         </motion.button>
                                     );
                                 })
                             ) : (
-                                [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(n => (
-                                    <div key={n} className="aspect-square bg-slate-50/50 rounded-[2rem] border border-slate-100 border-dashed animate-pulse" />
+                                [1,2,3,4,5,6,7,8].map(n => (
+                                    <div key={n} className="aspect-[4/3] bg-slate-50/50 rounded-3xl border border-slate-100 border-dashed animate-pulse" />
                                 ))
                             )}
                         </div>
                         
-                        <div className="mt-12 pt-8 border-t border-slate-50 space-y-4">
-                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                                <span>Signal Matrix Legend</span>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="flex items-center space-x-3 bg-white px-4 py-2.5 rounded-2xl border border-[#3E2723]/5 shadow-sm">
-                                    <div className="w-3 h-3 rounded-full bg-[#F59E0B] shadow-lg shadow-[#F59E0B]/20" />
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">High Craving</span>
+                        <div className="mt-8 pt-6 border-t border-slate-50">
+                            <h4 className="text-[9px] font-black uppercase tracking-widest text-slate-300 mb-4 block">Signal Matrix Legend</h4>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="flex items-center space-x-3 p-3 rounded-2xl bg-slate-50/50 border border-slate-100/50">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 shadow-md shadow-indigo-100" />
+                                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">High Craving</span>
                                 </div>
-                                <div className="flex items-center space-x-3 bg-white px-4 py-2.5 rounded-2xl border border-[#3E2723]/5 shadow-sm">
-                                    <div className="w-3 h-3 rounded-full bg-[#3E2723] shadow-lg shadow-[#3E2723]/10" />
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Impulse Alert</span>
+                                <div className="flex items-center space-x-3 p-3 rounded-2xl bg-slate-50/50 border border-slate-100/50">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-slate-900 shadow-md shadow-slate-200" />
+                                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">Impulse Alert</span>
                                 </div>
-                                <div className="flex items-center space-x-3 bg-white px-4 py-2.5 rounded-2xl border border-[#3E2723]/5 shadow-sm">
-                                    <div className="w-3 h-3 rounded-full bg-white border-2 border-slate-200" />
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Seated</span>
+                                <div className="flex items-center space-x-3 p-3 rounded-2xl bg-slate-50/50 border border-slate-100/50">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-white border-2 border-slate-200" />
+                                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">In Service</span>
                                 </div>
-                                <div className="flex items-center space-x-3 bg-white px-4 py-2.5 rounded-2xl border border-[#3E2723]/5 shadow-sm">
-                                    <div className="w-3 h-3 rounded-full bg-slate-100 border border-slate-200 border-dashed" />
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Available</span>
+                                <div className="flex items-center space-x-3 p-3 rounded-2xl bg-slate-50/50 border border-slate-100/50">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-slate-100 border border-slate-200 border-dashed" />
+                                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">Available</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Revenue Trend Mini View */}
-                    <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-200 relative overflow-hidden group">
-                        <div className="relative z-10">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1">Estimated Performance</p>
-                            <h3 className="text-3xl font-black tracking-tight mb-6">Excellent</h3>
-                            <div className="flex items-end space-x-1 h-12">
-                                {[3,5,4,7,6,8,10,9,12].map((v, i) => (
-                                    <motion.div
-                                        key={i}
-                                        initial={{ height: 0 }}
-                                        animate={{ height: `${v * 8}%` }}
-                                        transition={{ delay: 1 + (i * 0.05) }}
-                                        className="flex-1 bg-white/20 rounded-t-sm"
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                        <motion.div 
-                            animate={{ scale: [1, 1.2, 1], rotate: [0, 5, 0] }}
-                            transition={{ duration: 10, repeat: Infinity }}
-                            className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-2xl" 
-                        />
                     </div>
                 </div>
             </div>

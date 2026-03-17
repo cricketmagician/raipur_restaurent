@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState, useMemo } from "react";
 import { ServiceCard } from "@/components/ServiceCard";
-import { ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles, Search, ArrowUpRight, Receipt, ChevronRight, User, ArrowRight } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles, Search, ArrowUpRight, Receipt, ChevronRight, User, ArrowRight, Star, MapPin, Wifi, Car, Hammer, Shirt, Briefcase, Bath, MoreHorizontal, Home } from "lucide-react";
 import { ImpulseBottomSheet } from "@/components/ImpulseBottomSheet";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -41,7 +41,7 @@ export default function GuestDashboard() {
     const params = useParams();
     const hotelSlug = params?.hotel_slug as string;
 
-    const { roomNumber: tableNumber, checkedInAt } = useGuestRoom();
+    const { roomNumber: tableNumber, checkedInAt, numGuests } = useGuestRoom();
     const { branding, loading } = useHotelBranding(hotelSlug);
     const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id);
     const requests = useSupabaseRequests(branding?.id, tableNumber, checkedInAt);
@@ -342,10 +342,111 @@ export default function GuestDashboard() {
                 color: theme.text
             }}
         >
-            {/* 1. Starbucks Style Greeting & Rewards */}
-            <header className="mb-10">
-                {/* 1.1 Premium Card Stories (Top Priority - Replace Circular Circles) */}
-                <div className="mb-10 -mx-6 px-6 pt-2">
+            {/* 1. Premium Hero Section */}
+            <div className="absolute top-0 left-0 right-0 h-[45vh] overflow-hidden -z-10 bg-black">
+                <img 
+                    src="/images/branding/hero.png" 
+                    alt="Hotel Interior" 
+                    className="w-full h-full object-cover opacity-60 scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
+                
+                {/* Guest Portal Badge */}
+                <div className="absolute top-12 left-1/2 -translate-x-1/2 flex items-center px-10 py-3 rounded-full backdrop-blur-3xl border border-white/20 bg-white/5">
+                    <span className="text-[10px] font-black text-white uppercase tracking-[0.4em] drop-shadow-lg">GUEST PORTAL</span>
+                </div>
+            </div>
+
+            {/* 2. Floating Hotel Information Card (Glassmorphism) */}
+            <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="mt-[25vh] mb-10 bg-white/80 backdrop-blur-3xl p-10 shadow-2xl relative overflow-hidden group"
+                style={{ 
+                    borderRadius: "3rem",
+                    border: "1px solid rgba(255,255,255,0.4)"
+                }}
+            >
+                <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/5 rounded-full -mr-20 -mt-20 blur-3xl opacity-50" />
+                
+                <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">
+                            {branding?.name || "HOTEL TEEKLOVE"}
+                        </h1>
+                        <div className="flex items-center px-4 py-1.5 rounded-full bg-black text-white text-[8px] font-black uppercase tracking-widest shadow-lg">
+                            <Star className="w-3 h-3 text-amber-400 mr-2 fill-amber-400" />
+                            Verified Guest
+                        </div>
+                    </div>
+
+                    <div className="flex items-center space-x-1 mb-4 text-amber-500">
+                        {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-amber-500" />)}
+                    </div>
+
+                    <div className="flex items-center text-slate-400 text-sm font-bold opacity-80 mb-10">
+                        <MapPin className="w-4 h-4 mr-2 text-slate-400" />
+                        Raipur, India
+                    </div>
+
+                    <div className="pt-8 border-t border-slate-900/5 grid grid-cols-2 gap-8">
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">ROOM</p>
+                            <div className="flex items-center text-lg font-black text-slate-900">
+                                <span className={`w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center mr-3 text-orange-600 border border-orange-100`}>
+                                   <Home className="w-4 h-4" />
+                                </span>
+                                {tableNumber || "101"}
+                            </div>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">STAYING</p>
+                            <div className="flex items-center text-lg font-black text-slate-900">
+                                <span className={`w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center mr-3 text-indigo-600 border border-indigo-100`}>
+                                   <User className="w-4 h-4" />
+                                </span>
+                                {numGuests ? `${numGuests} Guest${numGuests > 1 ? 's' : ''}` : "Active Stay"}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* 3. Operational Services Grid (From Screenshot) */}
+            <div className="grid grid-cols-4 gap-6 mb-12">
+                {[
+                    { label: 'Wi-Fi Info', icon: <Wifi />, color: '#B4C424' },
+                    { label: 'Room Service', icon: <Utensils />, color: '#B4C424' },
+                    { label: 'Taxi', icon: <Car />, color: '#B4C424' },
+                    { label: 'Maintenance', icon: <Hammer />, color: '#B4C424' },
+                    { label: 'Laundry', icon: <Shirt />, color: '#B4C424' },
+                    { label: 'Luggage', icon: <Briefcase />, color: '#B4C424' },
+                    { label: 'Cleaning', icon: <Bath />, color: '#B4C424' },
+                    { label: 'More', icon: <MoreHorizontal />, color: '#B4C424' }
+                ].map((service) => (
+                    <motion.button
+                        key={service.label}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex flex-col items-center group"
+                    >
+                        <div 
+                            className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center mb-3 transition-all group-hover:shadow-lg group-hover:-translate-y-1"
+                            style={{ 
+                                backgroundColor: 'white',
+                                color: service.color,
+                                border: '1px solid rgba(0,0,0,0.05)'
+                            }}
+                        >
+                            {React.cloneElement(service.icon as React.ReactElement<any>, { className: "w-8 h-8 opacity-70 stroke-[1.5]" })}
+                        </div>
+                        <span className="text-[10px] font-bold text-center leading-tight opacity-60 whitespace-pre-wrap">{service.label}</span>
+                    </motion.button>
+                ))}
+            </div>
+
+            <div className="space-y-12">
+                {/* Seasonal Stories moved below hero/card */}
+                <div className="mb-0">
                     <div className="flex items-center justify-between mb-5 px-1">
                         <h3 className="text-xl font-black tracking-tight" style={{ fontFamily: 'Georgia, serif', color: theme.primary }}>
                             ✨ Seasonal Stories
@@ -384,22 +485,6 @@ export default function GuestDashboard() {
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between mb-8">
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                    >
-                        <h1 className="text-3xl font-black tracking-tighter" style={{ color: theme.primary }}>
-                            Hey 👋
-                        </h1>
-                        <p className="text-sm font-bold mt-1 italic opacity-60" style={{ color: theme.text }}>
-                            What are you craving today?
-                        </p>
-                    </motion.div>
-                </div>
-            </header>
-
-            <div className="space-y-12">
                 {/* 2. 🔥 Trending Now (Combo-focused) */}
                 <TrendingNow 
                     items={trendingItems} 

@@ -23,8 +23,8 @@ export default function ItemPage() {
     const item = useMemo(() => menuItems.find(i => i.id === itemId), [menuItems, itemId]);
     
     const pairing = useMemo(() => {
-        if (!item || !item.upsell_ids || item.upsell_ids.length === 0) return null;
-        const ids = item.upsell_ids;
+        if (!item || !item.upsell_items || item.upsell_items.length === 0) return null;
+        const ids = item.upsell_items;
         return menuItems.find(m => ids.includes(m.id) && m.is_available);
     }, [item, menuItems]);
 

@@ -83,7 +83,7 @@ export default function MenuPage() {
 
                     <button
                         onClick={() => {
-                            setEditingItem({ category: "Burgers", is_available: true, upsell_ids: [] });
+                            setEditingItem({ category: "Burgers", is_available: true, upsell_items: [] });
                             setIsModalOpen(true);
                         }}
                         className="bg-[#3E2723] text-[#FFF8F2] px-8 py-4 rounded-[1.5rem] font-serif italic text-lg shadow-2xl shadow-[#3E2723]/20 hover:scale-[1.02] transition-all flex items-center active:scale-95"
@@ -160,7 +160,7 @@ export default function MenuPage() {
                                 
                                 <button 
                                     onClick={() => {
-                                        setEditingItem({ category, is_available: true, upsell_ids: [] });
+                                        setEditingItem({ category, is_available: true, upsell_items: [] });
                                         setIsModalOpen(true);
                                     }}
                                     className="rounded-[2.5rem] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center p-12 text-slate-300 hover:bg-slate-50 hover:border-slate-200 transition-all hover:text-[#3E2723] group"
@@ -313,13 +313,13 @@ export default function MenuPage() {
                                                         <div className="relative">
                                                             <input 
                                                                 type="checkbox"
-                                                                checked={editingItem?.upsell_ids?.includes(item.id) || false}
+                                                                checked={editingItem?.upsell_items?.includes(item.id) || false}
                                                                 onChange={(e) => {
-                                                                    const current = editingItem?.upsell_ids || [];
+                                                                    const current = editingItem?.upsell_items || [];
                                                                     const next = e.target.checked 
                                                                         ? [...current, item.id]
                                                                         : current.filter(id => id !== item.id);
-                                                                    setEditingItem({ ...editingItem, upsell_ids: next });
+                                                                    setEditingItem({ ...editingItem, upsell_items: next });
                                                                 }}
                                                                 className="w-5 h-5 rounded-lg border-2 border-[#3E2723]/10 text-[#3E2723] focus:ring-[#3E2723]/20 cursor-pointer"
                                                             />

@@ -63,9 +63,9 @@ export default function RestaurantPage() {
         }
 
         // --- Smart Pairing Logic (Blueprint Phase) ---
-        if (item.upsell_ids && item.upsell_ids.length > 0) {
+        if (item.upsell_items && item.upsell_items.length > 0) {
             const potentialUpsell = menuItems.find(m => 
-                item.upsell_ids.includes(m.id) && 
+                item.upsell_items.includes(m.id) && 
                 !cart[m.id] && 
                 !suggestedIds.includes(m.id)
             );

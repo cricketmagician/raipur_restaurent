@@ -69,7 +69,7 @@ export default function ItemPage() {
 
     return (
         <div 
-            className="min-h-screen pb-40 transition-colors duration-500"
+            className="min-h-screen pb-40 w-full max-w-[500px] mx-auto transition-colors duration-500 overflow-x-hidden"
             style={{ 
                 backgroundColor: globalTheme.background,
                 fontFamily: globalTheme.fontSans,

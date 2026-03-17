@@ -55,7 +55,7 @@ export default function GuestLayout({
             )}
 
             <GuestAuthWrapper>
-                <main className={`flex-1 w-full relative ${isDashboard ? 'pt-0' : 'pt-32'}`}>
+                <main className={`flex-1 w-full max-w-[500px] mx-auto relative ${isDashboard ? 'pt-0' : 'pt-32'}`}>
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={pathname}

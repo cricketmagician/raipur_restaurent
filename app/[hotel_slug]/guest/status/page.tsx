@@ -112,7 +112,7 @@ export default function StatusPage() {
 
     return (
         <div 
-            className="pb-40 px-5 pt-safe min-h-screen overflow-x-hidden transition-colors duration-500"
+            className="pb-40 pt-safe min-h-screen max-w-[500px] mx-auto overflow-x-hidden transition-colors duration-500"
             style={{ 
                 backgroundColor: theme.background,
                 fontFamily: theme.fontSans,

@@ -105,7 +105,7 @@ export default function BillPage() {
 
     return (
         <div 
-            className="pb-40 pt-10 px-6 max-w-[500px] mx-auto min-h-screen transition-colors duration-500"
+            className="pb-40 pt-10 max-w-[500px] mx-auto min-h-screen transition-colors duration-500"
             style={{ backgroundColor: theme.background, color: theme.primary, fontFamily: theme.fontSans }}
         >
             <div className="flex items-center justify-between mb-12 no-print">

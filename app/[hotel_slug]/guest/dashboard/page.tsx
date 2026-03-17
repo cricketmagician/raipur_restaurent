@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useMemo } from "react";
 import { 
     Plus, 
+    Minus,
     Search, 
     ShoppingBag, 
     ChevronRight, 
@@ -29,7 +30,8 @@ import {
     useMenuCategories, 
     deriveMenuCategories, 
     normalizeCategoryKey, 
-    getRoomAccessState 
+    getRoomAccessState,
+    useSpecialOffers
 } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { Toast } from "@/components/Toast";
@@ -46,6 +48,7 @@ export default function GuestDashboard() {
     const { branding, loading } = useHotelBranding(hotelSlug);
     const { categories: menuCategories } = useMenuCategories(branding?.id);
     const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id);
+    const { offers, loading: offersLoading } = useSpecialOffers(branding?.id);
     const requests = useSupabaseRequests(branding?.id, tableNumber, checkedInAt);
     const theme = useTheme(branding);
 
@@ -113,7 +116,12 @@ export default function GuestDashboard() {
         if (e && triggerFly) {
             triggerFly(item.id, item.image_url || '', e);
         }
-        setToast({ message: `Added ${item.title} to bag`, type: "success", isVisible: true });
+    };
+
+    const removeFromCart = (item: any) => {
+        const currentQty = cart[item.id] || 0;
+        if (currentQty <= 0) return;
+        updateQuantity(item.id, currentQty - 1);
     };
 
     const handleOrder = async () => {
@@ -157,13 +165,18 @@ export default function GuestDashboard() {
         <div className="min-h-screen bg-[#0F0A08] text-[#F5F5DC] selection:bg-accent selection:text-primary pb-32">
             
             {/* 1. TOP BAR */}
-            <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#0F0A08]/95 backdrop-blur-md border-b border-accent/10 py-3' : 'bg-transparent py-5'}`}>
+            <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? 'bg-[#0F0A08]/95 backdrop-blur-md border-b border-accent/10 py-3' : 'bg-transparent py-5'}`}>
                 <div className="max-w-md mx-auto px-6 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center border border-accent/20">
                             <span className="text-xl">☰</span>
                         </button>
-                        <h1 className="text-2xl font-black tracking-tighter italic text-white">{branding?.name || "Hutgood"}</h1>
+                        <div className="flex items-center gap-3">
+                            {branding?.logo && (
+                                <img src={getDirectImageUrl(branding.logo)} className="w-8 h-8 rounded-lg object-contain" alt="Logo" />
+                            )}
+                            <h1 className="text-2xl font-black tracking-tighter italic text-white leading-none">{branding?.name || "Hutgood"}</h1>
+                        </div>
                     </div>
                     
                     <div className="flex items-center gap-3">
@@ -183,7 +196,32 @@ export default function GuestDashboard() {
                 </div>
             </header>
 
-            <main className="max-w-md mx-auto px-6 pt-24 space-y-8">
+            <main className="max-w-md mx-auto px-6 pt-32 space-y-10">
+                
+                {/* 0. ADVERTISEMENT SLIDER */}
+                {offers && offers.length > 0 && (
+                    <section className="relative -mx-6">
+                        <div className="flex gap-4 overflow-x-auto no-scrollbar px-6 py-2">
+                            {offers.map((offer) => (
+                                <motion.div 
+                                    key={offer.id}
+                                    className="min-w-[85%] relative aspect-[21/9] rounded-[2rem] overflow-hidden bg-[#1A1512] border border-accent/10 shadow-xl shrink-0"
+                                >
+                                    <img 
+                                        src={getDirectImageUrl(offer.image_url)} 
+                                        className="absolute inset-0 w-full h-full object-cover opacity-60" 
+                                        alt={offer.title} 
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+                                    <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                                        <h3 className="text-lg font-black italic text-white leading-tight">{offer.title}</h3>
+                                        <p className="text-[10px] text-accent font-black uppercase tracking-widest mt-1">Special Offer</p>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </section>
+                )}
                 
                 {/* 2. HERO CARD (Zomato Style) */}
                 <AnimatePresence mode="wait">
@@ -217,27 +255,47 @@ export default function GuestDashboard() {
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between pt-4 border-t border-accent/10">
-                                    <div className="flex items-center gap-4">
-                                        <AnimatePresence mode="popLayout">
-                                            {cart[heroItem.id] > 0 && (
+                                    <span className="text-2xl font-black text-accent">₹{heroItem.price}</span>
+                                    <div className="flex items-center bg-[#251D18] rounded-2xl p-1 border border-accent/20">
+                                        <AnimatePresence mode="wait">
+                                            {cart[heroItem.id] > 0 ? (
                                                 <motion.div 
-                                                    key="hero-qty"
-                                                    initial={{ scale: 0, opacity: 0 }}
-                                                    animate={{ scale: 1, opacity: 1 }}
-                                                    exit={{ scale: 0, opacity: 0 }}
-                                                    className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-primary font-black text-xs border-2 border-white shadow-xl"
+                                                    key="adjust"
+                                                    initial={{ opacity: 0, x: 20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    exit={{ opacity: 0, x: -20 }}
+                                                    className="flex items-center gap-4 px-2"
                                                 >
-                                                    {cart[heroItem.id]}
+                                                    <motion.button 
+                                                        whileTap={{ scale: 0.8 }}
+                                                        onClick={() => removeFromCart(heroItem)}
+                                                        className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent"
+                                                    >
+                                                        <Minus className="w-5 h-5" />
+                                                    </motion.button>
+                                                    <span className="text-lg font-black text-white min-w-[1.5rem] text-center">{cart[heroItem.id]}</span>
+                                                    <motion.button 
+                                                        whileTap={{ scale: 0.8 }}
+                                                        onClick={(e) => addToCart(heroItem, e as any)}
+                                                        className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-primary"
+                                                    >
+                                                        <Plus className="w-5 h-5" />
+                                                    </motion.button>
                                                 </motion.div>
+                                            ) : (
+                                                <motion.button 
+                                                    key="add"
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    exit={{ opacity: 0 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    onClick={(e) => addToCart(heroItem, e as any)}
+                                                    className="px-8 py-4 bg-accent text-primary rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-accent/20"
+                                                >
+                                                    Add to Bag
+                                                </motion.button>
                                             )}
                                         </AnimatePresence>
-                                        <motion.button 
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={(e) => addToCart(heroItem, e as any)}
-                                            className="px-8 py-4 bg-accent text-primary rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-accent/20 hover:brightness-110 transition-all"
-                                        >
-                                            Add to Bag
-                                        </motion.button>
                                     </div>
                                 </div>
                             </div>
@@ -290,26 +348,40 @@ export default function GuestDashboard() {
                                     <h4 className="font-bold text-white truncate">{item.title}</h4>
                                     <p className="text-accent font-black text-sm">₹{item.price}</p>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <AnimatePresence mode="popLayout">
-                                        {cart[item.id] > 0 && (
-                                            <motion.span 
-                                                key="qty"
-                                                initial={{ scale: 0 }}
-                                                animate={{ scale: 1 }}
-                                                className="text-accent font-black text-xs"
+                                <div className="flex items-center gap-2">
+                                    <AnimatePresence mode="wait">
+                                        {cart[item.id] > 0 ? (
+                                            <motion.div 
+                                                initial={{ width: 0, opacity: 0 }}
+                                                animate={{ width: "auto", opacity: 1 }}
+                                                className="flex items-center bg-accent/10 rounded-full p-1 border border-accent/20"
                                             >
-                                                {cart[item.id]}x
-                                            </motion.span>
+                                                <motion.button 
+                                                    whileTap={{ scale: 0.8 }}
+                                                    onClick={() => removeFromCart(item)}
+                                                    className="w-8 h-8 rounded-full flex items-center justify-center text-accent"
+                                                >
+                                                    <Minus className="w-4 h-4" />
+                                                </motion.button>
+                                                <span className="px-2 text-sm font-black text-accent">{cart[item.id]}</span>
+                                                <motion.button 
+                                                    whileTap={{ scale: 0.8 }}
+                                                    onClick={(e) => addToCart(item, e as any)}
+                                                    className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-primary"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                </motion.button>
+                                            </motion.div>
+                                        ) : (
+                                            <motion.button 
+                                                whileTap={{ scale: 0.8 }}
+                                                onClick={(e) => addToCart(item, e as any)}
+                                                className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-primary shadow-lg shadow-accent/20"
+                                            >
+                                                <Plus className="w-5 h-5" />
+                                            </motion.button>
                                         )}
                                     </AnimatePresence>
-                                    <motion.button 
-                                        whileTap={{ scale: 0.8 }}
-                                        onClick={(e) => addToCart(item, e as any)}
-                                        className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-primary shadow-lg shadow-accent/20"
-                                    >
-                                        <Plus className="w-5 h-5" />
-                                    </motion.button>
                                 </div>
                             </motion.div>
                         ))}
@@ -342,22 +414,24 @@ export default function GuestDashboard() {
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-[#0F0A08]/80 to-transparent" />
                                         
-                                        {/* Quantity Badge */}
-                                        <AnimatePresence>
-                                            {cart[item.id] > 0 && (
-                                                <motion.div 
-                                                    initial={{ x: 20, opacity: 0 }}
-                                                    animate={{ x: 0, opacity: 1 }}
-                                                    className="absolute top-4 right-4 bg-white text-primary px-3 py-1.5 rounded-full font-black text-[10px] shadow-2xl flex items-center gap-1.5 border border-accent/20"
-                                                >
-                                                    <ShoppingBag className="w-3 h-3" />
-                                                    <span>{cart[item.id]} in Bag</span>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-
-                                        <div className="absolute bottom-4 right-4 bg-accent text-primary px-4 py-2 rounded-xl font-black text-xs">
-                                            ₹{item.price}
+                                        <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                                            <AnimatePresence mode="wait">
+                                                {cart[item.id] > 0 ? (
+                                                    <motion.div 
+                                                        initial={{ scale: 0.8, opacity: 0 }}
+                                                        animate={{ scale: 1, opacity: 1 }}
+                                                        className="flex items-center bg-white rounded-xl p-1 shadow-2xl border border-accent/20"
+                                                    >
+                                                        <button onClick={() => removeFromCart(item)} className="p-2 text-primary hover:text-accent transition-colors"><Minus className="w-4 h-4" /></button>
+                                                        <span className="px-3 text-sm font-black text-primary">{cart[item.id]}</span>
+                                                        <button onClick={(e) => addToCart(item, e as any)} className="p-2 bg-accent text-primary rounded-lg shadow-lg"><Plus className="w-4 h-4" /></button>
+                                                    </motion.div>
+                                                ) : (
+                                                    <div className="bg-accent text-primary px-4 py-2 rounded-xl font-black text-xs shadow-xl">
+                                                        ₹{item.price}
+                                                    </div>
+                                                )}
+                                            </AnimatePresence>
                                         </div>
                                     </div>
                                     <div className="px-2">

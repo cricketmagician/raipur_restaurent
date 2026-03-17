@@ -1,5 +1,5 @@
 export type GuestTheme = {
-    id: 'CAFE' | 'FAST_FOOD' | 'FINE_DINE';
+    id: 'CAFE' | 'FINE_DINE';
     primary: string;
     secondary: string;
     accent: string;
@@ -27,20 +27,6 @@ export const GUEST_THEMES: Record<GuestTheme['id'], GuestTheme> = {
         fontSerif: "Playfair Display, serif",
         radius: "2.5rem",
         animation: 'smooth'
-    },
-    FAST_FOOD: {
-        id: 'FAST_FOOD',
-        primary: "#E31837", // McDonald's Style Red
-        secondary: "#FFBC0D", // Yellow
-        accent: "#C41230",
-        background: "#FFFBF0", // High-energy yellowish white
-        surface: "#FFFFFF",
-        text: "#1A1A1A",
-        textMuted: "#4B5563",
-        fontSans: "Saira, sans-serif",
-        fontSerif: "Saira, sans-serif",
-        radius: "1.25rem", // Slightly more rounded than before but still snappy
-        animation: 'snappy'
     },
     FINE_DINE: {
         id: 'FINE_DINE',

@@ -18,7 +18,7 @@ export default function BrandingSettingsPage() {
         primaryColor: "#2563eb",
         accentColor: "#4f46e5",
         bgPattern: "",
-        guestTheme: "CAFE" as "CAFE" | "FAST_FOOD" | "FINE_DINE"
+        guestTheme: "CAFE" as "CAFE" | "FINE_DINE"
     });
 
     const [isSaving, setIsSaving] = useState(false);
@@ -147,10 +147,9 @@ export default function BrandingSettingsPage() {
                             <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Experience Theme</h2>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {[
                                 { id: 'CAFE', name: 'Modern Café', desc: 'Starbucks vibes, Cozy entry', colors: ['#00704A', '#F2F0EB'] },
-                                { id: 'FAST_FOOD', name: 'Quick Service', desc: 'High energy, Bold colors', colors: ['#E31837', '#FFBC0D'] },
                                 { id: 'FINE_DINE', name: 'Fine Dining', desc: 'Minimalist, Luxury, Elite', colors: ['#1A1A1A', '#C5A059'] }
                             ].map((theme) => (
                                 <button

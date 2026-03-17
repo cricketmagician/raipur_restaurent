@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState } from "react";
 import { ServiceCard } from "@/components/ServiceCard";
-import { ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles, Search, ArrowUpRight, Receipt, ChevronRight } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles, Search, ArrowUpRight, Receipt, ChevronRight, User } from "lucide-react";
 import { ImpulseBottomSheet } from "@/components/ImpulseBottomSheet";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -213,176 +213,142 @@ export default function GuestDashboard() {
 
     const tableNumberDisplay = tableNumber;
     return (
-        <div className="pb-40 px-6 pt-10 min-h-screen bg-noise max-w-[500px] mx-auto overflow-x-hidden font-sans selection:bg-[#F59E0B]/30">
-            {/* 1. Live Spend Widget (Pulse) */}
-            <AnimatePresence>
-                {requests.some(r => (r.total || 0) > 0) && (
+        <div className="pb-40 px-6 pt-10 min-h-screen bg-[#F2F0EB] max-w-[500px] mx-auto overflow-x-hidden font-sans">
+            {/* 1. Starbucks Style Greeting & Rewards */}
+            <header className="mb-10">
+                <div className="flex items-center justify-between mb-8">
                     <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mb-10"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
                     >
-                        <button 
-                            onClick={() => router.push(`/${hotelSlug}/guest/bill`)}
-                            className="w-full bg-white rounded-[2rem] p-6 border border-[#3E2723]/5 shadow-xl shadow-[#3E2723]/5 flex items-center justify-between group active:scale-[0.98] transition-all"
-                        >
-                            <div className="flex items-center">
-                                <div className="w-12 h-12 bg-[#3E2723] rounded-2xl flex items-center justify-center mr-4 shadow-lg shadow-[#3E2723]/10">
-                                    <Receipt className="w-5 h-5 text-[#FFF8F2]" />
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-0.5">Current Ledger</p>
-                                    <div className="flex items-center">
-                                        <span className="text-2xl font-serif italic text-[#3E2723] tracking-tighter">
-                                            ₹{requests.reduce((sum, r) => sum + (r.total || 0), 0).toLocaleString()}
-                                        </span>
-                                        <motion.div 
-                                            animate={{ opacity: [0.3, 1, 0.3] }}
-                                            transition={{ duration: 2, repeat: Infinity }}
-                                            className="w-2 h-2 bg-emerald-400 rounded-full ml-3" 
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <ChevronRight className="w-6 h-6 text-[#3E2723]/30 group-hover:text-[#3E2723] transition-colors" />
-                        </button>
+                        <h1 className="text-3xl font-black text-[#1E3932] tracking-tighter">
+                            {timeTheme.greeting.split(" ")[0]}, {tableNumber !== "Takeaway" ? `Table ${tableNumber}` : "Guest"}
+                        </h1>
+                        <p className="text-sm font-bold text-[#00704A] mt-1 italic italic">It's a beautiful day for coffee.</p>
                     </motion.div>
-                )}
-            </AnimatePresence>
+                </div>
+
+                {/* Simulated Rewards Section */}
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-[#1E3932] rounded-[2rem] p-8 text-white shadow-2xl shadow-[#1E3932]/20 relative overflow-hidden"
+                >
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-6">
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Guest Rewards</span>
+                            <Sparkles className="w-5 h-5 text-[#D4E9E2]" />
+                        </div>
+                        <div className="flex items-baseline space-x-2 mb-2">
+                            <span className="text-5xl font-black">120</span>
+                            <span className="text-lg font-bold opacity-60 italic italic">vibe points</span>
+                        </div>
+                        <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mt-6">
+                            <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: '65%' }}
+                                className="h-full bg-[#D4E9E2]" 
+                            />
+                        </div>
+                        <p className="text-[10px] font-bold mt-4 opacity-70 tracking-widest text-[#D4E9E2]">30 POINTS UNTIL YOUR NEXT TREAT</p>
+                    </div>
+                    {/* Abstract Siren Shape Background */}
+                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl" />
+                </motion.div>
+            </header>
 
             <div className="space-y-12">
-                {/* 1. The Vibe Header */}
-                <header className="text-center pt-4">
-                    <motion.div
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="inline-block p-4 rounded-[2.5rem] bg-white shadow-xl shadow-[#3E2723]/5 mb-8"
-                    >
-                        <img src={branding?.logo || "/cafe-logo.png"} alt="Cafe Logo" className="h-14 w-auto object-contain mx-auto" />
-                    </motion.div>
-                    <motion.h1 
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.1 }}
-                        className="text-4xl font-serif italic text-[#3E2723] leading-tight mb-2"
-                    >
-                        {timeTheme.greeting}
-                    </motion.h1>
-                    <motion.p 
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-slate-400 font-medium italic text-lg"
-                    >
-                        {timeTheme.subtext}
-                    </motion.p>
-                </header>
-
                 {/* 2. Primary Action */}
                 <motion.button 
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 }}
+                    transition={{ delay: 0.2 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                    className="w-full bg-[#3E2723] text-[#FFF8F2] py-8 rounded-[1.75rem] shadow-2xl shadow-[#3E2723]/20 flex items-center justify-center space-x-4 group overflow-hidden relative active:scale-95 transition-all"
+                    className="w-full bg-[#00704A] text-white py-8 rounded-[1.75rem] shadow-2xl shadow-[#00704A]/20 flex items-center justify-between px-8 group overflow-hidden relative"
                 >
-                    <span className="text-2xl font-serif italic relative z-10">Explore the Menu</span>
-                    <ArrowUpRight className="w-6 h-6 relative z-10 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                    <span className="text-2xl font-black tracking-tighter relative z-10">Order Your Favorites</span>
+                    <ArrowUpRight className="w-8 h-8 relative z-10 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                 </motion.button>
 
-                {/* 3. 🔥 Trending Now (Social Proof Hero) */}
+                {/* 3. 🔥 Seasonal Collection */}
                 <div className="space-y-6">
                     <div className="flex items-center justify-between px-2">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] flex items-center">
-                            🔥 Trending Now
+                        <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em]">
+                            ✨ Seasonal Collection
                         </h3>
                     </div>
 
-                    <motion.div 
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                        className="bg-white rounded-[2.5rem] overflow-hidden shadow-2xl shadow-[#3E2723]/5 border border-[#3E2723]/5 relative group cursor-pointer"
-                    >
-                        <div className="aspect-[4/3] overflow-hidden relative">
-                            <img 
-                                src="/artifacts/trending_combo_cafe_1773727349008.png" 
-                                alt="Cold Coffee + Brownie Combo" 
-                                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#3E2723]/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                            <div className="absolute bottom-8 left-8 right-8 text-white">
-                                <h4 className="text-4xl font-serif italic mb-2 tracking-tight">The Midnight Combo</h4>
-                                <p className="text-[#FFF8F2]/80 font-medium italic">Cold Coffee + Warm Brownie — the ultimate vibe.</p>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-
-                {/* 4. ✨ Perfect Combos (AOV Engine) */}
-                <div className="space-y-6">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] px-2">✨ Perfect Combos</h3>
-                    <div className="grid grid-cols-1 gap-4">
-                        {SHARED_COMBOS.map((combo) => (
-                            <button
-                                key={combo.id}
+                    <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-6 -mx-2 px-2">
+                        {stories.map((story) => (
+                            <motion.div 
+                                key={story.id}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                                className="bg-white p-6 rounded-[2rem] border border-[#3E2723]/5 shadow-xl shadow-[#3E2723]/5 flex items-center justify-between group active:scale-[0.98] transition-all text-left"
+                                className="flex-none w-72 bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-[#00704A]/5 border border-[#00704A]/5 cursor-pointer"
                             >
-                                <div className="flex items-center">
-                                    <div className="w-14 h-14 bg-[#3E2723]/5 rounded-2xl flex items-center justify-center mr-4">
-                                        <Utensils className="w-6 h-6 text-[#3E2723]/20" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-xl font-serif italic text-[#3E2723]">{combo.title}</h4>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">₹{combo.price} SAVE ₹50</p>
+                                <div className="aspect-[4/5] overflow-hidden relative">
+                                    <img src={story.image} alt={story.label} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#1E3932]/60 via-transparent to-transparent" />
+                                    <div className="absolute bottom-6 left-6 right-6">
+                                        <div className="bg-[#D4E9E2] text-[#00704A] inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest mb-3">
+                                            {story.type}
+                                        </div>
+                                        <h4 className="text-2xl font-black text-white leading-tight">{story.label}</h4>
                                     </div>
                                 </div>
-                                <Plus className="w-6 h-6 text-[#3E2723]/20 group-hover:text-[#3E2723] transition-colors" />
-                            </button>
+                            </motion.div>
                         ))}
                     </div>
                 </div>
 
-                {/* 5. ⚡ Quick Picks (Craving Chips) */}
+                {/* 4. ⚡ Quick Picks */}
                 <div className="space-y-6">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] px-2">⚡ Quick Picks</h3>
+                    <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em] px-2">⚡ Quick Picks</h3>
                     <div className="flex flex-nowrap overflow-x-auto pb-4 gap-4 no-scrollbar -mx-2 px-2">
                         {[
-                            { label: 'Coffee', icon: '☕', color: 'bg-amber-50' },
-                            { label: 'Burgers', icon: '🍔', color: 'bg-orange-50' },
-                            { label: 'Snacks', icon: '🍟', color: 'bg-yellow-50' },
-                            { label: 'Desserts', icon: '🍰', color: 'bg-rose-50' }
+                            { label: 'Coffee', icon: '☕' },
+                            { label: 'Burgers', icon: '🍔' },
+                            { label: 'Snacks', icon: '🍟' },
+                            { label: 'Desserts', icon: '🍰' }
                         ].map((chip) => (
                             <button 
                                 key={chip.label}
                                 onClick={() => router.push(`/${hotelSlug}/guest/restaurant?cat=${chip.label.toLowerCase()}`)}
-                                className={`flex-none px-8 py-4 rounded-full border border-[#3E2723]/5 shadow-sm active:scale-90 transition-all flex items-center space-x-3 group bg-white hover:bg-[#3E2723] hover:text-[#FFF8F2]`}
+                                className="flex-none px-8 py-4 rounded-full border border-[#00704A]/10 shadow-sm active:scale-90 transition-all flex items-center space-x-3 bg-white hover:bg-[#D4E9E2] group"
                             >
                                 <span className="text-xl group-hover:scale-125 transition-transform">{chip.icon}</span>
-                                <span className="font-bold text-sm uppercase tracking-widest">{chip.label}</span>
+                                <span className="font-black text-xs uppercase tracking-widest text-[#1E3932]">{chip.label}</span>
                             </button>
                         ))}
                     </div>
                 </div>
 
-                {/* 6. 🍽 Categories */}
-                <div className="space-y-6">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] px-2">🍽 Categories</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        {categories.filter(c => c.id !== 'all').map((cat) => (
-                            <button
-                                key={cat.id}
-                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant?cat=${cat.id}`)}
-                                className="bg-white p-6 rounded-[2rem] border border-[#3E2723]/5 shadow-xl shadow-[#3E2723]/5 text-center group active:scale-[0.98] transition-all"
+                {/* 5. Current Tab Summary */}
+                <AnimatePresence>
+                    {requests.some(r => (r.total || 0) > 0) && (
+                        <div className="space-y-6">
+                            <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em] px-2">🧾 Current Tab</h3>
+                            <button 
+                                onClick={() => router.push(`/${hotelSlug}/guest/bill`)}
+                                className="w-full bg-[#D4E9E2]/30 rounded-[2rem] p-8 border border-[#00704A]/5 flex items-center justify-between group active:scale-[0.98] transition-all"
                             >
-                                <span className="text-3xl block mb-2 group-hover:scale-110 transition-transform">{cat.icon}</span>
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3E2723]">{cat.name}</span>
+                                <div className="flex items-center">
+                                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mr-6 shadow-sm">
+                                        <Receipt className="w-6 h-6 text-[#00704A]" />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-[10px] font-black text-[#00704A] uppercase tracking-[0.2em] mb-1">Total Bill</p>
+                                        <span className="text-3xl font-black text-[#1E3932] tracking-tighter">
+                                            ₹{requests.reduce((sum, r) => sum + (r.total || 0), 0).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-8 h-8 text-[#00704A]/30 group-hover:text-[#00704A] transition-all" />
                             </button>
-                        ))}
-                    </div>
-                </div>
+                        </div>
+                    )}
+                </AnimatePresence>
             </div>
 
             <BottomNav />

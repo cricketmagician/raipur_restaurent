@@ -189,59 +189,37 @@ export default function RestaurantPage() {
     }
 
     return (
-        <motion.div 
-            animate={{ 
-                background: currentTheme.id === 'all' 
-                    ? 'linear-gradient(to bottom, #FDFCFB, #E2D1C3)' 
-                    : `linear-gradient(to bottom, ${currentTheme.gradient.split(' ')[1]}, ${currentTheme.gradient.split(' ')[3]})` 
-            }}
-            transition={{ duration: 1 }}
-            className="pb-40 px-6 pt-10 min-h-screen bg-noise text-[#3E2723] max-w-[500px] mx-auto overflow-x-hidden font-sans selection:bg-[#F59E0B]/30 relative"
-        >
-            {/* Dynamic Emotion Overlay */}
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeCategory}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.05 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 pointer-events-none z-0 mix-blend-overlay"
-                    style={{ 
-                        backgroundImage: currentTheme.id === 'pizzas' ? "url('https://www.transparenttextures.com/patterns/carbon-fibre.png')" : 'none'
-                    }}
-                />
-            </AnimatePresence>
-
+        <div className="pb-40 px-6 pt-10 min-h-screen bg-[#F2F0EB] max-w-[500px] mx-auto overflow-x-hidden font-sans">
             <div className="relative z-10 block">
-            {/* 1. Integrated Search & Categories */}
-            <div className="space-y-8 mb-12">
-                <div className="relative group">
-                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#F59E0B] transition-colors" />
-                    <input 
-                        type="text" 
-                        placeholder="Search: Coffee, burger..." 
-                        className="w-full bg-white border border-[#3E2723]/5 rounded-full py-6 pl-16 pr-6 shadow-xl shadow-[#3E2723]/5 focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/20 transition-all font-medium italic text-lg"
-                    />
-                </div>
+                {/* 1. Integrated Search & Header */}
+                <header className="mb-10">
+                    <h1 className="text-3xl font-black text-[#1E3932] tracking-tighter mb-8">Order</h1>
+                    <div className="relative group">
+                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-[#00704A]/40 transition-colors" />
+                        <input 
+                            type="text" 
+                            placeholder="Find something handcrafted..." 
+                            className="w-full bg-white border border-[#00704A]/10 rounded-full py-6 pl-16 pr-6 shadow-xl shadow-[#00704A]/5 focus:outline-none focus:ring-2 focus:ring-[#00704A]/20 transition-all font-bold text-sm uppercase tracking-widest placeholder:text-slate-300"
+                        />
+                    </div>
+                </header>
 
-                <div className="overflow-x-auto no-scrollbar flex items-center space-x-4 -mx-2 px-2 pb-2">
+                {/* 2. Starbucks Style Vertical/Horizontal Categories */}
+                <div className="overflow-x-auto no-scrollbar flex items-center space-x-4 -mx-2 px-2 pb-8 mb-4 border-b border-[#00704A]/5">
                     {categories.map((category) => {
                         const isActive = activeCategory === category.id;
-                        const catTheme = CATEGORY_THEMES[category.id] || CATEGORY_THEMES.all;
-                        
                         return (
                             <motion.button
                                 key={category.id}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => setActiveCategory(category.id)}
-                                className={`flex-none px-6 py-4 rounded-full border transition-all flex items-center space-x-3 shadow-sm ${
+                                className={`flex-none px-6 py-3 rounded-full border transition-all flex items-center space-x-2 ${
                                     isActive 
-                                    ? 'bg-[#3E2723] text-[#FFF8F2] border-[#3E2723] shadow-lg shadow-[#3E2723]/10' 
-                                    : 'bg-white text-slate-400 border-[#3E2723]/5 hover:border-[#3E2723]/20'
+                                    ? 'bg-[#00704A] text-white border-[#00704A] shadow-lg shadow-[#00704A]/20' 
+                                    : 'bg-white text-[#1E3932] border-[#00704A]/10 hover:border-[#00704A]/30'
                                 }`}
-                                style={isActive ? { backgroundColor: catTheme.textColor, color: catTheme.accent === '#3E2723' ? '#FFF8F2' : catTheme.accent } : {}}
                             >
-                                <span className={`text-xl ${isActive ? 'scale-110' : ''}`}>{category.icon}</span>
+                                <span className={`text-sm ${isActive ? 'scale-110' : ''}`}>{category.icon}</span>
                                 <span className={`text-[10px] font-black uppercase tracking-[0.2em]`}>
                                     {category.name}
                                 </span>
@@ -249,53 +227,15 @@ export default function RestaurantPage() {
                         );
                     })}
                 </div>
-            </div>
 
-            {/* 2. Most Loved (Social Proof Hero) */}
-            {activeCategory === 'all' && (
-                <div className="mb-16">
-                    <div className="flex items-center space-x-3 mb-6 px-1">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Most Loved</span>
-                        <div className="h-[1px] flex-1 bg-slate-100/50" />
-                    </div>
-                    {menuItems.filter(i => i.is_popular).slice(0, 1).map((item) => (
-                        <MenuCard
-                            key={item.id}
-                            id={item.id}
-                            title={item.title}
-                            description={item.description || ""}
-                            price={item.price}
-                            image={item.image_url}
-                            isPopular={item.is_popular}
-                            isRecommended={item.is_recommended}
-                            theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
-                            onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
-                            onAdd={() => addToCart(item)}
-                        />
-                    ))}
-                </div>
-            )}
-
-            {/* 3. The Cravings List */}
-            <div className="space-y-8">
-                <div className="flex items-center space-x-3 mb-8 px-1">
-                    <span 
-                        className="text-[10px] font-black uppercase tracking-[0.3em] transition-colors"
-                        style={{ color: currentTheme.textColor }}
-                    >
-                        {activeCategory === 'all' ? 'All Cravings' : `${activeCategory} Cravings`}
-                    </span>
-                    <div className="h-[1px] flex-1 bg-slate-100/50" />
-                </div>
-                
-                <motion.div 
-                    layout
-                    className="grid grid-cols-1 gap-10 pb-20"
-                >
-                    <AnimatePresence mode="popLayout">
-                        {filteredItems
-                            .filter(i => !(activeCategory === 'all' && i.is_popular && menuItems.filter(m => m.is_popular).slice(0, 1).find(m => m.id === i.id)))
-                            .map((item) => (
+                {/* 3. Handcrafted for You (Featured) */}
+                {activeCategory === 'all' && (
+                    <div className="mb-16">
+                        <div className="flex items-center justify-between mb-8 px-1">
+                            <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em]">Handcrafted for You</h3>
+                        </div>
+                        <div className="grid grid-cols-1 gap-10">
+                            {menuItems.filter(i => i.is_popular).slice(0, 1).map((item) => (
                                 <MenuCard
                                     key={item.id}
                                     id={item.id}
@@ -310,59 +250,88 @@ export default function RestaurantPage() {
                                     onAdd={() => addToCart(item)}
                                 />
                             ))}
-                    </AnimatePresence>
-                </motion.div>
-            </div>
-
-            {/* Floating Selection Preview (Mini Cart) */}
-            <AnimatePresence>
-                {cartCount > 0 && !showCart && (
-                    <motion.div
-                        initial={{ y: 100, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 100, opacity: 0 }}
-                        className="fixed bottom-32 left-0 right-0 px-6 z-40"
-                    >
-                        <button
-                            onClick={() => setShowCart(true)}
-                            style={{ backgroundColor: currentTheme.textColor }}
-                            className="w-full text-[#FFF8F2] p-6 rounded-[2rem] flex items-center justify-between shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-[#FFF8F2]/10"
-                        >
-                            <div className="flex items-center space-x-4">
-                                <div 
-                                    style={{ backgroundColor: currentTheme.accent, color: currentTheme.textColor }}
-                                    className="px-4 py-2 rounded-xl text-[10px] font-black tracking-widest"
-                                >
-                                    {cartCount} ITEMS
-                                </div>
-                                <span className="text-sm font-serif italic tracking-tight">Your Cravings Bag</span>
-                            </div>
-                            <span className="text-2xl font-serif italic">₹{cartTotal.toFixed(0)}</span>
-                        </button>
-                    </motion.div>
+                        </div>
+                    </div>
                 )}
-            </AnimatePresence>
 
-            {/* Overlays */}
-            <CartOverlay 
-                isOpen={showCart}
-                onClose={() => setShowCart(false)}
-                cart={cart}
-                updateQuantity={updateQuantity}
-                cartTotal={cartTotal}
-                isOrdering={isOrdering}
-                onOrder={handleOrder}
-                hotelId={branding?.id}
-                menuItems={menuItems}
-            />
-            <ImpulseBottomSheet 
-                item={upsellItem as any}
-                isVisible={showUpsell}
-                onAdd={() => addToCart(upsellItem, true)}
-                onClose={() => setShowUpsell(false)}
-            />
-            <BottomNav />
+                {/* 4. The Menu Grid */}
+                <div className="space-y-12 pb-32">
+                    <div className="flex items-center justify-between px-1">
+                        <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em]">
+                            {activeCategory === 'all' ? 'The Full Menu' : `Selection: ${activeCategory}`}
+                        </h3>
+                    </div>
+                    
+                    <motion.div 
+                        layout
+                        className="grid grid-cols-1 gap-12"
+                    >
+                        <AnimatePresence mode="popLayout">
+                            {filteredItems
+                                .filter(i => !(activeCategory === 'all' && i.is_popular && menuItems.filter(m => m.is_popular).slice(0, 1).find(m => m.id === i.id)))
+                                .map((item) => (
+                                    <MenuCard
+                                        key={item.id}
+                                        id={item.id}
+                                        title={item.title}
+                                        description={item.description || ""}
+                                        price={item.price}
+                                        image={item.image_url}
+                                        isPopular={item.is_popular}
+                                        isRecommended={item.is_recommended}
+                                        theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
+                                        onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
+                                        onAdd={() => addToCart(item)}
+                                    />
+                                ))}
+                        </AnimatePresence>
+                    </motion.div>
+                </div>
+
+                {/* Floating Bag Preview */}
+                <AnimatePresence>
+                    {cartCount > 0 && !showCart && (
+                        <motion.div
+                            initial={{ y: 100, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 100, opacity: 0 }}
+                            className="fixed bottom-32 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[452px] z-[100]"
+                        >
+                            <button
+                                onClick={() => setShowCart(true)}
+                                className="w-full bg-[#1E3932] text-white p-6 rounded-full flex items-center justify-between shadow-[0_30px_60px_-15px_rgba(0,33,30,0.4)] border border-white/10 active:scale-95 transition-all"
+                            >
+                                <div className="flex items-center space-x-6">
+                                    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center font-black text-xs">
+                                        {cartCount}
+                                    </div>
+                                    <span className="text-sm font-black uppercase tracking-widest">In your bag</span>
+                                </div>
+                                <span className="text-xl font-black">₹{cartTotal.toFixed(0)}</span>
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <CartOverlay 
+                    isOpen={showCart}
+                    onClose={() => setShowCart(false)}
+                    cart={cart}
+                    updateQuantity={updateQuantity}
+                    cartTotal={cartTotal}
+                    isOrdering={isOrdering}
+                    onOrder={handleOrder}
+                    hotelId={branding?.id}
+                    menuItems={menuItems}
+                />
+                <ImpulseBottomSheet 
+                    item={upsellItem as any}
+                    isVisible={showUpsell}
+                    onAdd={() => addToCart(upsellItem, true)}
+                    onClose={() => setShowUpsell(false)}
+                />
+                <BottomNav />
             </div>
-        </motion.div>
+        </div>
     );
 }

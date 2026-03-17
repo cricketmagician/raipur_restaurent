@@ -52,52 +52,52 @@ export function GlobalHeader() {
         <motion.header 
             initial={{ y: -100 }}
             animate={{ y: 0 }}
-            className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] transition-all duration-300 ${
-                scrolled ? "bg-white/80 backdrop-blur-xl shadow-[0_4px_12px_rgba(0,0,0,0.06)] py-3" : "bg-white/40 backdrop-blur-md py-4"
-            } border-b border-white/20`}
+            className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] transition-all duration-500 ${
+                scrolled ? "bg-white/95 backdrop-blur-3xl shadow-[0_8px_30px_rgb(0,33,30,0.08)] py-4" : "bg-[#F2F0EB] py-6"
+            } border-b border-[#00704A]/5`}
         >
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-6">
                 {/* Row 1: Logo, Name/Address, Profile */}
-                <div className="px-5 flex items-center justify-between gap-4">
+                <div className="px-6 flex items-center justify-between gap-6">
                     {/* Left: Logo/Back */}
-                    <div className="flex-shrink-0 w-10">
+                    <div className="flex-shrink-0">
                         {!isDashboard ? (
                             <button 
                                 onClick={() => router.back()}
-                                className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 active:scale-95 transition-all text-slate-900"
+                                className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 active:scale-95 transition-all text-[#00704A]"
                             >
-                                <ArrowLeft className="w-5 h-5" />
+                                <ArrowLeft className="w-6 h-6" />
                             </button>
                         ) : branding?.logo || branding?.logoImage ? (
-                            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg border border-white/50">
+                            <div className="w-12 h-12 rounded-full overflow-hidden shadow-xl border-4 border-white">
                                 <img src={branding.logoImage || branding.logo} alt="Logo" className="w-full h-full object-cover" />
                             </div>
                         ) : (
-                            <div className="w-10 h-10 bg-[#1F2937] rounded-xl flex items-center justify-center shadow-lg shadow-slate-200">
-                                <Utensils className="text-white w-5 h-5" />
+                            <div className="w-12 h-12 bg-[#00704A] rounded-full flex items-center justify-center shadow-xl shadow-[#00704A]/10">
+                                <div className="text-white font-serif italic text-xl">S</div>
                             </div>
                         )}
                     </div>
 
                     {/* Center: Branding Info */}
                     <div className="flex-1 text-center min-w-0">
-                        <h1 className="text-base font-black text-slate-900 leading-tight truncate">
-                            {branding?.name || "Restaurant"}
+                        <h1 className="text-lg font-black text-[#1E3932] leading-tight truncate tracking-tight">
+                            {branding?.name || "Starbucks"}
                         </h1>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate mt-0.5">
-                            {branding?.address || "Premium Dining Experience"}
+                        <p className="text-[10px] font-bold text-[#00704A]/60 uppercase tracking-[0.2em] truncate mt-1">
+                            {branding?.address || "Experience the Siren"}
                         </p>
                     </div>
 
                     {/* Right: Profile & Utility Dropdown */}
-                    <div className="flex-shrink-0 w-10 relative">
+                    <div className="flex-shrink-0 relative">
                         <button 
                             onClick={() => setShowUtility(!showUtility)}
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                                showUtility ? "bg-[#1F2937] text-white" : "bg-white border border-slate-100 text-slate-400 shadow-sm"
+                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                                showUtility ? "bg-[#1E3932] text-white" : "bg-white border border-slate-100 text-[#00704A] shadow-sm"
                             } active:scale-95`}
                         >
-                            <Menu className="w-5 h-5" />
+                            <Menu className="w-6 h-6" />
                         </button>
 
                         <AnimatePresence>
@@ -106,40 +106,40 @@ export function GlobalHeader() {
                                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    className="absolute top-12 right-0 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden py-2"
+                                    className="absolute top-14 right-0 w-56 bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,33,30,0.15)] border border-[#00704A]/5 overflow-hidden py-3"
                                 >
-                                    <div className="px-4 py-2 border-b border-slate-50 mb-1">
-                                        <p className="text-[9px] font-black text-[#F59E0B] uppercase tracking-[0.2em]">Quick Actions</p>
+                                    <div className="px-6 py-3 border-b border-slate-50 mb-2">
+                                        <p className="text-[9px] font-black text-[#00704A] uppercase tracking-[0.3em]">Boutique Selection</p>
                                     </div>
                                     <button 
-                                        onClick={() => handleQuickRequest("Waiter Call", "Attendant requested from Header")}
+                                        onClick={() => handleQuickRequest("Waiter Call", "Host requested from Header")}
                                         disabled={!!requestLoading}
-                                        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors group"
+                                        className="w-full px-6 py-4 flex items-center justify-between hover:bg-[#D4E9E2]/30 transition-colors group"
                                     >
-                                        <div className="flex items-center space-x-3">
-                                            <Bell className="w-4 h-4 text-amber-500" />
-                                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Call Attendant</span>
+                                        <div className="flex items-center space-x-4">
+                                            <Bell className="w-5 h-5 text-[#00704A]" />
+                                            <span className="text-xs font-bold text-[#1E3932] uppercase tracking-widest">Call Host</span>
                                         </div>
-                                        {requestLoading === "Waiter Call" && <RefreshCw className="w-3 h-3 animate-spin text-slate-300" />}
+                                        {requestLoading === "Waiter Call" && <RefreshCw className="w-3 h-3 animate-spin text-[#00704A]" />}
                                     </button>
                                     <button 
-                                        onClick={() => handleQuickRequest("Mineral Water", "Water requested from Header")}
+                                        onClick={() => handleQuickRequest("Mineral Water", "Sparkling Water requested")}
                                         disabled={!!requestLoading}
-                                        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors group"
+                                        className="w-full px-6 py-4 flex items-center justify-between hover:bg-[#D4E9E2]/30 transition-colors group"
                                     >
-                                        <div className="flex items-center space-x-3">
-                                            <Droplets className="w-4 h-4 text-blue-500" />
-                                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Mineral Water</span>
+                                        <div className="flex items-center space-x-4">
+                                            <Droplets className="w-5 h-5 text-[#00704A]" />
+                                            <span className="text-xs font-bold text-[#1E3932] uppercase tracking-widest">Hydration</span>
                                         </div>
-                                        {requestLoading === "Mineral Water" && <RefreshCw className="w-3 h-3 animate-spin text-slate-300" />}
+                                        {requestLoading === "Mineral Water" && <RefreshCw className="w-3 h-3 animate-spin text-[#00704A]" />}
                                     </button>
-                                    <div className="h-px bg-slate-50 my-1" />
+                                    <div className="h-px bg-slate-50 my-2" />
                                     <button 
                                         onClick={() => { router.push(`/${hotelSlug}/guest/profile`); setShowUtility(false); }}
-                                        className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
+                                        className="w-full px-6 py-4 flex items-center space-x-4 hover:bg-[#D4E9E2]/30 transition-colors"
                                     >
-                                        <User className="w-4 h-4 text-slate-400" />
-                                        <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">My Profile</span>
+                                        <User className="w-5 h-5 text-[#00704A]/40" />
+                                        <span className="text-xs font-bold text-[#1E3932] uppercase tracking-widest">My Identity</span>
                                     </button>
                                 </motion.div>
                             )}
@@ -148,15 +148,15 @@ export function GlobalHeader() {
                 </div>
 
                 {/* Row 2: Segmented Toggle */}
-                <div className="px-5">
-                    <div className="max-w-[180px] mx-auto bg-slate-100/50 p-1 rounded-[18px] flex text-[9px] font-black uppercase tracking-widest relative overflow-hidden border border-slate-200/30">
+                <div className="px-6">
+                    <div className="max-w-[200px] mx-auto bg-white p-1 rounded-full flex text-[10px] font-black uppercase tracking-widest relative overflow-hidden border border-[#00704A]/10 shadow-sm">
                         <motion.div 
                             initial={false}
                             animate={{ 
-                                x: tableNumber?.toLowerCase() === 'takeaway' ? '100%' : '0%',
+                                x: tableNumber?.toLowerCase() === 'takeaway' ? '100.5%' : '0%',
                             }}
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="absolute inset-y-1 left-1 w-[calc(50%-2px)] bg-[#1F2937] rounded-[14px] shadow-sm"
+                            transition={{ type: "spring", stiffness: 400, damping: 40 }}
+                            className="absolute inset-y-1 left-1 w-[calc(50%-2px)] bg-[#00704A] rounded-full shadow-lg shadow-[#00704A]/20"
                         />
                         
                         <button 
@@ -167,11 +167,11 @@ export function GlobalHeader() {
                                     setTimeout(() => window.location.reload(), 100);
                                 }
                             }}
-                            className={`relative z-10 flex-1 py-1 flex items-center justify-center transition-colors duration-300 ${
-                                tableNumber?.toLowerCase() !== "takeaway" ? "text-white" : "text-slate-400"
+                            className={`relative z-10 flex-1 py-1.5 flex items-center justify-center transition-all duration-500 ${
+                                tableNumber?.toLowerCase() !== "takeaway" ? "text-white" : "text-[#00704A]/40"
                             }`}
                         >
-                            Dine-In
+                            In-Store
                         </button>
                         <button 
                             onClick={() => {
@@ -182,11 +182,11 @@ export function GlobalHeader() {
                                     setTimeout(() => window.location.reload(), 100);
                                 }
                             }}
-                            className={`relative z-10 flex-1 py-1 flex items-center justify-center transition-colors duration-300 ${
-                                tableNumber?.toLowerCase() === "takeaway" ? "text-white" : "text-slate-400"
+                            className={`relative z-10 flex-1 py-1.5 flex items-center justify-center transition-all duration-500 ${
+                                tableNumber?.toLowerCase() === "takeaway" ? "text-white" : "text-[#00704A]/40"
                             }`}
                         >
-                            Takeaway
+                            Takeout
                         </button>
                     </div>
                 </div>

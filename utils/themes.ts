@@ -11,64 +11,64 @@ export type CategoryTheme = {
 export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
     all: {
         id: "all",
-        gradient: "from-[#FDFCFB] to-[#E2D1C3]",
-        accent: "#3E2723",
+        gradient: "from-[#F2F0EB] to-[#D4E9E2]",
+        accent: "#00704A",
         emotion: "discovery",
-        textColor: "#3E2723"
+        textColor: "#00704A"
     },
     coffee: {
         id: "coffee",
-        gradient: "from-[#3E2723] to-[#1A0F0E]",
-        accent: "#C8A27C",
+        gradient: "from-[#1E3932] to-[#1E3932]",
+        accent: "#D4E9E2",
         emotion: "comfort",
-        textColor: "#FFF8F2",
+        textColor: "#FFFFFF",
         effect: "none"
     },
     burgers: {
         id: "burgers",
-        gradient: "from-[#3E2723] to-[#795548]",
-        accent: "#FFC107",
+        gradient: "from-[#F2F0EB] to-[#F2F0EB]",
+        accent: "#00704A",
         emotion: "satisfaction",
-        textColor: "#FFF8F2"
+        textColor: "#1E3932"
     },
     pizzas: {
         id: "pizzas",
-        gradient: "from-[#8B0000] to-[#FF6B35]",
-        accent: "#FFD700",
-        texture: "oven-grain",
-        effect: "shine",
+        gradient: "from-[#F2F0EB] to-[#F2F0EB]",
+        accent: "#006241",
+        texture: "none",
+        effect: "none",
         emotion: "sharing",
-        textColor: "#FFF8F2"
+        textColor: "#1E3932"
     },
     fries: {
         id: "fries",
-        gradient: "from-[#F4A261] to-[#E76F51]",
-        accent: "#3E2723",
+        gradient: "from-[#D4E9E2] to-[#D4E9E2]",
+        accent: "#1E3932",
         emotion: "fun",
-        textColor: "#3E2723"
+        textColor: "#1E3932"
     },
     desserts: {
         id: "desserts",
-        gradient: "from-[#6D4C41] to-[#F8BBD0]",
-        accent: "#FF4081",
-        effect: "glow",
+        gradient: "from-[#F2F0EB] to-[#F2F0EB]",
+        accent: "#00704A",
+        effect: "none",
         emotion: "indulgence",
-        textColor: "#3E2723"
+        textColor: "#1E3932"
     },
     drinks: {
         id: "drinks",
-        gradient: "from-[#2196F3] to-[#00BCD4]",
-        accent: "#E3F2FD",
-        effect: "condensation",
+        gradient: "from-[#D4E9E2] to-[#D4E9E2]",
+        accent: "#00704A",
+        effect: "none",
         emotion: "refreshment",
-        textColor: "#FFFFFF"
+        textColor: "#1E3932"
     },
     sides: {
         id: "sides",
-        gradient: "from-[#F59E0B] to-[#D97706]",
-        accent: "#3E2723",
+        gradient: "from-[#F2F0EB] to-[#F2F0EB]",
+        accent: "#00704A",
         emotion: "extra",
-        textColor: "#3E2723"
+        textColor: "#1E3932"
     }
 };
 

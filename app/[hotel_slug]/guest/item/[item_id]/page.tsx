@@ -58,22 +58,22 @@ export default function ItemPage() {
     );
 
     return (
-        <div className="min-h-screen bg-[#FFF8F2] font-sans pb-40">
+        <div className="min-h-screen bg-[#F2F0EB] font-sans pb-40">
             {/* Header / Back Button */}
             <div className="fixed top-0 left-0 right-0 p-6 z-50 flex items-center justify-between">
                 <button 
                     onClick={() => router.back()}
-                    className="w-12 h-12 bg-white/80 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-lg shadow-black/5 active:scale-95 transition-all"
+                    className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all text-[#1E3932]"
                 >
-                    <ArrowLeft className="w-6 h-6 text-[#3E2723]" />
+                    <ArrowLeft className="w-6 h-6" />
                 </button>
-                <div className="px-6 py-2 bg-white/80 backdrop-blur-md rounded-2xl shadow-lg shadow-black/5">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3E2723]">{item.category}</span>
+                <div className="px-6 py-2 bg-[#00704A] text-white rounded-full shadow-lg">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">{item.category}</span>
                 </div>
             </div>
 
-            {/* Giant Hero Image */}
-            <div className="relative w-full aspect-[4/5] overflow-hidden">
+            {/* Premium Product Presentation */}
+            <div className="relative w-full aspect-[4/5] overflow-hidden bg-white">
                 <motion.img 
                     initial={{ scale: 1.1, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -82,7 +82,7 @@ export default function ItemPage() {
                     alt={item.title} 
                     className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#FFF8F2] via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#F2F0EB] via-transparent to-transparent opacity-60" />
             </div>
 
             {/* Content Section */}
@@ -91,40 +91,36 @@ export default function ItemPage() {
                     initial={{ y: 40, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.2 }}
+                    className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-[#1E3932]/10"
                 >
-                    <div className="flex items-center space-x-3 mb-4">
+                    <div className="flex items-center space-x-3 mb-6">
                         {item.is_popular && (
-                            <div className="bg-[#F59E0B] text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center">
-                                <Sparkles className="w-3 h-3 mr-1" /> Most Loved
-                            </div>
-                        )}
-                        {item.is_recommended && (
-                            <div className="bg-[#3E2723] text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest">
-                                Chef Choice
+                            <div className="bg-[#D4E9E2] text-[#00704A] px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center">
+                                <Sparkles className="w-3 h-3 mr-2" /> Handcrafted
                             </div>
                         )}
                     </div>
 
-                    <h1 className="text-5xl font-serif italic text-[#3E2723] leading-tight mb-4 tracking-tight">
+                    <h1 className="text-4xl font-black text-[#1E3932] leading-tight mb-4 tracking-tighter">
                         {item.title}
                     </h1>
                     
-                    <p className="text-slate-400 text-lg leading-relaxed italic mb-8 font-medium">
-                        “{item.description}”
+                    <p className="text-slate-500 text-sm leading-relaxed mb-8 font-medium">
+                        {item.description}
                     </p>
 
-                    <div className="flex items-center justify-between mb-12">
-                        <span className="text-4xl font-serif italic text-[#3E2723]">₹{item.price}</span>
-                        <div className="flex items-center space-x-4 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
-                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest px-4">Standard Portion</span>
+                    <div className="flex items-center justify-between mb-10 pb-10 border-b border-[#00704A]/5">
+                        <span className="text-4xl font-black text-[#1E3932]">₹{item.price}</span>
+                        <div className="flex flex-col items-end">
+                            <span className="text-[10px] font-black text-[#00704A] uppercase tracking-widest">+ 45 STARS</span>
                         </div>
                     </div>
 
                     {/* Add to Order CTA */}
                     <button
                         onClick={handleAdd}
-                        className={`w-full py-8 rounded-[2rem] flex items-center justify-center space-x-4 transition-all active:scale-95 shadow-2xl relative overflow-hidden group ${
-                            isAdded ? 'bg-emerald-500 text-white' : 'bg-[#3E2723] text-[#FFF8F2]'
+                        className={`w-full py-8 rounded-full flex items-center justify-center space-x-4 transition-all active:scale-95 shadow-xl relative overflow-hidden group ${
+                            isAdded ? 'bg-emerald-500 text-white' : 'bg-[#00704A] text-white'
                         }`}
                     >
                         <AnimatePresence mode="wait">
@@ -134,9 +130,9 @@ export default function ItemPage() {
                                     initial={{ y: 20, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
                                     exit={{ y: -20, opacity: 0 }}
-                                    className="text-2xl font-serif italic flex items-center"
+                                    className="text-lg font-black uppercase tracking-widest flex items-center"
                                 >
-                                    Added to Cravings ✨
+                                    Added to Bag ✨
                                 </motion.span>
                             ) : (
                                 <motion.span 
@@ -144,43 +140,42 @@ export default function ItemPage() {
                                     initial={{ y: 20, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
                                     exit={{ y: -20, opacity: 0 }}
-                                    className="text-2xl font-serif italic flex items-center"
+                                    className="text-lg font-black uppercase tracking-widest flex items-center"
                                 >
-                                    Add to Order <Plus className="w-6 h-6 ml-3 opacity-40" />
+                                    Add to Order
                                 </motion.span>
                             )}
                         </AnimatePresence>
                     </button>
                 </motion.div>
 
-                {/* --- 🤤 Perfect with this (Smart Pairing) --- */}
+                {/* --- 🤤 Perfect Pairing (Smart Suggestion) --- */}
                 {pairing && (
                     <motion.div 
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="mt-16 space-y-6"
+                        className="mt-16 space-y-8"
                     >
-                        <div className="flex items-center space-x-3 px-1">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">🤤 Perfect with this</span>
-                            <div className="h-[1px] flex-1 bg-slate-100" />
+                        <div className="flex items-center justify-between px-2">
+                            <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em]">Perfect Addition</h3>
                         </div>
 
                         <button 
                             onClick={handleAddPairing}
-                            className="w-full bg-white p-6 rounded-[2.5rem] border border-[#3E2723]/5 shadow-xl shadow-[#3E2723]/5 flex items-center justify-between group active:scale-[0.98] transition-all text-left"
+                            className="w-full bg-white p-6 rounded-[2.5rem] border border-[#00704A]/5 shadow-xl shadow-[#00704A]/5 flex items-center justify-between group active:scale-[0.98] transition-all text-left"
                         >
                             <div className="flex items-center flex-1 min-w-0">
-                                <div className="w-16 h-16 rounded-2xl overflow-hidden mr-5 bg-slate-50 shrink-0">
+                                <div className="w-16 h-16 rounded-full overflow-hidden mr-5 shrink-0 shadow-lg">
                                     <img src={pairing.image_url} alt={pairing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                 </div>
                                 <div className="min-w-0 mr-4">
-                                    <h4 className="text-xl font-serif italic text-[#3E2723] truncate">{pairing.title}</h4>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">₹{pairing.price} EXTRA</p>
+                                    <h4 className="text-lg font-black text-[#1E3932] truncate">{pairing.title}</h4>
+                                    <p className="text-[10px] text-[#00704A] font-black uppercase tracking-widest mt-1">₹{pairing.price} ADD EXTRA</p>
                                 </div>
                             </div>
-                            <div className="w-12 h-12 bg-[#3E2723] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-all">
-                                <Plus className="w-5 h-5" />
+                            <div className="w-12 h-12 bg-[#00704A] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-all">
+                                <Plus className="w-6 h-6" />
                             </div>
                         </button>
                     </motion.div>

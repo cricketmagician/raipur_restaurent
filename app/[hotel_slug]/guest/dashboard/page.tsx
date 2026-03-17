@@ -336,19 +336,26 @@ export default function GuestDashboard() {
     const tableNumberDisplay = tableNumber;
     return (
         <div 
-            className="pb-40 px-6 pt-10 min-h-screen max-w-[500px] mx-auto overflow-x-hidden transition-colors duration-500"
+            className="pb-40 px-6 pt-10 min-h-screen max-w-[500px] mx-auto overflow-x-hidden transition-colors duration-500 relative"
             style={{ 
-                backgroundColor: theme.background,
                 fontFamily: theme.fontSans,
                 color: theme.text
             }}
         >
+            {/* Background Layer (only active when scrolled) */}
+            <div 
+                className="fixed inset-0 -z-20 transition-opacity duration-500"
+                style={{ 
+                    backgroundColor: theme.background,
+                    opacity: scrolled ? 1 : 0 // Fully transparent at top, solid on scroll
+                }}
+            />
             {/* 1. Premium Hero Section */}
             <div className="absolute top-0 left-0 right-0 h-[45vh] overflow-hidden -z-10 bg-black">
                 <img 
                     src={getDirectImageUrl(branding?.heroImage) || "/images/branding/hero.png"} 
                     alt="Hotel Interior" 
-                    className="w-full h-full object-cover opacity-60 scale-105"
+                    className="w-full h-full object-cover opacity-80 scale-105" // Increased opacity
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
                 

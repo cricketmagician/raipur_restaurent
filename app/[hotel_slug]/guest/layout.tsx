@@ -41,16 +41,18 @@ export default function GuestLayout({
     return (
         <div 
             className="flex flex-col min-h-[100dvh] text-slate-900 antialiased pb-24 overflow-x-hidden pt-safe transition-colors duration-500"
-            style={{ backgroundColor: theme.background }}
+            style={{ backgroundColor: isDashboard ? 'transparent' : theme.background }}
         >
             <GlobalHeader />
             <AddEffect />
 
             {/* Ambient Background Gradient - Refined for Theme */}
-            <div 
-                className="fixed inset-0 -z-10 opacity-30"
-                style={{ backgroundImage: `radial-gradient(circle at top right, ${theme.secondary}66, transparent 60%)` }}
-            ></div>
+            {!isDashboard && (
+                <div 
+                    className="fixed inset-0 -z-10 opacity-30"
+                    style={{ backgroundImage: `radial-gradient(circle at top right, ${theme.secondary}66, transparent 60%)` }}
+                ></div>
+            )}
 
             <GuestAuthWrapper>
                 <main className={`flex-1 w-full max-w-md mx-auto relative px-5 ${isDashboard ? 'pt-0' : 'pt-32'}`}>

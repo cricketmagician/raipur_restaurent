@@ -56,9 +56,12 @@ export function useTheme(branding?: { guestTheme?: string, primaryColor?: string
     const theme = getTheme(branding?.guestTheme);
     
     // Override with custom branding colors if provided
+    // Special check: If CAFE is selected but color is legacy blue, force coffee brown
+    const isLegacyBlue = branding?.primaryColor === "#2563eb" || branding?.primaryColor === "#00704A";
+    
     return {
         ...theme,
-        primary: branding?.primaryColor || theme.primary,
+        primary: (isLegacyBlue && theme.id === 'CAFE') ? theme.primary : (branding?.primaryColor || theme.primary),
         accent: branding?.accentColor || theme.accent,
     };
 }
@@ -77,64 +80,64 @@ export type CategoryTheme = {
 export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
     all: {
         id: "all",
-        gradient: "from-[#F2F0EB] to-[#D4E9E2]",
-        accent: "#00704A",
+        gradient: "from-[#FDFBF7] to-[#EADBC8]",
+        accent: "#3C2A21",
         emotion: "discovery",
-        textColor: "#00704A"
+        textColor: "#3C2A21"
     },
     coffee: {
         id: "coffee",
-        gradient: "from-[#1E3932] to-[#1E3932]",
-        accent: "#D4E9E2",
+        gradient: "from-[#3C2A21] to-[#3C2A21]",
+        accent: "#EADBC8",
         emotion: "comfort",
         textColor: "#FFFFFF",
         effect: "none"
     },
     burgers: {
         id: "burgers",
-        gradient: "from-[#F2F0EB] to-[#F2F0EB]",
-        accent: "#00704A",
+        gradient: "from-[#FDFBF7] to-[#FDFBF7]",
+        accent: "#3C2A21",
         emotion: "satisfaction",
-        textColor: "#1E3932"
+        textColor: "#3C2A21"
     },
     pizzas: {
         id: "pizzas",
-        gradient: "from-[#F2F0EB] to-[#F2F0EB]",
-        accent: "#006241",
+        gradient: "from-[#FDFBF7] to-[#FDFBF7]",
+        accent: "#2D1F18",
         texture: "none",
         effect: "none",
         emotion: "sharing",
-        textColor: "#1E3932"
+        textColor: "#3C2A21"
     },
     fries: {
         id: "fries",
-        gradient: "from-[#D4E9E2] to-[#D4E9E2]",
-        accent: "#1E3932",
+        gradient: "from-[#EADBC8] to-[#EADBC8]",
+        accent: "#3C2A21",
         emotion: "fun",
-        textColor: "#1E3932"
+        textColor: "#3C2A21"
     },
     desserts: {
         id: "desserts",
-        gradient: "from-[#F2F0EB] to-[#F2F0EB]",
-        accent: "#00704A",
+        gradient: "from-[#FDFBF7] to-[#FDFBF7]",
+        accent: "#3C2A21",
         effect: "none",
         emotion: "indulgence",
-        textColor: "#1E3932"
+        textColor: "#3C2A21"
     },
     drinks: {
         id: "drinks",
-        gradient: "from-[#D4E9E2] to-[#D4E9E2]",
-        accent: "#00704A",
+        gradient: "from-[#EADBC8] to-[#EADBC8]",
+        accent: "#3C2A21",
         effect: "none",
         emotion: "refreshment",
-        textColor: "#1E3932"
+        textColor: "#3C2A21"
     },
     sides: {
         id: "sides",
-        gradient: "from-[#F2F0EB] to-[#F2F0EB]",
-        accent: "#00704A",
+        gradient: "from-[#FDFBF7] to-[#FDFBF7]",
+        accent: "#3C2A21",
         emotion: "extra",
-        textColor: "#1E3932"
+        textColor: "#3C2A21"
     }
 };
 

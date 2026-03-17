@@ -4,47 +4,56 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: #3C2A21; /* Coffee Brown */
-  --color-secondary: #2D1F18; /* Darker Coffee */
-  --color-accent: #EADBC8; /* Warm Cream */
+  --color-primary: #0F0A08; /* Rich Dark Brown */
+  --color-secondary: #2C1E1A; /* Deep Cocoa */
+  --color-accent: #D4AF37; /* Metallic Gold */
+  --color-surface: #1A1412; /* Warm Dark surface */
+  --color-beige: #F5F5DC;
   
   --font-serif: var(--font-playfair), serif;
   --font-sans: var(--font-inter), sans-serif;
 
-  /* Standardized Radii */
-  --radius-sm: 0.5rem;   /* 8px */
-  --radius-md: 0.875rem; /* 14px */
-  --radius-lg: 1.25rem;  /* 20px */
-  --radius-xl: 1.75rem;  /* 28px */
-  --radius-2xl: 2.5rem;  /* 40px */
+  /* Premium Radii */
+  --radius-sm: 0.75rem;
+  --radius-md: 1.25rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+  --radius-2xl: 4rem;
   --radius-full: 9999px;
 }
 
-@utility glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(60, 42, 33, 0.05);
+@utility glass-v3 {
+  background: rgba(18, 21, 28, 0.75);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
-@utility glass-dark {
-  background: rgba(15, 18, 24, 0.92);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+@utility glass-gold {
+  background: rgba(212, 175, 55, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.15);
 }
 
 @utility premium-shadow {
-  box-shadow: 0 25px 60px -15px rgba(62, 39, 35, 0.08);
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.45);
 }
 
 @utility gold-glow {
-  box-shadow: 0 10px 30px -5px rgba(184, 134, 11, 0.2);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+}
+
+@utility editorial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
 }
 
 :root {
-  --background: #F2F0EB; /* Starbucks House Green / Cream */
-  --foreground: #000000; /* Pure Black */
+  --background: #0F0A08;
+  --foreground: #F5F5DC;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }

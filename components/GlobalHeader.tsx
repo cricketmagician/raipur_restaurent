@@ -29,6 +29,8 @@ export function GlobalHeader() {
 
     const isDashboard = pathname?.endsWith("/dashboard");
 
+    if (isDashboard) return null;
+
     const openQuickActions = (actionId: "water" | "waiter") => {
         setShowUtility(false);
         window.dispatchEvent(new CustomEvent("guest_open_quick_actions", { detail: { actionId } }));

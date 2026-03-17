@@ -44,7 +44,7 @@ export default function GuestDashboard() {
     const params = useParams();
     const hotelSlug = params?.hotel_slug as string;
 
-    const { roomNumber: tableNumber, checkedInAt, orderMode } = useGuestRoom();
+    const { roomNumber: tableNumber, checkedInAt, orderMode, switchToDineIn, switchToTakeaway } = useGuestRoom();
     const { branding, loading } = useHotelBranding(hotelSlug);
     const { categories: menuCategories } = useMenuCategories(branding?.id);
     const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id);
@@ -166,30 +166,29 @@ export default function GuestDashboard() {
             
             {/* 1. TOP BAR */}
             <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? 'bg-[#0F0A08]/95 backdrop-blur-md border-b border-accent/10 py-3' : 'bg-transparent py-5'}`}>
-                <div className="max-w-md mx-auto px-6 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center border border-accent/20">
-                            <span className="text-xl">☰</span>
-                        </button>
-                        <div className="flex items-center gap-3">
-                            {branding?.logo && (
-                                <img src={getDirectImageUrl(branding.logo)} className="w-8 h-8 rounded-lg object-contain" alt="Logo" />
-                            )}
-                            <h1 className="text-2xl font-black tracking-tighter italic text-white leading-none">{branding?.name || "Hutgood"}</h1>
-                        </div>
+                <div className="max-w-md mx-auto px-6 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 shrink-0">
+                        {branding?.logo && (
+                            <img src={getDirectImageUrl(branding.logo)} className="w-8 h-8 rounded-lg object-contain" alt="Logo" />
+                        )}
+                        <h1 className="text-xl font-black tracking-tighter italic text-white leading-none">{branding?.name || "Hutgood"}</h1>
                     </div>
                     
-                    <div className="flex items-center gap-3">
-                        <div className="flex bg-[#1A1512] rounded-full p-1 border border-accent/10 text-[10px] font-black uppercase tracking-widest">
-                            <button className={`px-3 py-1.5 rounded-full transition-all ${orderMode === 'dine-in' ? 'bg-accent text-primary' : 'text-white/40'}`}>Dine-in</button>
-                            <button className={`px-3 py-1.5 rounded-full transition-all ${orderMode === 'takeaway' ? 'bg-accent text-primary' : 'text-white/40'}`}>Takeaway</button>
+                    <div className="flex items-center gap-2">
+                        <div className="flex bg-white/10 rounded-full p-1 border border-white/20 text-[9px] font-black uppercase tracking-widest backdrop-blur-md">
+                            <button onClick={switchToDineIn} className={`px-3 py-1.5 rounded-full transition-all ${orderMode === 'dine-in' ? 'bg-accent text-primary shadow-lg' : 'text-white/40'}`}>Dine-in</button>
+                            <button onClick={switchToTakeaway} className={`px-3 py-1.5 rounded-full transition-all ${orderMode === 'takeaway' ? 'bg-accent text-primary shadow-lg' : 'text-white/40'}`}>Takeaway</button>
                         </div>
-                        <button onClick={() => setShowCart(true)} className="relative w-10 h-10 rounded-full bg-accent flex items-center justify-center text-primary shadow-lg shadow-accent/20">
+                        <button onClick={() => setShowCart(true)} className="relative w-10 h-10 rounded-full bg-accent flex items-center justify-center text-primary shadow-lg shadow-accent/20 shrink-0">
                             <ShoppingBag className="w-5 h-5" />
                             {cartCount > 0 && (
-                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-primary text-[10px] font-bold rounded-full flex items-center justify-center animate-bounce">
+                                <motion.span 
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="absolute -top-1 -right-1 w-5 h-5 bg-white text-primary text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg"
+                                >
                                     {cartCount}
-                                </span>
+                                </motion.span>
                             )}
                         </button>
                     </div>

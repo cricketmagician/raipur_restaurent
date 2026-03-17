@@ -336,7 +336,7 @@ export default function GuestDashboard() {
     const tableNumberDisplay = tableNumber;
     return (
         <div 
-            className="pb-40 px-6 pt-10 min-h-screen w-full overflow-x-hidden transition-colors duration-500 relative"
+            className="pb-40 pt-10 min-h-screen w-full overflow-x-hidden transition-colors duration-500 relative"
             style={{ 
                 fontFamily: theme.fontSans,
                 color: theme.text

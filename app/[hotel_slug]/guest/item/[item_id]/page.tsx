@@ -77,7 +77,7 @@ export default function ItemPage() {
             }}
         >
             {/* Header / Back Button */}
-            <div className="fixed top-0 left-0 right-0 p-6 z-50 flex items-center justify-between">
+            <div className="fixed top-0 left-0 right-0 px-4 py-6 z-50 flex items-center justify-between">
                 <button 
                     onClick={() => router.back()}
                     className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
@@ -107,12 +107,12 @@ export default function ItemPage() {
             </div>
 
             {/* Content Section */}
-            <div className="px-8 -mt-20 relative z-10">
+            <div className="px-4 -mt-20 relative z-10">
                 <motion.div
                     initial={{ y: 40, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-white p-10 shadow-2xl shadow-black/5"
+                    className="bg-white px-6 py-10 shadow-2xl shadow-black/5"
                     style={{ borderRadius: globalTheme.radius }}
                 >
                     <div className="flex items-center space-x-3 mb-6">

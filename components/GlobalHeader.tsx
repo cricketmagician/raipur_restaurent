@@ -65,7 +65,7 @@ export function GlobalHeader() {
         >
             <div className="flex flex-col gap-6">
                 {/* Row 1: Menu (Left), Branding (Center), Cart (Right) */}
-                <div className="px-6 flex items-center justify-between gap-4">
+                <div className="px-4 flex items-center justify-between gap-4">
                     {/* Left: Menu & Utility Dropdown */}
                     <div className="flex-shrink-0 relative">
                         <button 

@@ -289,7 +289,7 @@ export default function RestaurantPage() {
 
     return (
         <div 
-            className="pb-40 px-6 pt-10 min-h-screen max-w-[500px] mx-auto overflow-x-hidden transition-colors duration-500"
+            className="pb-40 pt-10 min-h-screen w-full overflow-x-hidden transition-colors duration-500"
             style={{ backgroundColor: theme.background, fontFamily: theme.fontSans, color: theme.text }}
         >
             <div className="relative z-10">

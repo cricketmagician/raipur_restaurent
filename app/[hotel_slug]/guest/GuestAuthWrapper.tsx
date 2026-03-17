@@ -135,9 +135,15 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
             return;
         }
 
-        console.log(`AuthLogic: Manual verify for Room ${roomNumber}`);
-        setIsVerifying(true);
+        const timestamp = Date.now();
         localStorage.setItem(`hotel_room_${hotelSlug}`, roomNumber);
+        
+        // Only set checkedInAt if it doesn't exist yet to preserve the session start
+        if (!localStorage.getItem(`hotel_checked_in_at_${hotelSlug}`)) {
+            localStorage.setItem(`hotel_checked_in_at_${hotelSlug}`, timestamp.toString());
+            setCheckedInAt(timestamp);
+        }
+        
         localStorage.removeItem(`hotel_pin_${hotelSlug}`);
         setIsVerified(true);
         setIsVerifying(false);

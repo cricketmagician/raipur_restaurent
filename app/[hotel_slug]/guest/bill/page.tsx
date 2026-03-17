@@ -30,12 +30,18 @@ export default function BillPage() {
     };
 
     // All requests for the current room and session
-    const roomRequests = checkedInAt ? requests.filter(r =>
-        r.room === roomNumber &&
-        (r.price || 0) > 0 &&
-        r.timestamp >= checkedInAt &&
-        r.type !== "Checkout Requested"
-    ) : [];
+    // Relaxed filtering: If checkedInAt is missing, show everything for this room
+    const roomRequests = requests.filter(r => {
+        const isCorrectRoom = r.room === roomNumber;
+        const hasPrice = (r.price || 0) > 0;
+        const isNotCheckoutAction = r.type !== "Checkout Requested";
+        
+        // If we have a timestamp, use it for security/session split
+        // If not, allow showing items for this room (common for quick-entry tables)
+        const isCurrentSession = !checkedInAt || r.timestamp >= checkedInAt;
+        
+        return isCorrectRoom && hasPrice && isNotCheckoutAction && isCurrentSession;
+    });
     const unpaidRequests = roomRequests.filter(r => !r.is_paid);
     const totalAmount = roomRequests.reduce((sum, r) => sum + (r.total || 0), 0);
     const amountDue = unpaidRequests.reduce((sum, r) => sum + (r.total || 0), 0);

@@ -215,17 +215,22 @@ export default function RestaurantPage() {
                         <input 
                             type="text" 
                             placeholder="Find something handcrafted..." 
-                            className="w-full bg-white border border-black/5 rounded-full py-6 pl-16 pr-6 shadow-xl shadow-black/5 focus:outline-none focus:ring-2 transition-all font-bold text-sm uppercase tracking-widest placeholder:text-slate-300"
+                            className="w-full border rounded-full py-6 pl-16 pr-6 shadow-xl focus:outline-none focus:ring-2 transition-all font-bold text-sm uppercase tracking-widest placeholder:text-slate-300"
                             style={{ 
                                 borderRadius: theme.radius,
-                                focusRingColor: `${theme.primary}33`
+                                backgroundColor: theme.surface,
+                                borderColor: `${theme.primary}10`,
+                                color: theme.text
                             } as any}
                         />
                     </div>
                 </header>
 
                 {/* 2. Starbucks Style Vertical/Horizontal Categories */}
-                <div className="overflow-x-auto no-scrollbar flex items-center space-x-4 -mx-2 px-2 pb-8 mb-4 border-b border-black/5">
+                <div 
+                    className="overflow-x-auto no-scrollbar flex items-center space-x-4 -mx-2 px-2 pb-8 mb-4 border-b"
+                    style={{ borderColor: `${theme.primary}0a` }}
+                >
                     {categories.map((category) => {
                         const isActive = activeCategory === category.id;
                         return (
@@ -233,14 +238,14 @@ export default function RestaurantPage() {
                                 key={category.id}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => setActiveCategory(category.id)}
-                                className={`flex-none px-6 py-3 rounded-full border transition-all flex items-center space-x-2 ${
+                                className={`flex-none px-6 py-3 border transition-all flex items-center space-x-2 ${
                                     isActive 
                                     ? 'text-white shadow-lg' 
-                                    : 'bg-white border-black/10 hover:border-black/30'
+                                    : 'hover:opacity-80'
                                 }`}
                                 style={{ 
-                                    backgroundColor: isActive ? theme.primary : "white",
-                                    borderColor: isActive ? theme.primary : undefined,
+                                    backgroundColor: isActive ? theme.primary : theme.surface,
+                                    borderColor: isActive ? theme.primary : `${theme.primary}10`,
                                     color: isActive ? "white" : theme.text,
                                     borderRadius: theme.radius
                                 }}

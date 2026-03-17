@@ -19,7 +19,7 @@ export const GUEST_THEMES: Record<GuestTheme['id'], GuestTheme> = {
         primary: "#00704A", // Starbucks Green
         secondary: "#D4E9E2",
         accent: "#006241",
-        background: "#F2F0EB",
+        background: "#F9F7F2", // Warmer, more paper-like background
         surface: "#FFFFFF",
         text: "#1E3932",
         textMuted: "#6B7280",
@@ -33,27 +33,27 @@ export const GUEST_THEMES: Record<GuestTheme['id'], GuestTheme> = {
         primary: "#E31837", // McDonald's Style Red
         secondary: "#FFBC0D", // Yellow
         accent: "#C41230",
-        background: "#F8F8F8",
+        background: "#FFFBF0", // High-energy yellowish white
         surface: "#FFFFFF",
         text: "#1A1A1A",
         textMuted: "#4B5563",
         fontSans: "Saira, sans-serif",
-        fontSerif: "Saira, sans-serif", // Fast food rarely uses serif
-        radius: "1rem",
+        fontSerif: "Saira, sans-serif",
+        radius: "1.25rem", // Slightly more rounded than before but still snappy
         animation: 'snappy'
     },
     FINE_DINE: {
         id: 'FINE_DINE',
-        primary: "#1A1A1A", // Elegant Black
-        secondary: "#C5A059", // Gold
+        primary: "#C5A059", // Gold
+        secondary: "#1A1A1A", // Dark
         accent: "#8B6F39",
-        background: "#FCFAF7",
-        surface: "#FFFFFF",
-        text: "#1A1A1A",
+        background: "#0A0A0A", // Luxury DARK background
+        surface: "#1A1A1A",
+        text: "#F5F5F5", // Light text for dark background
         textMuted: "#9CA3AF",
         fontSans: "Montserrat, sans-serif",
         fontSerif: "Cormorant Garamond, serif",
-        radius: "0rem", // Minimalist/Square
+        radius: "0.5rem", // Sharp but slightly softened
         animation: 'elegant'
     }
 };

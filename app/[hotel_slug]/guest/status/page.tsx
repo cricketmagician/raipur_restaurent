@@ -9,6 +9,8 @@ import { useGuestRoom } from "../GuestAuthWrapper";
 import { playGuestNotification, playSuccessNotification, initAudioContext } from "@/utils/audio";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { useTheme } from "@/utils/themes";
+
 export default function StatusPage() {
     const router = useRouter();
     const params = useParams();
@@ -16,6 +18,7 @@ export default function StatusPage() {
     const { roomNumber, checkedInAt } = useGuestRoom();
     const { branding } = useHotelBranding(hotelSlug);
     const requests = useSupabaseRequests(branding?.id, roomNumber, checkedInAt);
+    const theme = useTheme(branding);
     const prevRequestsRef = useRef(requests);
 
     useEffect(() => {
@@ -98,8 +101,8 @@ export default function StatusPage() {
             bg: "bg-slate-50/80",
             border: "border-slate-100",
             text: "text-slate-900",
-            accent: "bg-slate-900",
-            light: "bg-slate-500/10",
+            accent: theme.primary,
+            light: `${theme.primary}1a`,
             muted: "text-slate-400"
         };
     };
@@ -108,7 +111,14 @@ export default function StatusPage() {
     const pastRequests = requests.filter((r) => r.status === "Completed");
 
     return (
-        <div className="pb-40 px-5 pt-safe min-h-app bg-[#FAF7F2] text-slate-900 overflow-x-hidden">
+        <div 
+            className="pb-40 px-5 pt-safe min-h-screen overflow-x-hidden transition-colors duration-500"
+            style={{ 
+                backgroundColor: theme.background,
+                fontFamily: theme.fontSans,
+                color: theme.text
+            }}
+        >
             <div className="flex items-center justify-between mb-10 pt-10">
                 <motion.button 
                     whileTap={{ scale: 0.9 }}

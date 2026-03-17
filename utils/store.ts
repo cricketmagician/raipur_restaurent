@@ -1108,3 +1108,75 @@ export function useCart(hotelId: string | undefined) {
 
     return { cart, updateQuantity, clearCart, cartCount, isInitialized };
 }
+/**
+ * Loyalty System (Vibe Points)
+ */
+export async function addLoyaltyPoints(hotelId: string, phone: string, points: number) {
+    if (!hotelId || !phone) return { error: "Missing hotel ID or phone" };
+    
+    try {
+        // Upsert loyalty record
+        const { data, error } = await supabase
+            .from('guest_loyalty')
+            .select('id, points')
+            .eq('hotel_id', hotelId)
+            .eq('phone', phone)
+            .single();
+
+        if (error && error.code !== 'PGRST116') throw error;
+
+        if (data) {
+            // Update existing
+            const { error: updateError } = await supabase
+                .from('guest_loyalty')
+                .update({ points: data.points + points })
+                .eq('id', data.id);
+            return { error: updateError };
+        } else {
+            // Insert new
+            const { error: insertError } = await supabase
+                .from('guest_loyalty')
+                .insert([{
+                    hotel_id: hotelId,
+                    phone: phone,
+                    points: points
+                }]);
+            return { error: insertError };
+        }
+    } catch (err) {
+        console.error("Error in addLoyaltyPoints:", err);
+        return { error: err };
+    }
+}
+
+export async function getGuestLoyalty(hotelId: string, phone: string) {
+    const { data, error } = await supabase
+        .from('guest_loyalty')
+        .select('*')
+        .eq('hotel_id', hotelId)
+        .eq('phone', phone)
+        .single();
+    
+    return { data, error };
+}
+
+export function useGuestLoyalty(hotelId: string | undefined, phone: string | null) {
+    const state = useRealtimeCollection<any>({
+        table: 'guest_loyalty',
+        consumer: 'guest-loyalty',
+        scopeKey: (hotelId && phone) ? `${hotelId}-${phone}` : 'no-loyalty',
+        enabled: !!hotelId && !!phone,
+        fetchFilters: hotelId ? [
+            { column: 'hotel_id', value: hotelId },
+            { column: 'phone', value: phone }
+        ] : [],
+        channelFilter: hotelId ? { column: 'hotel_id', value: hotelId } : undefined,
+    });
+
+    return {
+        loyalty: state.data[0] || null,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+    };
+}

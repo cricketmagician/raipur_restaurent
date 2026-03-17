@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState, useMemo } from "react";
 import { ServiceCard } from "@/components/ServiceCard";
-import { ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles, Search, ArrowUpRight, Receipt, ChevronRight, User } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles, Search, ArrowUpRight, Receipt, ChevronRight, User, ArrowRight } from "lucide-react";
 import { ImpulseBottomSheet } from "@/components/ImpulseBottomSheet";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,6 +25,8 @@ import { TrendingNow } from "@/components/TrendingNow";
 import { PerfectPairs } from "@/components/PerfectPairs";
 import { MoodSection } from "@/components/MoodSection";
 import { useAddEffectTrigger } from "@/components/AddEffect";
+import { LoyaltySignIn } from "@/components/LoyaltySignIn";
+import { useGuestLoyalty, addLoyaltyPoints } from "@/utils/store";
 
 
 // Helper to safely render icons with className
@@ -54,6 +56,26 @@ export default function GuestDashboard() {
     const [showCart, setShowCart] = useState(false);
     const [isOrdering, setIsOrdering] = useState(false);
     const [orderComplete, setOrderComplete] = React.useState(false);
+    // Loyalty State
+    const [loyaltyProfile, setLoyaltyProfile] = useState<{ phone: string; name: string } | null>(() => {
+        if (typeof window === 'undefined') return null;
+        const stored = localStorage.getItem(`guest_loyalty_${hotelSlug}`);
+        return stored ? JSON.parse(stored) : null;
+    });
+    const { loyalty: realLoyalty } = useGuestLoyalty(branding?.id, loyaltyProfile?.phone || null);
+    const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
+
+    const handleLoyaltySignIn = (phone: string, name: string) => {
+        const profile = { phone, name };
+        localStorage.setItem(`guest_loyalty_${hotelSlug}`, JSON.stringify(profile));
+        setLoyaltyProfile(profile);
+        // Points will auto-fetch via useGuestLoyalty
+    };
+
+    const currentPoints = realLoyalty?.points || 0;
+    const pointsToNextTreat = Math.max(0, 150 - (currentPoints % 150));
+    const progressPercent = ((currentPoints % 150) / 150) * 100;
+
     const [toast, setToast] = React.useState<{ message: string; type: "success" | "error"; isVisible: boolean }>({
         message: "",
         type: "success",
@@ -224,10 +246,22 @@ export default function GuestDashboard() {
         if (error) {
             setToast({ message: `Order Failed: ${error.message}`, type: "error", isVisible: true });
         } else {
+            // Loyalty Integration
+            if (loyaltyProfile?.phone) {
+                const earnedPoints = Math.floor(cartTotal / 10);
+                if (earnedPoints > 0) {
+                    await addLoyaltyPoints(branding.id, loyaltyProfile.phone, earnedPoints);
+                    setToast({ message: `Order Placed! Earned ${earnedPoints} vibe points ✨`, type: "success", isVisible: true });
+                } else {
+                    setToast({ message: "Order Placed Successfully!", type: "success", isVisible: true });
+                }
+            } else {
+                setToast({ message: "Order Placed Successfully!", type: "success", isVisible: true });
+            }
+
             setOrderComplete(true);
             clearCart();
             setShowCart(false);
-            setToast({ message: "Order Placed Successfully!", type: "success", isVisible: true });
         }
     };
 
@@ -309,11 +343,12 @@ export default function GuestDashboard() {
                     </motion.div>
                 </div>
 
-                {/* Simulated Rewards Section */}
+                {/* Starbucks Aesthetic Rewards Section */}
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden"
+                    onClick={() => !loyaltyProfile && setIsLoyaltyOpen(true)}
+                    className={`rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group transition-all duration-500 ${!loyaltyProfile ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
                     style={{ 
                         backgroundColor: theme.primary,
                         borderRadius: theme.radius
@@ -321,27 +356,43 @@ export default function GuestDashboard() {
                 >
                     <div className="relative z-10">
                         <div className="flex items-center justify-between mb-6">
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Guest Rewards</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">
+                                {loyaltyProfile ? `Welcome, ${loyaltyProfile.name}` : "Guest Rewards"}
+                            </span>
                             <Sparkles className="w-5 h-5 text-[#D4E9E2]" />
                         </div>
-                        <div className="flex items-baseline space-x-2 mb-2">
-                            <span className="text-5xl font-black">120</span>
-                            <span className="text-lg font-bold opacity-60 italic italic">vibe points</span>
-                        </div>
-                        <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mt-6">
-                            <motion.div 
-                                initial={{ width: 0 }}
-                                animate={{ width: '65%' }}
-                                className="h-full" 
-                                style={{ backgroundColor: theme.secondary }}
-                            />
-                        </div>
-                        <p className="text-[10px] font-bold mt-4 opacity-70 tracking-widest uppercase" style={{ color: theme.secondary }}>
-                            30 POINTS UNTIL YOUR NEXT TREAT
-                        </p>
+                        
+                        {loyaltyProfile ? (
+                            <>
+                                <div className="flex items-baseline space-x-2 mb-2">
+                                    <span className="text-5xl font-black">{currentPoints}</span>
+                                    <span className="text-lg font-bold opacity-60 italic">vibe points</span>
+                                </div>
+                                <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mt-6">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${progressPercent}%` }}
+                                        className="h-full" 
+                                        style={{ backgroundColor: theme.secondary }}
+                                    />
+                                </div>
+                                <p className="text-[10px] font-bold mt-4 opacity-70 tracking-widest uppercase" style={{ color: theme.secondary }}>
+                                    {pointsToNextTreat} POINTS UNTIL YOUR NEXT TREAT
+                                </p>
+                            </>
+                        ) : (
+                            <div className="py-2">
+                                <h3 className="text-2xl font-black italic tracking-tight mb-2">Join the Vibe.</h3>
+                                <p className="text-sm font-bold opacity-60">Tap to sign in and earn points on every order.</p>
+                                <div className="mt-6 flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest text-[#D4E9E2]">
+                                    <span>Get Started</span>
+                                    <ArrowRight className="w-3 h-3" />
+                                </div>
+                            </div>
+                        )}
                     </div>
                     {/* Abstract Siren Shape Background */}
-                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl" />
+                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors" />
                 </motion.div>
             </header>
 
@@ -388,8 +439,12 @@ export default function GuestDashboard() {
                             <button 
                                 key={chip.label}
                                 onClick={() => router.push(`/${hotelSlug}/guest/restaurant?cat=${chip.label.toLowerCase()}`)}
-                                className="flex-none px-10 py-5 rounded-[1.5rem] border border-black/5 shadow-xl active:scale-95 transition-all flex items-center space-x-4 bg-white group"
-                                style={{ borderRadius: theme.radius }}
+                                className="flex-none px-10 py-5 shadow-xl active:scale-95 transition-all flex items-center space-x-4 group border"
+                                style={{ 
+                                    borderRadius: theme.radius,
+                                    backgroundColor: theme.surface,
+                                    borderColor: `${theme.primary}10`
+                                }}
                             >
                                 <span className="text-2xl group-hover:scale-125 transition-transform duration-500">{chip.icon}</span>
                                 <span className="font-black text-[10px] uppercase tracking-widest" style={{ color: theme.text }}>{chip.label}</span>
@@ -435,7 +490,14 @@ export default function GuestDashboard() {
                                 }}
                             >
                                 <div className="flex items-center relative z-10">
-                                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mr-6 shadow-sm" style={{ borderRadius: `calc(${theme.radius} * 0.6)` }}>
+                                    <div 
+                                        className="w-14 h-14 flex items-center justify-center mr-6 shadow-sm border" 
+                                        style={{ 
+                                            borderRadius: `calc(${theme.radius} * 0.6)`,
+                                            backgroundColor: theme.surface,
+                                            borderColor: `${theme.primary}10`
+                                        }}
+                                    >
                                         <Receipt className="w-6 h-6" style={{ color: theme.primary }} />
                                     </div>
                                     <div className="text-left">
@@ -445,16 +507,16 @@ export default function GuestDashboard() {
                                         </span>
                                     </div>
                                 </div>
-                                <ChevronRight className="w-8 h-8 text-black/10 group-hover:text-black transition-all relative z-10" />
-                                <div className="absolute bottom-0 right-0 w-40 h-40 bg-black/5 rounded-full blur-2xl translate-y-1/4 translate-x-1/4" />
+                                <ChevronRight className="w-8 h-8 opacity-20 group-hover:opacity-100 transition-all relative z-10" style={{ color: theme.text }} />
+                                <div className="absolute bottom-0 right-0 w-40 h-40 opacity-5 rounded-full blur-2xl translate-y-1/4 translate-x-1/4" style={{ backgroundColor: theme.primary }} />
                             </button>
                         </div>
                     )}
                 </AnimatePresence>
 
                 {/* Seasonal Collection (Optionalized at bottom or integrated elsewhere) */}
-                <div className="space-y-6 pt-10 border-t border-[#00704A]/5">
-                    <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em] px-2 opacity-40">
+                <div className="space-y-6 pt-10 border-t" style={{ borderColor: `${theme.primary}10` }}>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] px-2 opacity-40" style={{ color: theme.text }}>
                         ✨ Seasonal Stories
                     </h3>
                     <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-6 -mx-2 px-2">
@@ -463,11 +525,16 @@ export default function GuestDashboard() {
                                 key={story.id}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => setStoryConfig({ isVisible: true, initialIndex: index })}
-                                className="flex-none w-48 bg-white rounded-[2rem] overflow-hidden shadow-lg border border-[#00704A]/5 cursor-pointer group grayscale-0 hover:grayscale-0 transition-all opacity-80 hover:opacity-100"
+                                className="flex-none w-48 overflow-hidden shadow-lg border cursor-pointer group grayscale-0 hover:grayscale-0 transition-all opacity-80 hover:opacity-100"
+                                style={{ 
+                                    backgroundColor: theme.surface,
+                                    borderColor: `${theme.primary}10`,
+                                    borderRadius: theme.radius
+                                }}
                             >
                                 <div className="aspect-square overflow-hidden relative">
                                     <img src={story.image} alt={story.label} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#1E3932]/40 to-transparent" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                                     <div className="absolute bottom-4 left-4 right-4">
                                         <h4 className="text-xs font-black text-white leading-tight truncate">{story.label}</h4>
                                     </div>

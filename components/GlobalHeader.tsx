@@ -57,10 +57,10 @@ export function GlobalHeader() {
             animate={{ y: 0 }}
             className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] transition-all duration-500 py-6`}
             style={{ 
-                backgroundColor: scrolled ? "rgba(255, 255, 255, 0.95)" : theme.background,
+                backgroundColor: scrolled ? `${theme.surface}f2` : "transparent", // f2 is ~95% opacity
                 backdropFilter: scrolled ? "blur(20px)" : "none",
                 boxShadow: scrolled ? "0 8px 30px rgba(0,0,0,0.04)" : "none",
-                borderBottom: `1px solid ${theme.primary}10`
+                borderBottom: scrolled ? `1px solid ${theme.primary}10` : "none"
             }}
         >
             <div className="flex flex-col gap-6">
@@ -88,37 +88,37 @@ export function GlobalHeader() {
                                     className="absolute top-14 left-0 w-56 bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,33,30,0.15)] border border-[#00704A]/5 overflow-hidden py-3 z-[110]"
                                 >
                                     <div className="px-6 py-3 border-b border-slate-50 mb-2">
-                                        <p className="text-[9px] font-black text-[#00704A] uppercase tracking-[0.3em]">Boutique Selection</p>
+                                        <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: theme.primary }}>Guest Selection</p>
                                     </div>
                                     <button 
                                         onClick={() => handleQuickRequest("Waiter Call", "Host requested from Header")}
                                         disabled={!!requestLoading}
-                                        className="w-full px-6 py-4 flex items-center justify-between hover:bg-[#D4E9E2]/30 transition-colors group"
+                                        className="w-full px-6 py-4 flex items-center justify-between hover:bg-black/5 transition-colors group"
                                     >
                                         <div className="flex items-center space-x-4">
-                                            <Bell className="w-5 h-5 text-[#00704A]" />
-                                            <span className="text-xs font-bold text-[#1E3932] uppercase tracking-widest">Call Host</span>
+                                            <Bell className="w-5 h-5" style={{ color: theme.primary }} />
+                                            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: theme.text }}>Call Host</span>
                                         </div>
-                                        {requestLoading === "Waiter Call" && <RefreshCw className="w-3 h-3 animate-spin text-[#00704A]" />}
+                                        {requestLoading === "Waiter Call" && <RefreshCw className="w-3 h-3 animate-spin" style={{ color: theme.primary }} />}
                                     </button>
                                     <button 
                                         onClick={() => handleQuickRequest("Mineral Water", "Sparkling Water requested")}
                                         disabled={!!requestLoading}
-                                        className="w-full px-6 py-4 flex items-center justify-between hover:bg-[#D4E9E2]/30 transition-colors group"
+                                        className="w-full px-6 py-4 flex items-center justify-between hover:bg-black/5 transition-colors group"
                                     >
                                         <div className="flex items-center space-x-4">
-                                            <Droplets className="w-5 h-5 text-[#00704A]" />
-                                            <span className="text-xs font-bold text-[#1E3932] uppercase tracking-widest">Hydration</span>
+                                            <Droplets className="w-5 h-5" style={{ color: theme.primary }} />
+                                            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: theme.text }}>Hydration</span>
                                         </div>
-                                        {requestLoading === "Mineral Water" && <RefreshCw className="w-3 h-3 animate-spin text-[#00704A]" />}
+                                        {requestLoading === "Mineral Water" && <RefreshCw className="w-3 h-3 animate-spin" style={{ color: theme.primary }} />}
                                     </button>
                                     <div className="h-px bg-slate-50 my-2" />
                                     <button 
                                         onClick={() => { router.push(`/${hotelSlug}/guest/profile`); setShowUtility(false); }}
-                                        className="w-full px-6 py-4 flex items-center space-x-4 hover:bg-[#D4E9E2]/30 transition-colors"
+                                        className="w-full px-6 py-4 flex items-center space-x-4 hover:bg-black/5 transition-colors"
                                     >
-                                        <User className="w-5 h-5 text-[#00704A]/40" />
-                                        <span className="text-xs font-bold text-[#1E3932] uppercase tracking-widest">My Identity</span>
+                                        <User className="w-5 h-5" style={{ color: `${theme.text}66` }} />
+                                        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: theme.text }}>My Identity</span>
                                     </button>
                                 </motion.div>
                             )}
@@ -154,7 +154,8 @@ export function GlobalHeader() {
                         <button 
                             id="header-cart-button"
                             onClick={() => window.dispatchEvent(new CustomEvent('open_cart'))}
-                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 active:scale-95 transition-all text-[#00704A] relative"
+                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 active:scale-95 transition-all relative"
+                            style={{ color: theme.primary }}
                         >
                             <ShoppingBag className="w-6 h-6" />
                             <AnimatePresence>
@@ -211,8 +212,9 @@ export function GlobalHeader() {
                                 }
                             }}
                             className={`relative z-10 flex-1 py-1.5 flex items-center justify-center transition-all duration-500 ${
-                                (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? "text-white" : "text-[#00704A]/40"
+                                (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? "text-white" : ""
                             }`}
+                            style={{ color: (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? "white" : `${theme.primary}66` }}
                         >
                             Takeout
                         </button>

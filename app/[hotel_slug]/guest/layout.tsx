@@ -11,12 +11,18 @@ import { GuestAuthWrapper } from "./GuestAuthWrapper";
 import { useHotelBranding } from "@/utils/store";
 import { useParams } from "next/navigation";
 
+import { useTheme } from "@/utils/themes";
+
 export default function GuestLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const params = useParams();
+    const hotelSlug = params?.hotel_slug as string;
+    const { branding } = useHotelBranding(hotelSlug);
+    const theme = useTheme(branding);
 
     useEffect(() => {
         const unlock = () => {
@@ -32,12 +38,18 @@ export default function GuestLayout({
     }, []);
 
     return (
-        <div className="flex flex-col min-h-[100dvh] bg-[#FAF7F2] text-slate-900 antialiased pb-24 overflow-x-hidden pt-safe">
+        <div 
+            className="flex flex-col min-h-[100dvh] text-slate-900 antialiased pb-24 overflow-x-hidden pt-safe transition-colors duration-500"
+            style={{ backgroundColor: theme.background }}
+        >
             <GlobalHeader />
             <AddEffect />
 
-            {/* Ambient Background Gradient - Refined for Warm Theme */}
-            <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_#B8860B08,_transparent_60%)]"></div>
+            {/* Ambient Background Gradient - Refined for Theme */}
+            <div 
+                className="fixed inset-0 -z-10 opacity-30"
+                style={{ backgroundImage: `radial-gradient(circle at top right, ${theme.secondary}66, transparent 60%)` }}
+            ></div>
 
             <GuestAuthWrapper>
                 <main className="flex-1 w-full max-w-md mx-auto relative px-5 pt-32">

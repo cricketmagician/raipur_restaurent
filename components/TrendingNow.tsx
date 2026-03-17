@@ -49,8 +49,12 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                         key={item.id}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onItemClick(item.id)}
-                        className="flex-none w-[85%] bg-white overflow-hidden shadow-2xl cursor-pointer relative group border border-black/5"
-                        style={{ borderRadius: theme.radius }}
+                        className="flex-none w-[85%] overflow-hidden shadow-2xl cursor-pointer relative group border"
+                        style={{ 
+                            borderRadius: theme.radius,
+                            backgroundColor: theme.surface,
+                            borderColor: `${theme.primary}10`
+                        }}
                     >
                         <div className="aspect-[16/10] overflow-hidden relative">
                             <img 
@@ -58,10 +62,10 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                                 alt={item.title} 
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t via-transparent to-transparent" style={{ backgroundImage: `linear-gradient(to top, ${theme.primary}CC, transparent, transparent)` }} />
+                            <div className="absolute inset-0 bg-gradient-to-t via-transparent to-transparent" style={{ backgroundImage: `linear-gradient(to top, ${theme.primary}88, transparent, transparent)` }} />
                             
                             <div className="absolute top-6 left-6">
-                                <span className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest shadow-xl" style={{ color: theme.primary }}>
+                                <span className="backdrop-blur-md px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest shadow-xl border" style={{ backgroundColor: `${theme.surface}e6`, color: theme.primary, borderColor: `${theme.primary}10` }}>
                                     {item.tag}
                                 </span>
                             </div>
@@ -76,30 +80,36 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                                     <ArrowUpRight className="w-5 h-5" style={{ color: theme.primary }} />
                                 </div>
                             </div>
-                            <p className="text-sm text-slate-500 font-medium italic mb-4 line-clamp-1">
+                            <p className="text-sm font-medium italic mb-4 line-clamp-1" style={{ color: theme.text, opacity: 0.6 }}>
                                 {item.description}
                             </p>
                             <div className="flex items-center justify-between">
-                                <span className="text-xl font-black text-[#1E3932]">₹{item.price}</span>
+                                <span className="text-xl font-black" style={{ color: theme.text }}>₹{item.price}</span>
                                 
                                 {cart[item.menuItemId] > 0 ? (
-                                    <div className="flex items-center bg-[#F2F0EB] rounded-full p-1 border border-[#00704A]/10" onClick={(e) => e.stopPropagation()}>
+                                    <div 
+                                        className="flex items-center rounded-full p-1 border" 
+                                        style={{ backgroundColor: `${theme.primary}0a`, borderColor: `${theme.primary}1a` }}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
                                         <button 
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onUpdateQuantity(item.menuItemId, cart[item.menuItemId] - 1);
                                             }}
-                                            className="w-8 h-8 rounded-full flex items-center justify-center text-[#00704A] hover:bg-white transition-all shadow-sm"
+                                            className="w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm"
+                                            style={{ color: theme.primary, backgroundColor: theme.surface }}
                                         >
                                             -
                                         </button>
-                                        <span className="w-8 text-center text-[10px] font-black text-[#1E3932]">{cart[item.menuItemId]}</span>
+                                        <span className="w-8 text-center text-[10px] font-black" style={{ color: theme.text }}>{cart[item.menuItemId]}</span>
                                         <button 
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onUpdateQuantity(item.menuItemId, cart[item.menuItemId] + 1);
                                             }}
-                                            className="w-8 h-8 rounded-full flex items-center justify-center bg-[#00704A] text-white shadow-md"
+                                            className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md"
+                                            style={{ backgroundColor: theme.primary }}
                                         >
                                             +
                                         </button>

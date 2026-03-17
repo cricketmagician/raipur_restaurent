@@ -47,7 +47,8 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={onClick}
-            className={`group bg-white rounded-[2rem] ${popularEffect} border-none overflow-hidden flex flex-col hover:shadow-[0_40px_80px_rgba(0,33,30,0.1)] transition-all duration-700 ease-out active:scale-[0.98] relative ${onClick ? 'cursor-pointer' : ''}`}
+            className={`group rounded-[2rem] ${popularEffect} border-none overflow-hidden flex flex-col hover:shadow-[0_40px_80px_rgba(0,33,30,0.1)] transition-all duration-700 ease-out active:scale-[0.98] relative ${onClick ? 'cursor-pointer' : ''}`}
+            style={{ backgroundColor: globalTheme.surface }}
         >
             {image && (
                 <div className="relative w-full aspect-square overflow-hidden" style={{ backgroundColor: globalTheme.background }}>
@@ -59,12 +60,12 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                     
                     <div 
                         className="absolute inset-0 bg-gradient-to-t via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" 
-                        style={{ backgroundImage: `linear-gradient(to top, ${globalTheme.primary}33, transparent, transparent)` }}
+                        style={{ backgroundImage: `linear-gradient(to top, ${globalTheme.primary}44, transparent, transparent)` }}
                     />
                     
                     <div 
-                        className="absolute top-4 right-4 bg-white px-4 py-1.5 rounded-full shadow-lg z-10 border"
-                        style={{ borderColor: `${primaryColor}10` }}
+                        className="absolute top-4 right-4 px-4 py-1.5 rounded-full shadow-lg z-10 border"
+                        style={{ backgroundColor: globalTheme.surface, borderColor: `${primaryColor}10` }}
                     >
                         <span className="text-sm font-black" style={{ color: primaryColor }}>₹{price.toFixed(0)}</span>
                     </div>
@@ -123,7 +124,7 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                                         e.stopPropagation();
                                         onRemove?.();
                                     }}
-                                    className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white transition-all active:scale-90"
+                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
                                     style={{ color: primaryColor }}
                                 >
                                     {quantity === 1 ? <Trash2 className="w-4 h-4 text-red-500" /> : <Minus className="w-4 h-4" />}

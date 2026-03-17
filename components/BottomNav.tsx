@@ -44,7 +44,7 @@ export function BottomNav() {
                         <div className={`p-2 rounded-2xl transition-all duration-300 relative ${
                             isActive 
                                 ? 'scale-110' 
-                                : 'text-slate-400 group-hover:text-slate-600'
+                                : 'text-slate-400 opacity-60'
                         } ${item.id === 'menu' ? 'p-2.5 -mt-1' : ''}`}
                         style={{ color: isActive ? theme.primary : undefined }}>
                             <item.icon 
@@ -54,10 +54,13 @@ export function BottomNav() {
                                 strokeWidth={item.id === 'menu' ? (isActive ? 2.5 : 2.2) : (isActive ? 2.5 : 2)}
                             />
                             {isActive && (
-                                <div className="absolute inset-0 bg-[#F55D2C]/10 blur-xl rounded-full" />
+                                <div 
+                                    className="absolute inset-0 blur-xl rounded-full" 
+                                    style={{ backgroundColor: `${theme.primary}1a` }} // 10% opacity
+                                />
                             )}
                         </div>
-                        <span className={`text-[9px] font-black uppercase tracking-[0.15em] transition-colors ${isActive ? '' : 'text-slate-400'}`} style={{ color: isActive ? theme.primary : undefined }}>
+                        <span className={`text-[9px] font-black uppercase tracking-[0.15em] transition-colors`} style={{ color: isActive ? theme.primary : `${theme.text}66` }}>
                             {item.label}
                         </span>
                         {isActive && (

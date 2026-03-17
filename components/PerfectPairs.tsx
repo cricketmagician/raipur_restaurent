@@ -43,19 +43,23 @@ export function PerfectPairs({ pairs, cart, onUpdateQuantity }: PerfectPairsProp
                         initial={{ opacity: 0, scale: 0.95 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        className="bg-white p-6 border flex items-center group relative overflow-hidden shadow-xl"
+                        className="p-6 border flex items-center group relative overflow-hidden shadow-xl"
                         style={{ 
                             borderRadius: theme.radius,
+                            backgroundColor: theme.surface,
                             borderColor: `${theme.primary}10`
                         }}
                     >
                         {/* Abstract background shape */}
                         <div 
-                            className="absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl transition-colors" 
-                            style={{ backgroundColor: `${theme.secondary}66` }} 
+                            className="absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl transition-colors opacity-20" 
+                            style={{ backgroundColor: theme.primary }} 
                         />
 
-                        <div className="w-24 h-24 rounded-full overflow-hidden mr-6 shadow-xl border-4 border-white shrink-0 relative z-10">
+                        <div 
+                            className="w-24 h-24 rounded-full overflow-hidden mr-6 shadow-xl border-4 shrink-0 relative z-10"
+                            style={{ borderColor: theme.surface }}
+                        >
                             <img src={pair.image} alt={pair.title} className="w-full h-full object-cover" />
                         </div>
 
@@ -68,23 +72,29 @@ export function PerfectPairs({ pairs, cart, onUpdateQuantity }: PerfectPairsProp
                         </div>
 
                         {cart[pair.originalId] > 0 ? (
-                            <div className="flex items-center bg-[#F2F0EB] rounded-full p-1 border border-[#00704A]/10 relative z-10" onClick={(e) => e.stopPropagation()}>
+                            <div 
+                                className="flex items-center rounded-full p-1 border relative z-10" 
+                                style={{ backgroundColor: `${theme.primary}0a`, borderColor: `${theme.primary}1a` }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 <button 
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onUpdateQuantity(pair.originalId, cart[pair.originalId] - 1);
                                     }}
-                                    className="w-10 h-10 rounded-full flex items-center justify-center text-[#00704A] hover:bg-white transition-all shadow-sm"
+                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm"
+                                    style={{ color: theme.primary, backgroundColor: theme.surface }}
                                 >
                                     -
                                 </button>
-                                <span className="w-8 text-center text-xs font-black text-[#1E3932]">{cart[pair.originalId]}</span>
+                                <span className="w-8 text-center text-xs font-black" style={{ color: theme.text }}>{cart[pair.originalId]}</span>
                                 <button 
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onUpdateQuantity(pair.originalId, cart[pair.originalId] + 1);
                                     }}
-                                    className="w-10 h-10 rounded-full flex items-center justify-center bg-[#00704A] text-white shadow-md"
+                                    className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md"
+                                    style={{ backgroundColor: theme.primary }}
                                 >
                                     +
                                 </button>

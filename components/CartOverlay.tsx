@@ -88,8 +88,13 @@ export function CartOverlay({
                                 <motion.button
                                     whileTap={{ scale: 0.9 }}
                                     onClick={onClose}
-                                    className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-xl border border-black/5"
-                                    style={{ color: theme.primary, borderRadius: `calc(${theme.radius} * 0.5)` }}
+                                    className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl border"
+                                    style={{ 
+                                        backgroundColor: theme.surface,
+                                        color: theme.primary, 
+                                        borderRadius: `calc(${theme.radius} * 0.5)`,
+                                        borderColor: `${theme.primary}10`
+                                    }}
                                 >
                                     <X className="w-6 h-6" />
                                 </motion.button>
@@ -98,7 +103,15 @@ export function CartOverlay({
                             <div className="space-y-4 mb-12">
                                 {cartItems.length > 0 ? (
                                     cartItems.map((item) => (
-                                        <div key={item.id} className="flex items-center justify-between p-6 bg-white shadow-xl border border-black/5 group" style={{ borderRadius: theme.radius }}>
+                                        <div 
+                                            key={item.id} 
+                                            className="flex items-center justify-between p-6 shadow-xl border group transition-all" 
+                                            style={{ 
+                                                borderRadius: theme.radius,
+                                                backgroundColor: theme.surface,
+                                                borderColor: `${theme.primary}10`
+                                            }}
+                                        >
                                             <div className="flex items-center space-x-4">
                                                 <div className="w-12 h-12 rounded-xl flex items-center justify-center font-bold" style={{ backgroundColor: `${theme.primary}10`, color: theme.primary }}>
                                                     {item.quantity}×
@@ -111,13 +124,15 @@ export function CartOverlay({
                                             <div className="flex items-center space-x-2">
                                                 <button 
                                                     onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                                                    className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center active:scale-90 transition-all border border-slate-100"
+                                                    className="w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
+                                                    style={{ backgroundColor: `${theme.text}0a`, borderColor: `${theme.text}10`, color: theme.text }}
                                                 >
                                                     <Minus className="w-4 h-4" />
                                                 </button>
                                                 <button 
                                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                    className="w-10 h-10 bg-[#3E2723]/5 text-[#3E2723] rounded-xl flex items-center justify-center active:scale-90 transition-all border border-[#3E2723]/10"
+                                                    className="w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
+                                                    style={{ backgroundColor: `${theme.primary}10`, borderColor: `${theme.primary}20`, color: theme.primary }}
                                                 >
                                                     <Plus className="w-4 h-4" />
                                                 </button>
@@ -126,10 +141,10 @@ export function CartOverlay({
                                     ))
                                 ) : (
                                     <div className="py-20 text-center space-y-4">
-                                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
-                                            <ShoppingBag className="w-8 h-8 text-slate-200" />
+                                        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto" style={{ backgroundColor: `${theme.primary}0a` }}>
+                                            <ShoppingBag className="w-8 h-8 opacity-20" style={{ color: theme.primary }} />
                                         </div>
-                                        <p className="text-slate-400 font-serif italic text-xl">Your bag is empty</p>
+                                        <p className="font-serif italic text-xl opacity-40" style={{ color: theme.text }}>Your bag is empty</p>
                                     </div>
                                 )}
                             </div>
@@ -138,8 +153,8 @@ export function CartOverlay({
                             {cartItems.length > 0 && (
                                 <div className="mb-12">
                                     <div className="flex items-center space-x-3 mb-6 px-1">
-                                        <span className="text-[10px] font-black text-[#F59E0B] uppercase tracking-[0.3em]">Complete your Order</span>
-                                        <div className="h-[1px] flex-1 bg-orange-100" />
+                                        <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: theme.accent }}>Complete your Order</span>
+                                        <div className="h-[1px] flex-1 opacity-10" style={{ backgroundColor: theme.accent }} />
                                     </div>
                                     <div className="grid grid-cols-1 gap-4">
                                         {(() => {
@@ -172,11 +187,8 @@ export function CartOverlay({
                                                         <h4 className="text-2xl font-black italic text-white mb-1">“Add a {suggestion.title}?” 🍰</h4>
                                                         <p className="text-white/60 text-sm font-medium italic mb-6">End your experience on a perfect note.</p>
                                                         <button 
-                                                            className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-xl shadow-lg active:scale-95 transition-all"
-                                                            style={{ 
-                                                                backgroundColor: theme.accent,
-                                                                color: "white" 
-                                                            }}
+                                                            className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-xl shadow-lg active:scale-95 transition-all text-white"
+                                                            style={{ backgroundColor: theme.accent }}
                                                         >
                                                             <Plus className="w-4 h-4" />
                                                             <span>Add for ₹{suggestion.price}</span>
@@ -190,9 +202,9 @@ export function CartOverlay({
                             )}
 
                             {/* 5. Checkout Action */}
-                            <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-[#3E2723]/5 border border-[#3E2723]/5">
+                            <div className="rounded-[2.5rem] p-8 shadow-2xl border" style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}>
                                 <div className="flex justify-between items-center mb-6">
-                                    <span className="text-slate-400 font-black uppercase text-[10px] tracking-widest">Grand Total</span>
+                                    <span className="font-black uppercase text-[10px] tracking-widest opacity-40" style={{ color: theme.text }}>Grand Total</span>
                                     <span className="text-4xl font-black italic" style={{ color: theme.text }}>₹{cartTotal.toFixed(0)}</span>
                                 </div>
                                 <button

@@ -40,10 +40,10 @@ export function GlobalHeader() {
             animate={{ y: 0 }}
             className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[460px] z-[100] transition-all duration-500 py-3`}
             style={{ 
-                backgroundColor: scrolled ? "rgba(255, 255, 255, 0.4)" : "transparent",
+                backgroundColor: scrolled ? theme.primary : "transparent",
                 backdropFilter: scrolled ? "blur(30px) saturate(180%)" : "none",
-                boxShadow: scrolled ? "0 10px 40px rgba(0,0,0,0.06)" : "none",
-                borderBottom: scrolled ? "1px solid rgba(255,255,255,0.3)" : "none"
+                boxShadow: scrolled ? "0 10px 40px rgba(0,0,0,0.15)" : "none",
+                borderBottom: scrolled ? "1px solid rgba(255,255,255,0.1)" : "none"
             }}
         >
             <div className="flex flex-col gap-4">
@@ -55,8 +55,8 @@ export function GlobalHeader() {
                             onClick={() => setShowUtility(!showUtility)}
                             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 border border-white/40 shadow-sm backdrop-blur-md`}
                             style={{ 
-                                backgroundColor: showUtility ? theme.primary : "rgba(255,255,255,0.6)",
-                                color: showUtility ? "white" : theme.primary
+                                backgroundColor: showUtility ? theme.primary : (scrolled ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)"),
+                                color: "white"
                             }}
                         >
                             {showUtility ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

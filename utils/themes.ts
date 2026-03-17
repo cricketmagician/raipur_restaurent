@@ -1,5 +1,5 @@
 export type GuestTheme = {
-    id: 'CAFE' | 'FINE_DINE';
+    id: 'CAFE' | 'FINE_DINE' | 'ELITE_CAFE';
     primary: string;
     secondary: string;
     accent: string;
@@ -14,6 +14,20 @@ export type GuestTheme = {
 };
 
 export const GUEST_THEMES: Record<GuestTheme['id'], GuestTheme> = {
+    ELITE_CAFE: {
+        id: 'ELITE_CAFE',
+        primary: "#00704A", // Starbucks Deep Green
+        secondary: "#1E3932", // Starbucks Dark Forest
+        accent: "#D4E9E2", // Soft Mint / Cream
+        background: "#FFFFFF",
+        surface: "#F1F8F5", // Very light green-tinted surface
+        text: "#1E3932",
+        textMuted: "#6B7280",
+        fontSans: "Outfit, Inter, sans-serif",
+        fontSerif: "Playfair Display, serif",
+        radius: "1.25rem",
+        animation: 'smooth'
+    },
     CAFE: {
         id: 'CAFE',
         primary: "#3C2A21", // Dark Coffee Bean

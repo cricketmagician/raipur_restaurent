@@ -41,107 +41,124 @@ export function MenuListItem({
                 hidden: { opacity: 0, y: 20 },
                 show: { opacity: 1, y: 0 }
             }}
-            whileHover={{ y: -4, boxShadow: `0 20px 40px ${theme.primary}10` }}
+            whileHover={{ y: -8, boxShadow: `0 30px 60px ${theme.primary}15` }}
             whileTap={{ scale: 0.98 }}
-            className={`bg-white shadow-[0_10px_30px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col relative group transition-all duration-300 border ${isLarge ? 'col-span-2' : ''}`}
-            style={{ borderRadius: theme.radius, borderColor: `${theme.primary}05` }}
+            className={`bg-white shadow-[0_15px_45px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col relative group transition-all duration-500 border-b-4 ${isLarge ? 'col-span-2' : ''}`}
+            style={{ 
+                borderRadius: "1.25rem", 
+                borderColor: quantity > 0 ? theme.primary : "transparent",
+                borderBottomColor: quantity > 0 ? theme.primary : "transparent"
+            }}
         >
-            {/* Image Section: Food First (60% proportional focus) */}
-            <div className={`relative w-full overflow-hidden ${isLarge ? 'h-[240px]' : 'h-[180px]'}`}>
+            {/* Image Section: Elite Starbucks Texture */}
+            <div className={`relative w-full overflow-hidden ${isLarge ? 'h-[280px]' : 'h-[200px]'}`}>
                 <img 
                     src={image} 
                     alt={title} 
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000 opacity-95"
                 />
                 
-                {/* Badges on Image */}
-                <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    {(trendingCount > 0 || isLarge) && (
+                {/* Visual Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                
+                {/* Top Badges */}
+                <div className="absolute top-4 left-4">
+                    {isLarge && (
                         <div 
-                            className="backdrop-blur-md text-[7px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest w-fit border shadow-xl"
-                            style={{ backgroundColor: `${theme.primary}CC`, color: theme.secondary, borderColor: `${theme.secondary}20` }}
+                            className="backdrop-blur-xl text-[8px] font-black px-4 py-2 rounded-full uppercase tracking-[0.2em] w-fit border shadow-2xl flex items-center gap-2"
+                            style={{ backgroundColor: theme.primary, color: "white", borderColor: "rgba(255,255,255,0.1)" }}
                         >
-                            <Zap className="w-2 h-2 mr-1 inline-block" style={{ fill: theme.secondary }} />
-                            {isLarge ? "Chef's Signature" : "Trending Choice"}
+                            <Star className="w-2.5 h-2.5 fill-white" />
+                            Premium Reserve
                         </div>
                     )}
                 </div>
                 
+                {/* Floating Price Tag */}
                 <div 
-                    className="absolute bottom-3 right-3 backdrop-blur-sm px-3 py-1 rounded-lg flex items-center shadow-md border"
-                    style={{ backgroundColor: `${theme.background}EE`, borderColor: `${theme.primary}10` }}
+                    className="absolute bottom-4 right-4 backdrop-blur-2xl px-4 py-2 rounded-2xl flex items-center shadow-2xl border"
+                    style={{ backgroundColor: "rgba(255,255,255,0.9)", borderColor: "rgba(0,112,74,0.1)" }}
                 >
-                    <span className="text-[11px] font-black tracking-tight" style={{ color: theme.primary }}>₹{price.toFixed(0)}</span>
+                    <span className="text-sm font-black tracking-tight text-[#00704A]">₹{price.toFixed(0)}</span>
                 </div>
             </div>
 
-            {/* Info Section: Minimal Context */}
-            <div className={`p-5 flex flex-col flex-1 ${isLarge ? 'items-center text-center px-10' : ''}`}>
-                <h3 
-                    className={`${isLarge ? 'text-2xl mb-2' : 'text-sm mb-1'} font-black leading-tight transition-colors line-clamp-1`}
-                    style={{ color: theme.primary }}
-                >
-                    {title}
-                </h3>
+            {/* Info Section: Sophisticated Typography */}
+            <div className={`p-6 flex flex-col flex-1 ${isLarge ? 'items-center text-center px-12' : ''}`}>
+                <div className="mb-3">
+                    <h3 
+                        className={`${isLarge ? 'text-2xl mb-2' : 'text-base mb-1'} font-black leading-tight transition-colors line-clamp-2 uppercase tracking-tight`}
+                        style={{ color: "#1E3932" }}
+                    >
+                        {title}
+                    </h3>
+                    <div className="flex items-center gap-2 opacity-40">
+                        <span className="text-[9px] font-bold uppercase tracking-widest">Handcrafted</span>
+                        <div className="w-1 h-1 rounded-full bg-current" />
+                        <span className="text-[9px] font-bold uppercase tracking-widest">Fresh</span>
+                    </div>
+                </div>
+
                 <p 
-                    className={`${isLarge ? 'text-xs mb-6' : 'text-[9px] mb-4'} font-medium line-clamp-2 leading-relaxed tracking-tight opacity-40`}
-                    style={{ color: theme.primary }}
+                    className={`${isLarge ? 'text-sm mb-8' : 'text-[10px] mb-6'} font-medium line-clamp-2 leading-relaxed tracking-tight opacity-60 italic`}
+                    style={{ color: "#1E3932" }}
                 >
                     {description}
                 </p>
                 
-                <div className="mt-auto flex items-center justify-between">
-                    <div className="relative min-w-[100%] flex">
-                        <AnimatePresence mode="wait">
-                            {quantity === 0 ? (
-                                <motion.button 
-                                    key="add"
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.8 }}
-                                    whileTap={{ scale: 0.9 }}
+                <div className="mt-auto">
+                    <AnimatePresence mode="wait">
+                        {quantity === 0 ? (
+                            <motion.button 
+                                key="add"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onUpdateQuantity(1);
+                                }}
+                                className="w-full font-black text-[9px] uppercase tracking-[0.25em] py-4 shadow-xl transition-all flex items-center justify-center space-x-3 group-hover:bg-[#1E3932]"
+                                style={{ backgroundColor: "#00704A", color: "white", borderRadius: "100px" }}
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span>Add to Bag</span>
+                            </motion.button>
+                        ) : (
+                            <motion.div 
+                                key="quantity"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="w-full flex items-center justify-between shadow-2xl overflow-hidden h-12 px-2"
+                                style={{ backgroundColor: "#1E3932", color: "white", borderRadius: "100px" }}
+                            >
+                                <button 
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        onUpdateQuantity(1);
+                                        onUpdateQuantity(quantity - 1);
                                     }}
-                                    className="w-full font-black text-[8px] uppercase tracking-[0.2em] px-4 py-2.5 shadow-lg transition-all flex items-center justify-center space-x-2"
-                                    style={{ backgroundColor: theme.primary, color: theme.secondary, borderRadius: theme.radius }}
+                                    className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors border border-white/10"
+                                >
+                                    <Minus className="w-3 h-3" />
+                                </button>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-xs font-black leading-none">{quantity}</span>
+                                    <span className="text-[7px] font-bold uppercase tracking-widest opacity-40">In Bag</span>
+                                </div>
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onUpdateQuantity(quantity + 1);
+                                    }}
+                                    className="w-8 h-8 rounded-full flex items-center justify-center bg-white text-[#1E3932] shadow-lg"
                                 >
                                     <Plus className="w-3 h-3" />
-                                    <span>Add to your table</span>
-                                </motion.button>
-                            ) : (
-                                <motion.div 
-                                    key="quantity"
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.8 }}
-                                    className="w-full flex items-center justify-between shadow-lg overflow-hidden h-9"
-                                    style={{ backgroundColor: theme.primary, color: theme.background, borderRadius: theme.radius }}
-                                >
-                                    <button 
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onUpdateQuantity(quantity - 1);
-                                        }}
-                                        className="h-full px-4 hover:bg-black/10 transition-colors"
-                                    >
-                                        <Minus className="w-3 h-3" style={{ color: theme.secondary }} />
-                                    </button>
-                                    <span className="text-[10px] font-black" style={{ color: theme.background }}>{quantity}</span>
-                                    <button 
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onUpdateQuantity(quantity + 1);
-                                        }}
-                                        className="h-full px-4 hover:bg-black/10 transition-colors"
-                                    >
-                                        <Plus className="w-3 h-3" style={{ color: theme.secondary }} />
-                                    </button>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </motion.div>

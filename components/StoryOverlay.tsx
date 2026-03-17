@@ -4,24 +4,15 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingBag, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useTheme } from "@/utils/themes";
-import { useHotelBranding } from "@/utils/store";
+import { useHotelBranding, SeasonalStory } from "@/utils/store";
 import { useParams } from "next/navigation";
 
-interface Story {
-    id: string;
-    image: string;
-    label: string;
-    type: string;
-    menuItemId: string;
-    price: number;
-}
-
 interface StoryOverlayProps {
-    stories: Story[];
+    stories: SeasonalStory[];
     initialIndex: number;
     isVisible: boolean;
     onClose: () => void;
-    onOrder: (story: Story) => void;
+    onOrder: (story: SeasonalStory, event: React.MouseEvent) => void;
 }
 
 export function StoryOverlay({ stories, initialIndex, isVisible, onClose, onOrder }: StoryOverlayProps) {
@@ -129,7 +120,7 @@ export function StoryOverlay({ stories, initialIndex, isVisible, onClose, onOrde
                                 className="absolute inset-0"
                             >
                                 <img 
-                                    src={currentStory.image} 
+                                    src={currentStory.image_url} 
                                     alt={currentStory.label} 
                                     className="w-full h-full object-cover"
                                 />
@@ -162,12 +153,12 @@ export function StoryOverlay({ stories, initialIndex, isVisible, onClose, onOrde
                                 <div className="absolute bottom-12 left-8 right-8 z-30">
                                     <motion.button 
                                         whileTap={{ scale: 0.95 }}
-                                        onClick={() => onOrder(currentStory)}
+                                        onClick={(e) => onOrder(currentStory, e)}
                                         className="w-full py-8 rounded-full font-black uppercase tracking-widest flex items-center justify-center space-x-4 shadow-2xl"
                                         style={{ backgroundColor: theme.background, color: theme.primary, borderRadius: theme.radius }}
                                     >
-                                        <Plus className="w-6 h-6" />
-                                        <span>Add to Bag</span>
+                                        <ShoppingBag className="w-6 h-6" />
+                                        <span>Order Now</span>
                                     </motion.button>
                                 </div>
                             </motion.div>

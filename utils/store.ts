@@ -151,6 +151,18 @@ export interface MenuCategory {
     created_at?: string;
 }
 
+export interface SeasonalStory {
+    id: string;
+    hotel_id: string;
+    label: string;
+    type?: string;
+    image_url?: string;
+    price?: number;
+    menu_item_id?: string;
+    is_active: boolean;
+    created_at?: string;
+}
+
 const REQUEST_TYPE_KEYWORDS = {
     dining: ['dining order', 'restaurant order', 'restaurant', 'food order', 'room service', 'breakfast', 'lunch', 'dinner'],
     beverages: ['water', 'mineral water', 'tea', 'coffee', 'beverage'],
@@ -1520,4 +1532,59 @@ export function useGuestLoyalty(hotelId: string | undefined, phone: string | nul
         refresh: state.refresh,
         syncStatus: state.syncStatus,
     };
+}
+
+/**
+ * Hook to fetch and subscribe to seasonal stories for a specific hotel
+ */
+export function useSeasonalStories(hotelId?: string) {
+    const state = useRealtimeCollection<SeasonalStory>({
+        table: 'seasonal_stories',
+        consumer: 'seasonal-stories',
+        scopeKey: hotelId || 'no-hotel',
+        enabled: !!hotelId,
+        fetchFilters: hotelId ? [{ column: 'hotel_id', value: hotelId }] : [],
+        channelFilter: hotelId ? { column: 'hotel_id', value: hotelId } : undefined,
+        orderBy: { column: 'created_at', ascending: true },
+        enablePollingFallback: true,
+    });
+
+    return {
+        stories: state.data,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+        fetchError: state.fetchError,
+        lastSyncedAt: state.lastSyncedAt,
+    };
+}
+
+/**
+ * Save or add a seasonal story
+ */
+export async function saveSeasonalStory(hotelId: string, story: Partial<SeasonalStory>) {
+    if (story.id) {
+        return await supabase
+            .from('seasonal_stories')
+            .update({
+                label: story.label,
+                type: story.type,
+                image_url: story.image_url,
+                price: story.price,
+                menu_item_id: story.menu_item_id,
+                is_active: story.is_active
+            })
+            .eq('id', story.id);
+    } else {
+        return await supabase
+            .from('seasonal_stories')
+            .insert([{ ...story, hotel_id: hotelId }]);
+    }
+}
+
+/**
+ * Delete a seasonal story
+ */
+export async function deleteSeasonalStory(id: string) {
+    return await supabase.from('seasonal_stories').delete().eq('id', id);
 }

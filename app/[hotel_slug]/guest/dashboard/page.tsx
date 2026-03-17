@@ -9,7 +9,7 @@ import { getDirectImageUrl } from "@/utils/image";
 import { ImpulseBottomSheet } from "@/components/ImpulseBottomSheet";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequests, addSupabaseRequest, useSpecialOffers, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequests, addSupabaseRequest, useSpecialOffers, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, useSeasonalStories } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { Toast } from "@/components/Toast";
 import { ComboCard } from "@/components/ComboCard";
@@ -128,13 +128,19 @@ export default function GuestDashboard() {
     ]), [categoryRecords]);
 
 
-    const stories = [
-        { id: "s1", image: "/images/menu_demo/dessert.png", label: "Midnight Choco", type: "Viral", menuItemId: "d1137704-58a3-48b4-8395-8120387e7f6e", price: 219 },
-        { id: "s2", image: "/images/menu_demo/fries.png", label: "Peri Peri Rush", type: "Trending", menuItemId: "f1137704-58a3-48b4-8395-8120387e7f6e", price: 159 },
-        { id: "s3", image: "/images/menu_demo/burger.png", label: "Cheddar King", type: "New", menuItemId: "b1137704-58a3-48b4-8395-8120387e7f6e", price: 299 },
-        { id: "s4", image: "/images/menu_demo/pizza.png", label: "Garden Fresh", type: "Must try", menuItemId: "a1137704-58a3-48b4-8395-8120387e7f6e", price: 349 },
-        { id: "s5", image: "/images/menu_demo/coffee.png", label: "Cold Brew", type: "Classic", menuItemId: "c1137704-58a3-48b4-8395-8120387e7f6e", price: 189 },
-    ];
+    const { stories: dynamicStories, loading: storiesLoading } = useSeasonalStories(branding?.id);
+
+    const stories = useMemo(() => {
+        if (dynamicStories.length > 0) return dynamicStories;
+        // Fallback for demo/empty state
+        return [
+            { id: "s1", image_url: "/images/menu_demo/dessert.png", label: "Midnight Choco", type: "Viral", menu_item_id: "d1137704-58a3-48b4-8395-8120387e7f6e", price: 219, hotel_id: branding?.id || "", is_active: true },
+            { id: "s2", image_url: "/images/menu_demo/fries.png", label: "Peri Peri Rush", type: "Trending", menu_item_id: "f1137704-58a3-48b4-8395-8120387e7f6e", price: 159, hotel_id: branding?.id || "", is_active: true },
+            { id: "s3", image_url: "/images/menu_demo/burger.png", label: "Cheddar King", type: "New", menu_item_id: "b1137704-58a3-48b4-8395-8120387e7f6e", price: 299, hotel_id: branding?.id || "", is_active: true },
+            { id: "s4", image_url: "/images/menu_demo/pizza.png", label: "Garden Fresh", type: "Must try", menu_item_id: "a1137704-58a3-48b4-8395-8120387e7f6e", price: 349, hotel_id: branding?.id || "", is_active: true },
+            { id: "s5", image_url: "/images/menu_demo/coffee.png", label: "Cold Brew", type: "Classic", menu_item_id: "c1137704-58a3-48b4-8395-8120387e7f6e", price: 189, hotel_id: branding?.id || "", is_active: true },
+        ];
+    }, [dynamicStories, branding]);
 
     const trendingItems = useMemo(() => {
         const popular = availableMenuItems.filter(i => i.is_popular).slice(0, 2);
@@ -438,30 +444,31 @@ export default function GuestDashboard() {
                         </h3>
                         <span className="text-[8px] font-black uppercase tracking-[0.3em] opacity-30">Swipe to Explore</span>
                     </div>
-                    <div className="flex space-x-5 overflow-x-auto no-scrollbar pb-4 -mx-6 px-6">
+                    <div className="flex space-x-5 overflow-x-auto no-scrollbar pb-6 -mx-6 px-6">
                         {stories.map((story, index) => (
                             <motion.div 
                                 key={story.id}
                                 whileTap={{ scale: 0.96, rotate: -1 }}
                                 onClick={() => setStoryConfig({ isVisible: true, initialIndex: index })}
-                                className="flex-none w-36 overflow-hidden shadow-[0_15px_45px_rgba(0,0,0,0.12)] border-2 cursor-pointer group relative active:shadow-sm transition-all duration-300"
+                                className="flex-none w-40 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-2 cursor-pointer group relative active:shadow-sm transition-all duration-300"
                                 style={{ 
                                     backgroundColor: theme.surface,
                                     borderColor: `${theme.primary}08`,
-                                    borderRadius: "1.5rem"
+                                    borderRadius: "2.5rem"
                                 }}
                             >
-                                <div className="aspect-[4/5] overflow-hidden relative">
-                                    <img src={story.image} alt={story.label} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                <div className="aspect-[3/4] overflow-hidden relative">
+                                    <img src={getDirectImageUrl(story.image_url)} alt={story.label} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
                                     
-                                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600 px-2 py-0.5 rounded-full border border-white/20 shadow-lg scale-90 origin-left">
+                                    <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600 px-2.5 py-1 rounded-full border border-white/20 shadow-lg scale-90 origin-left">
                                         <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                                        <span className="text-[7px] font-black text-white uppercase tracking-widest">LIVE</span>
+                                        <span className="text-[8px] font-black text-white uppercase tracking-widest">{story.type || 'LIVE'}</span>
                                     </div>
 
-                                    <div className="absolute bottom-3 left-3 right-3">
-                                        <h4 className="text-[10px] font-black text-white leading-tight uppercase tracking-widest">{story.label}</h4>
+                                    <div className="absolute bottom-5 left-5 right-5">
+                                        <p className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] mb-1">Seasonal Highlight</p>
+                                        <h4 className="text-sm font-black text-white leading-tight uppercase tracking-widest">{story.label}</h4>
                                     </div>
                                 </div>
                             </motion.div>
@@ -680,11 +687,12 @@ export default function GuestDashboard() {
                 initialIndex={storyConfig.initialIndex}
                 stories={stories}
                 onClose={() => setStoryConfig({ ...storyConfig, isVisible: false })}
-                onOrder={(story) => {
-            const item = availableMenuItems.find(m => m.id === story.menuItemId);
-            if (item) {
-                addToCart(item);
-                setStoryConfig({ ...storyConfig, isVisible: false });
+                onOrder={(story, e) => {
+                    const mid = story.menu_item_id;
+                    if (mid) {
+                        updateQuantity(mid, (cart[mid] || 0) + 1);
+                        triggerFly(mid, story.image_url || '', e);
+                        setStoryConfig({ ...storyConfig, isVisible: false });
                         setToast({ message: "Added to Bag! ✨", type: "success", isVisible: true });
                     }
                 }}

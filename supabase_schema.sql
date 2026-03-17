@@ -140,6 +140,23 @@ CREATE TABLE IF NOT EXISTS special_offers (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- 8. Seasonal Stories
+CREATE TABLE IF NOT EXISTS seasonal_stories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    hotel_id UUID REFERENCES hotels(id) ON DELETE CASCADE,
+    label TEXT NOT NULL,
+    type TEXT DEFAULT 'Viral',
+    image_url TEXT,
+    price DECIMAL(10, 2),
+    menu_item_id UUID REFERENCES menu_items(id) ON DELETE SET NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE seasonal_stories ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read seasonal_stories" ON seasonal_stories;
+CREATE POLICY "Allow public read seasonal_stories" ON seasonal_stories FOR SELECT USING (true);
+
 -- Enable Row Level Security (RLS)
 -- NOTE: You should configure specific policies based on your security needs.
 -- For now, we'll just enable them.

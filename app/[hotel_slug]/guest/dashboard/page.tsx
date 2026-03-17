@@ -18,7 +18,10 @@ import { BottomNav } from "@/components/BottomNav";
 import { FoodStory } from "@/components/FoodStory";
 import { CartOverlay } from "@/components/CartOverlay";
 import { SHARED_COMBOS } from "@/utils/constants";
-import { getTimeTheme } from "@/utils/themes";
+import { getTimeTheme, CATEGORY_THEMES } from "@/utils/themes";
+import { StoryOverlay } from "@/components/StoryOverlay";
+import { GlobalHeader } from "@/components/GlobalHeader";
+
 
 // Helper to safely render icons with className
 const renderIcon = (icon: React.ReactNode, className: string) => {
@@ -45,11 +48,17 @@ export default function GuestDashboard() {
     const [submittingType, setSubmittingType] = React.useState<string | null>(null);
     const [showCart, setShowCart] = useState(false);
     const [isOrdering, setIsOrdering] = useState(false);
-    const [orderComplete, setOrderComplete] = useState(false);
+    const [orderComplete, setOrderComplete] = React.useState(false);
     const [toast, setToast] = React.useState<{ message: string; type: "success" | "error"; isVisible: boolean }>({
         message: "",
         type: "success",
         isVisible: false
+    });
+
+    // Story State
+    const [storyConfig, setStoryConfig] = React.useState({ 
+        isVisible: false, 
+        initialIndex: 0 
     });
 
     React.useEffect(() => {
@@ -73,10 +82,10 @@ export default function GuestDashboard() {
 
 
     const stories = [
-        { id: "s1", image: "/images/menu/choco_lava_cake_1773233674857.png", label: "New Dessert", type: "Sweet" },
-        { id: "s2", image: "/images/menu/loaded_fries_hero_1773232655179.png", label: "Must Try", type: "Viral" },
-        { id: "s3", image: "/images/menu/buttermilk_chicken_burger_1773233570467.png", label: "Chef Pick", type: "Hot" },
-        { id: "s4", image: "/images/menu/garlic_bread_1773233624069.png", label: "Special", type: "New" },
+        { id: "s1", image: "/images/menu_demo/dessert.png", label: "Choco Lava Delight", type: "Sweet", menuItemId: "d1137704-58a3-48b4-8395-8120387e7f6e", price: 219 },
+        { id: "s2", image: "/images/menu_demo/fries.png", label: "Peri Peri Rush", type: "Viral", menuItemId: "f1137704-58a3-48b4-8395-8120387e7f6e", price: 159 },
+        { id: "s3", image: "/images/menu_demo/burger.png", label: "Cheddar King", type: "Hot", menuItemId: "b1137704-58a3-48b4-8395-8120387e7f6e", price: 299 },
+        { id: "s4", image: "/images/menu_demo/pizza.png", label: "Garden Special", type: "New", menuItemId: "a1137704-58a3-48b4-8395-8120387e7f6e", price: 349 },
     ];
 
         // No change needed to updateQuantity itself as it's now from useCart
@@ -280,12 +289,12 @@ export default function GuestDashboard() {
                     </div>
 
                     <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-6 -mx-2 px-2">
-                        {stories.map((story) => (
+                        {stories.map((story, index) => (
                             <motion.div 
                                 key={story.id}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                                className="flex-none w-72 bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-[#00704A]/5 border border-[#00704A]/5 cursor-pointer"
+                                onClick={() => setStoryConfig({ isVisible: true, initialIndex: index })}
+                                className="flex-none w-72 bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-[#00704A]/5 border border-[#00704A]/5 cursor-pointer group"
                             >
                                 <div className="aspect-[4/5] overflow-hidden relative">
                                     <img src={story.image} alt={story.label} className="w-full h-full object-cover" />
@@ -370,6 +379,21 @@ export default function GuestDashboard() {
                 onOrder={handleOrder}
                 hotelId={branding?.id}
                 menuItems={menuItems}
+            />
+
+            <StoryOverlay 
+                isVisible={storyConfig.isVisible}
+                initialIndex={storyConfig.initialIndex}
+                stories={stories}
+                onClose={() => setStoryConfig({ ...storyConfig, isVisible: false })}
+                onOrder={(story) => {
+                    const item = menuItems.find(m => m.id === story.menuItemId);
+                    if (item) {
+                        addToCart(item);
+                        setStoryConfig({ ...storyConfig, isVisible: false });
+                        setToast({ message: "Added to Bag! ✨", type: "success", isVisible: true });
+                    }
+                }}
             />
 
             <Toast {...toast} onClose={() => setToast({ ...toast, isVisible: false })} />

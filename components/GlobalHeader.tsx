@@ -14,7 +14,7 @@ export function GlobalHeader() {
     const pathname = usePathname();
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
-    const { roomNumber } = useGuestRoom();
+    const { roomNumber, orderMode, switchToDineIn, switchToTakeaway } = useGuestRoom();
     const { cartCount } = useCart(branding?.id);
     const theme = useTheme(branding);
     
@@ -28,7 +28,6 @@ export function GlobalHeader() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    const tableNumber = roomNumber;
     const isDashboard = pathname?.endsWith("/dashboard");
 
     const handleQuickRequest = async (type: string, notes: string) => {
@@ -129,14 +128,9 @@ export function GlobalHeader() {
                     <div className="flex-1 flex justify-center">
                         <div className="flex bg-slate-100/50 p-1 rounded-full border border-slate-100 backdrop-blur-md">
                             <button 
-                                onClick={() => {
-                                    if (tableNumber?.toLowerCase() === 'takeaway' || tableNumber?.toLowerCase() === 'takeout') {
-                                        localStorage.removeItem(`hotel_room_${hotelSlug}`);
-                                        window.location.href = window.location.pathname;
-                                    }
-                                }}
+                                onClick={switchToDineIn}
                                 className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
-                                    (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") 
+                                    orderMode === "dine-in"
                                     ? 'bg-white text-slate-900 shadow-sm' 
                                     : 'text-slate-400 hover:text-slate-600'
                                 }`}
@@ -144,15 +138,9 @@ export function GlobalHeader() {
                                 Dine-In
                             </button>
                             <button 
-                                onClick={() => {
-                                    if (tableNumber?.toLowerCase() !== 'takeaway' && tableNumber?.toLowerCase() !== 'takeout') {
-                                        localStorage.setItem(`hotel_room_${hotelSlug}`, 'Takeaway');
-                                        localStorage.removeItem(`hotel_pin_${hotelSlug}`);
-                                        window.location.href = window.location.pathname + "?room=Takeaway";
-                                    }
-                                }}
+                                onClick={switchToTakeaway}
                                 className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
-                                    (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") 
+                                    orderMode === "takeaway"
                                     ? 'bg-white text-slate-900 shadow-sm' 
                                     : 'text-slate-400 hover:text-slate-600'
                                 }`}

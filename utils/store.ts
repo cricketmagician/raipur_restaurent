@@ -1065,27 +1065,65 @@ export function useCart(hotelId: string | undefined) {
     const [isInitialized, setIsInitialized] = useState(false);
 
     const STORAGE_KEY = `cart_${hotelId}`;
+    const SYNC_EVENT = `cart_updated_${hotelId}`;
 
-    useEffect(() => {
-        if (!hotelId) return;
+    const readCart = () => {
+        if (!hotelId) return {};
+
         const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            try {
-                setCart(JSON.parse(stored));
-            } catch (e) {
-                console.error("Failed to parse cart from storage", e);
-            }
+        if (!stored) return {};
+
+        try {
+            return JSON.parse(stored) as Record<string, number>;
+        } catch (e) {
+            console.error("Failed to parse cart from storage", e);
+            return {};
         }
-        setIsInitialized(true);
-    }, [hotelId]);
+    };
+
+    const persistCart = (nextCart: Record<string, number>) => {
+        if (!hotelId) return;
+
+        if (Object.keys(nextCart).length === 0) {
+            localStorage.removeItem(STORAGE_KEY);
+        } else {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(nextCart));
+        }
+
+        window.dispatchEvent(new CustomEvent(SYNC_EVENT, { detail: nextCart }));
+    };
 
     useEffect(() => {
-        if (isInitialized && hotelId) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
-            // Trigger storage event for cross-tab or same-page synchronization if needed
-            window.dispatchEvent(new Event('storage'));
+        if (!hotelId) {
+            setCart({});
+            setIsInitialized(false);
+            return;
         }
-    }, [cart, hotelId, isInitialized]);
+
+        const syncFromStorage = (event?: Event) => {
+            if (event instanceof StorageEvent && event.key && event.key !== STORAGE_KEY) {
+                return;
+            }
+
+            if (event instanceof CustomEvent && event.detail) {
+                setCart(event.detail as Record<string, number>);
+                setIsInitialized(true);
+                return;
+            }
+
+            setCart(readCart());
+            setIsInitialized(true);
+        };
+
+        syncFromStorage();
+        window.addEventListener('storage', syncFromStorage);
+        window.addEventListener(SYNC_EVENT, syncFromStorage as EventListener);
+
+        return () => {
+            window.removeEventListener('storage', syncFromStorage);
+            window.removeEventListener(SYNC_EVENT, syncFromStorage as EventListener);
+        };
+    }, [hotelId, STORAGE_KEY, SYNC_EVENT]);
 
     const updateQuantity = (id: string, q: number) => {
         setCart(prev => {
@@ -1095,13 +1133,16 @@ export function useCart(hotelId: string | undefined) {
             } else {
                 newCart[id] = q;
             }
+            if (hotelId) {
+                persistCart(newCart);
+            }
             return newCart;
         });
     };
 
     const clearCart = () => {
         setCart({});
-        if (hotelId) localStorage.removeItem(STORAGE_KEY);
+        if (hotelId) persistCart({});
     };
 
     const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);

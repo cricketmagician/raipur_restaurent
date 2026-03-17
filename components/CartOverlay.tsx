@@ -39,7 +39,7 @@ export function CartOverlay({
     const theme = useTheme(branding);
     
     const cartItems = Object.entries(cart).map(([id, q]) => {
-        let item = menuItems.find(m => m.id === id);
+        const item = menuItems.find(m => m.id === id);
         
         if (!item) return null;
         return { ...item, quantity: q };

@@ -212,7 +212,7 @@ export default function RestaurantPage() {
     };
 
     const cartItems = Object.entries(cart).map(([id, q]) => {
-        let item = effectiveItems.find(m => m.id === id);
+        const item = effectiveItems.find(m => m.id === id);
         if (!item) return null;
         return { ...item, quantity: q };
     }).filter((item): item is (typeof effectiveItems[0] & { quantity: number }) => item !== null);
@@ -240,7 +240,7 @@ export default function RestaurantPage() {
         const cartItemsString = cartItemsData.map(item => `${item.title} x${item.quantity}`).join(", ");
 
         const { error } = await addSupabaseRequest(branding.id, {
-            room: searchParams.get('room') || roomNumber || 'Unknown',
+            room: roomNumber || 'Unknown',
             type: "Dining Order",
             notes: cartItemsString,
             total: cartTotal,

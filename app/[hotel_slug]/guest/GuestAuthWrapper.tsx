@@ -12,11 +12,24 @@ interface GuestContextType {
     checkoutTime?: string;
     numGuests?: number;
     checkedInAt?: number | null;
+    orderMode: "dine-in" | "takeaway";
+    switchToDineIn: () => void;
+    switchToTakeaway: () => void;
 }
 
-const GuestContext = createContext<GuestContextType>({ roomNumber: "" });
+const GuestContext = createContext<GuestContextType>({
+    roomNumber: "",
+    orderMode: "dine-in",
+    switchToDineIn: () => {},
+    switchToTakeaway: () => {},
+});
 
 export const useGuestRoom = () => useContext(GuestContext);
+
+const isTakeawayRoom = (value?: string | null) => {
+    const normalized = value?.trim().toLowerCase();
+    return normalized === "takeaway" || normalized === "takeout";
+};
 
 
 function AuthLogic({ children }: { children: React.ReactNode }) {
@@ -33,6 +46,52 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
     const [checkedInAt, setCheckedInAt] = useState<number | null>(null);
     const [error, setError] = useState<string>("");
     const [isVerifying, setIsVerifying] = useState(false);
+
+    const setRoomInUrl = (nextRoom: string | null) => {
+        const currentUrl = new URL(window.location.href);
+
+        if (nextRoom && isTakeawayRoom(nextRoom)) {
+            currentUrl.searchParams.set("room", "Takeaway");
+        } else {
+            currentUrl.searchParams.delete("room");
+        }
+
+        window.history.replaceState({}, "", `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
+    };
+
+    const switchToTakeaway = () => {
+        if (!hotelSlug) return;
+
+        if (roomNumber && !isTakeawayRoom(roomNumber)) {
+            localStorage.setItem(`hotel_dinein_room_${hotelSlug}`, roomNumber);
+        }
+
+        localStorage.setItem(`hotel_room_${hotelSlug}`, "Takeaway");
+        localStorage.removeItem(`hotel_pin_${hotelSlug}`);
+        setRoomNumber("Takeaway");
+        setIsVerified(true);
+        setRoomInUrl("Takeaway");
+    };
+
+    const switchToDineIn = () => {
+        if (!hotelSlug) return;
+
+        const savedDineInRoom = localStorage.getItem(`hotel_dinein_room_${hotelSlug}`);
+        if (savedDineInRoom && !isTakeawayRoom(savedDineInRoom)) {
+            localStorage.setItem(`hotel_room_${hotelSlug}`, savedDineInRoom);
+            localStorage.removeItem(`hotel_pin_${hotelSlug}`);
+            setRoomNumber(savedDineInRoom);
+            setIsVerified(true);
+            setRoomInUrl(null);
+            return;
+        }
+
+        localStorage.removeItem(`hotel_room_${hotelSlug}`);
+        localStorage.removeItem(`hotel_pin_${hotelSlug}`);
+        setRoomNumber("");
+        setIsVerified(false);
+        setRoomInUrl(null);
+    };
 
     useEffect(() => {
         const timestamp = new Date().toLocaleTimeString();
@@ -65,6 +124,9 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
 
         if (effectiveRoom) {
             setRoomNumber(effectiveRoom);
+            if (!isTakeawayRoom(effectiveRoom)) {
+                localStorage.setItem(`hotel_dinein_room_${hotelSlug}`, effectiveRoom);
+            }
             if (storedCheckoutDate) setCheckoutDate(storedCheckoutDate);
             if (storedCheckoutTime) setCheckoutTime(storedCheckoutTime);
             if (storedNumGuests) setNumGuests(parseInt(storedNumGuests));
@@ -137,6 +199,9 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
 
         const timestamp = Date.now();
         localStorage.setItem(`hotel_room_${hotelSlug}`, roomNumber);
+        if (!isTakeawayRoom(roomNumber)) {
+            localStorage.setItem(`hotel_dinein_room_${hotelSlug}`, roomNumber);
+        }
         
         // Only set checkedInAt if it doesn't exist yet to preserve the session start
         if (!localStorage.getItem(`hotel_checked_in_at_${hotelSlug}`)) {
@@ -241,7 +306,18 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <GuestContext.Provider value={{ roomNumber, checkoutDate, checkoutTime, numGuests, checkedInAt }}>
+        <GuestContext.Provider
+            value={{
+                roomNumber,
+                checkoutDate,
+                checkoutTime,
+                numGuests,
+                checkedInAt,
+                orderMode: isTakeawayRoom(roomNumber) ? "takeaway" : "dine-in",
+                switchToDineIn,
+                switchToTakeaway,
+            }}
+        >
             {children}
         </GuestContext.Provider>
     );

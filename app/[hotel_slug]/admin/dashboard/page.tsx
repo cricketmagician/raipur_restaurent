@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
-import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, LayoutDashboard, ShieldAlert, BarChart3, Sparkles, Palette, CreditCard, PlayCircle, Phone, UserRound, Gem, Clock3 } from "lucide-react";
+import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, ShieldAlert, BarChart3, Sparkles, Palette, CreditCard, Phone, UserRound, Gem, Clock3 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHotelBranding, useSupabaseRequestsState, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms, useHotelGuests, useHotelGuestLoyalty, isDiningRequest, isHousekeepingRequest, isServiceRequest, isBillRequest, requestTypeMatches, type SyncStatus } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
@@ -115,7 +115,6 @@ export default function AdminHub() {
     const [audioInitialized, setAudioInitialized] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<HotelRequest | null>(null);
     const [activeTab, setActiveTab] = useState<"queue" | "active" | "history">("queue");
-    const [searchQuery, setSearchQuery] = useState("");
 
     const loading = brandingLoading || authLoading || profileLoading;
     const syncStates: SyncStatus[] = [brandingSyncStatus, requestsSyncStatus, roomsSyncStatus];
@@ -230,23 +229,9 @@ export default function AdminHub() {
         return requestTypeMatches(r.type, allowedTypes);
     });
 
-    const filteredBySearch = roleFilteredRequests.filter(r =>
-        r.room.includes(searchQuery) ||
-        r.type.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    const queueRequests = filteredBySearch.filter(r => r.status === "Pending");
-    const activeRequests = filteredBySearch.filter(r => r.status === "Assigned" || r.status === "In Progress");
-    const historyRequests = filteredBySearch.filter(r => r.status === "Completed");
-    const openBillRequests = roleFilteredRequests.filter(r => isBillRequest(r.type) && r.status !== "Completed");
-    const latestBillRequest = [...openBillRequests].sort((left, right) => right.timestamp - left.timestamp)[0] || null;
-    const statusOverview = {
-        pending: roleFilteredRequests.filter(r => r.status === "Pending").length,
-        assigned: roleFilteredRequests.filter(r => r.status === "Assigned").length,
-        inProgress: roleFilteredRequests.filter(r => r.status === "In Progress").length,
-        completed: roleFilteredRequests.filter(r => r.status === "Completed").length,
-        bills: openBillRequests.length,
-    };
+    const queueRequests = roleFilteredRequests.filter(r => r.status === "Pending");
+    const activeRequests = roleFilteredRequests.filter(r => r.status === "Assigned" || r.status === "In Progress");
+    const historyRequests = roleFilteredRequests.filter(r => r.status === "Completed");
     const roomGuestMap = useMemo(() => {
         const map = new Map<string, typeof guests[number]>();
         guests
@@ -336,8 +321,8 @@ export default function AdminHub() {
             </AnimatePresence>
 
             {/* THE PULSE: Hero Section */}
-            <header className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
-                <div className="lg:col-span-8 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <header className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-6">
+                <div className="flex-1 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                     <div>
                         <div className="flex items-center space-x-2 mb-2">
                             <span className="flex h-2 w-2 relative">
@@ -376,98 +361,6 @@ export default function AdminHub() {
                         <Palette className="w-4 h-4 mr-2 text-indigo-400 group-hover:text-indigo-300" />
                         Quick Visuals & Hero
                     </button>
-                </div>
-
-                <div className="lg:col-span-4">
-                    <div className="rounded-[2.25rem] border border-slate-200/70 bg-white/95 backdrop-blur-xl shadow-xl shadow-slate-200/40 p-5 space-y-5">
-                        <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-indigo-500 mb-2">Status Management</p>
-                                <h3 className="text-2xl font-black text-slate-900 leading-none">Front Desk Control</h3>
-                                <p className="text-xs font-bold text-slate-400 mt-2">Queue, service, and billing actions from one control rail.</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
-                                <LayoutDashboard className="w-5 h-5" />
-                            </div>
-                        </div>
-
-                        <div className="relative group">
-                            <input
-                                type="text"
-                                placeholder="Find room or request..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-200/60 rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/5 transition-all outline-none shadow-sm group-hover:shadow-md"
-                            />
-                            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <button
-                                onClick={() => setActiveTab("queue")}
-                                className={`rounded-2xl border px-4 py-4 text-left transition-all ${activeTab === "queue" ? "bg-amber-50 border-amber-200 ring-2 ring-amber-500/10" : "bg-white border-slate-100 hover:border-slate-200"}`}
-                            >
-                                <div className="flex items-center justify-between mb-3">
-                                    <Bell className="w-4 h-4 text-amber-500" />
-                                    <span className="text-xl font-black text-slate-900">{statusOverview.pending}</span>
-                                </div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Pending</p>
-                            </button>
-
-                            <button
-                                onClick={() => setActiveTab("active")}
-                                className={`rounded-2xl border px-4 py-4 text-left transition-all ${activeTab === "active" ? "bg-blue-50 border-blue-200 ring-2 ring-blue-500/10" : "bg-white border-slate-100 hover:border-slate-200"}`}
-                            >
-                                <div className="flex items-center justify-between mb-3">
-                                    <PlayCircle className="w-4 h-4 text-blue-500" />
-                                    <span className="text-xl font-black text-slate-900">{statusOverview.assigned + statusOverview.inProgress}</span>
-                                </div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Active</p>
-                            </button>
-
-                            <button
-                                onClick={() => latestBillRequest && setSelectedRequest(latestBillRequest)}
-                                disabled={!latestBillRequest}
-                                className="rounded-2xl border px-4 py-4 text-left transition-all bg-emerald-50/70 border-emerald-100 hover:border-emerald-200 disabled:opacity-50 disabled:hover:border-emerald-100"
-                            >
-                                <div className="flex items-center justify-between mb-3">
-                                    <CreditCard className="w-4 h-4 text-emerald-600" />
-                                    <span className="text-xl font-black text-slate-900">{statusOverview.bills}</span>
-                                </div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Bill Desk</p>
-                            </button>
-
-                            <button
-                                onClick={() => setActiveTab("history")}
-                                className={`rounded-2xl border px-4 py-4 text-left transition-all ${activeTab === "history" ? "bg-slate-100 border-slate-200 ring-2 ring-slate-400/10" : "bg-white border-slate-100 hover:border-slate-200"}`}
-                            >
-                                <div className="flex items-center justify-between mb-3">
-                                    <CheckCircle className="w-4 h-4 text-emerald-500" />
-                                    <span className="text-xl font-black text-slate-900">{statusOverview.completed}</span>
-                                </div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Completed</p>
-                            </button>
-                        </div>
-
-                        <div className="rounded-[1.75rem] bg-slate-900 text-white p-4 flex items-center justify-between gap-4">
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/50 mb-1">Next Priority</p>
-                                <p className="text-sm font-black">
-                                    {latestBillRequest
-                                        ? `Table ${latestBillRequest.room} bill pending`
-                                        : statusOverview.pending > 0
-                                            ? `${statusOverview.pending} requests waiting`
-                                            : "All sections under control"}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => latestBillRequest ? setSelectedRequest(latestBillRequest) : setActiveTab("queue")}
-                                className="px-4 py-2.5 rounded-2xl bg-white text-slate-900 text-[10px] font-black uppercase tracking-[0.2em] hover:scale-[1.02] transition-transform"
-                            >
-                                {latestBillRequest ? "Open Bill" : "Open Queue"}
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </header>
 

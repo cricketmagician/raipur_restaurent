@@ -14,6 +14,7 @@ export function BottomNav() {
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
     const theme = useTheme(branding);
+    const [isHidden, setIsHidden] = React.useState(false);
 
     const navItems = [
         { id: "home", label: "Home", icon: Home, path: `/${hotelSlug}/guest/dashboard` },
@@ -22,9 +23,19 @@ export function BottomNav() {
         { id: "bill", label: "Live Bill", icon: Receipt, path: `/${hotelSlug}/guest/bill` },
     ];
 
+    React.useEffect(() => {
+        const handleVisibility = (event: Event) => {
+            const customEvent = event as CustomEvent<{ hidden?: boolean }>;
+            setIsHidden(!!customEvent.detail?.hidden);
+        };
+
+        window.addEventListener("guest_footer_visibility", handleVisibility as EventListener);
+        return () => window.removeEventListener("guest_footer_visibility", handleVisibility as EventListener);
+    }, []);
+
     return (
         <div 
-            className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] px-4 pb-safe pt-3 backdrop-blur-2xl border-t flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.04)]"
+            className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] px-4 pb-safe pt-3 backdrop-blur-2xl border-t flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.04)] transition-all duration-300 ${isHidden ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}
             style={{ 
                 backgroundColor: `${theme.background}CC`,
                 borderColor: `${theme.primary}10`,

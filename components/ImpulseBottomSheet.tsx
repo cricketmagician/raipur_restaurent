@@ -25,6 +25,14 @@ export function ImpulseBottomSheet({ item, isVisible, onAdd, onClose }: ImpulseB
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
     const theme = useTheme(branding);
+
+    React.useEffect(() => {
+        window.dispatchEvent(new CustomEvent("guest_footer_visibility", { detail: { hidden: isVisible } }));
+        return () => {
+            window.dispatchEvent(new CustomEvent("guest_footer_visibility", { detail: { hidden: false } }));
+        };
+    }, [isVisible]);
+
     return (
         <AnimatePresence>
             {isVisible && item && (
@@ -45,7 +53,7 @@ export function ImpulseBottomSheet({ item, isVisible, onAdd, onClose }: ImpulseB
                         animate={{ y: 0 }}
                         exit={{ y: "100%", opacity: 0.9 }}
                         transition={{ type: "spring", damping: 28, stiffness: 260 }}
-                        className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-[520px] max-h-[calc(100dvh-2rem)] overflow-hidden bg-white z-[190] shadow-[0_30px_120px_-30px_rgba(0,0,0,0.55)] border"
+                        className="fixed bottom-3 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] max-w-[480px] max-h-[calc(100dvh-5.5rem)] overflow-hidden bg-white z-[190] shadow-[0_30px_120px_-30px_rgba(0,0,0,0.55)] border"
                         style={{ 
                             borderRadius: `calc(${theme.radius} * 1.1)`,
                             borderColor: `${theme.primary}18`
@@ -54,7 +62,7 @@ export function ImpulseBottomSheet({ item, isVisible, onAdd, onClose }: ImpulseB
                         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-black/20 to-transparent" />
                         <div className="absolute inset-x-0 top-0 h-28 opacity-60 pointer-events-none" style={{ background: `linear-gradient(180deg, ${theme.primary}14, transparent)` }} />
 
-                        <div className="p-5 sm:p-6 pb-5 overflow-y-auto max-h-[calc(100dvh-2rem)]">
+                        <div className="p-4 sm:p-5 pb-4 overflow-y-auto max-h-[calc(100dvh-5.5rem)]">
                             <div className="flex items-center justify-between mb-5">
                                 <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-black/[0.03] border border-black/[0.04]">
                                     <Sparkles className="w-4 h-4" style={{ color: theme.primary }} />
@@ -72,7 +80,7 @@ export function ImpulseBottomSheet({ item, isVisible, onAdd, onClose }: ImpulseB
                             </div>
 
                             <div className="mb-5">
-                                <h3 className="text-[clamp(1.75rem,4vw,2.6rem)] leading-[0.95] font-black tracking-tight" style={{ color: theme.primary }}>
+                                <h3 className="text-[clamp(1.5rem,4vw,2.2rem)] leading-[0.95] font-black tracking-tight" style={{ color: theme.primary }}>
                                     Add a little extra?
                                 </h3>
                                 <p className="mt-3 text-sm font-medium text-slate-500 leading-relaxed">
@@ -80,8 +88,8 @@ export function ImpulseBottomSheet({ item, isVisible, onAdd, onClose }: ImpulseB
                                 </p>
                             </div>
 
-                            <div className="rounded-[2rem] overflow-hidden border shadow-sm mb-5" style={{ borderColor: `${theme.primary}14` }}>
-                                <div className="relative aspect-[16/10] bg-slate-100">
+                            <div className="rounded-[1.75rem] overflow-hidden border shadow-sm mb-4" style={{ borderColor: `${theme.primary}14` }}>
+                                <div className="relative aspect-[16/9] max-h-[240px] bg-slate-100">
                                     <img
                                         src={getDirectImageUrl(item.image_url)}
                                         alt={item.title}
@@ -100,14 +108,14 @@ export function ImpulseBottomSheet({ item, isVisible, onAdd, onClose }: ImpulseB
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3 mb-5">
-                                <div className="rounded-[1.5rem] p-4 bg-slate-50 border border-slate-100">
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="rounded-[1.25rem] p-4 bg-slate-50 border border-slate-100">
                                     <p className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-400 mb-2">Why it fits</p>
                                     <p className="text-sm font-semibold leading-relaxed text-slate-700">
                                         Adds balance and keeps the order feeling complete.
                                     </p>
                                 </div>
-                                <div className="rounded-[1.5rem] p-4 bg-slate-50 border border-slate-100">
+                                <div className="rounded-[1.25rem] p-4 bg-slate-50 border border-slate-100">
                                     <p className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-400 mb-2">Tap to add</p>
                                     <p className="text-sm font-semibold leading-relaxed text-slate-700">
                                         It will appear instantly in your cart.

@@ -49,7 +49,7 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                         key={item.id}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onItemClick(item.id)}
-                        className={`flex-none overflow-hidden cursor-pointer relative group border shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-500 ${idx === 0 ? 'w-[88%]' : 'w-[75%]'}`}
+                        className="flex-none w-[82%] sm:w-[75%] overflow-hidden cursor-pointer relative group border shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-500"
                         style={{ 
                             borderRadius: theme.radius,
                             backgroundColor: theme.surface,

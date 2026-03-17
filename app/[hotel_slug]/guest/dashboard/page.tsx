@@ -344,12 +344,44 @@ export default function GuestDashboard() {
         >
             {/* 1. Starbucks Style Greeting & Rewards */}
             <header className="mb-10">
-                {/* 1.1 Instagram-Style Status/Stories (Top Priority) */}
-                <div className="mb-8 -mx-2">
-                    <FoodStory 
-                        stories={stories} 
-                        onStoryClick={(id, index) => setStoryConfig({ isVisible: true, initialIndex: index })} 
-                    />
+                {/* 1.1 Premium Card Stories (Top Priority - Replace Circular Circles) */}
+                <div className="mb-10 -mx-6 px-6 pt-2">
+                    <div className="flex items-center justify-between mb-5 px-1">
+                        <h3 className="text-xl font-black tracking-tight" style={{ fontFamily: 'Georgia, serif', color: theme.primary }}>
+                            ✨ Seasonal Stories
+                        </h3>
+                        <span className="text-[8px] font-black uppercase tracking-[0.3em] opacity-30">Swipe to Explore</span>
+                    </div>
+                    <div className="flex space-x-5 overflow-x-auto no-scrollbar pb-4 -mx-6 px-6">
+                        {stories.map((story, index) => (
+                            <motion.div 
+                                key={story.id}
+                                whileTap={{ scale: 0.96, rotate: -1 }}
+                                onClick={() => setStoryConfig({ isVisible: true, initialIndex: index })}
+                                className="flex-none w-36 overflow-hidden shadow-[0_15px_45px_rgba(0,0,0,0.12)] border-2 cursor-pointer group relative active:shadow-sm transition-all duration-300"
+                                style={{ 
+                                    backgroundColor: theme.surface,
+                                    borderColor: `${theme.primary}08`,
+                                    borderRadius: "1.5rem"
+                                }}
+                            >
+                                <div className="aspect-[4/5] overflow-hidden relative">
+                                    <img src={story.image} alt={story.label} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+                                    
+                                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600 px-2 py-0.5 rounded-full border border-white/20 shadow-lg scale-90 origin-left">
+                                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                                        <span className="text-[7px] font-black text-white uppercase tracking-widest">LIVE</span>
+                                    </div>
+
+                                    <div className="absolute bottom-3 left-3 right-3">
+                                        <h4 className="text-[10px] font-black text-white leading-tight uppercase tracking-widest">{story.label}</h4>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                        <div className="flex-none w-10" /> {/* Spacer for scroll end */}
+                    </div>
                 </div>
 
                 <div className="flex items-center justify-between mb-8">
@@ -541,36 +573,6 @@ export default function GuestDashboard() {
                 </motion.div>
 
 
-
-                {/* Seasonal Collection (Optionalized at bottom or integrated elsewhere) */}
-                <div className="space-y-6 pt-10 border-t" style={{ borderColor: `${theme.primary}10` }}>
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] px-2 opacity-40" style={{ color: theme.text }}>
-                        ✨ Seasonal Stories
-                    </h3>
-                    <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-6 -mx-2 px-2">
-                        {stories.map((story, index) => (
-                            <motion.div 
-                                key={story.id}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setStoryConfig({ isVisible: true, initialIndex: index })}
-                                className="flex-none w-48 overflow-hidden shadow-lg border cursor-pointer group grayscale-0 hover:grayscale-0 transition-all opacity-80 hover:opacity-100"
-                                style={{ 
-                                    backgroundColor: theme.surface,
-                                    borderColor: `${theme.primary}10`,
-                                    borderRadius: theme.radius
-                                }}
-                            >
-                                <div className="aspect-square overflow-hidden relative">
-                                    <img src={story.image} alt={story.label} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                                    <div className="absolute bottom-4 left-4 right-4">
-                                        <h4 className="text-xs font-black text-white leading-tight truncate">{story.label}</h4>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
             </div>
 
             <BottomNav />

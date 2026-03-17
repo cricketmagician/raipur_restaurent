@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
 import { GlobalHeader } from "@/components/GlobalHeader";
 import { AddEffect } from "@/components/AddEffect";
+import { QuickActionFAB } from "@/components/QuickActionFAB";
 import { useEffect } from "react";
 import { initAudioContext } from "@/utils/audio";
 import { GuestAuthWrapper } from "./GuestAuthWrapper";
@@ -46,6 +47,7 @@ export default function GuestLayout({
             <GuestAuthWrapper>
                 <GlobalHeader />
                 <AddEffect />
+                <QuickActionFAB />
 
                 {/* Ambient Background Gradient - Refined for Theme */}
                 {!isDashboard && (

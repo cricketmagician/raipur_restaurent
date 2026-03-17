@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, Bell, Droplets, X, ChevronRight, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHotelBranding, addSupabaseRequest } from "@/utils/store";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useGuestRoom } from "../app/[hotel_slug]/guest/GuestAuthWrapper";
 import { Toast } from "./Toast";
 
@@ -12,6 +12,7 @@ export function QuickActionFAB() {
     const [isOpen, setIsOpen] = useState(false);
     const [confirming, setConfirming] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState<string | null>(null);
+    const [preselectedAction, setPreselectedAction] = useState<string | null>(null);
     const [toast, setToast] = useState<{ message: string; type: "success" | "error"; isVisible: boolean }>({
         message: "",
         type: "success",
@@ -19,6 +20,7 @@ export function QuickActionFAB() {
     });
 
     const params = useParams();
+    const router = useRouter();
     const hotelSlug = params?.hotel_slug as string;
     const { roomNumber } = useGuestRoom();
 
@@ -47,13 +49,32 @@ export function QuickActionFAB() {
 
     const { branding } = useHotelBranding(hotelSlug);
 
+    useEffect(() => {
+        const handleOpenQuickActions = (event: Event) => {
+            const customEvent = event as CustomEvent<{ actionId?: string }>;
+            setIsOpen(true);
+            setConfirming(customEvent.detail?.actionId || null);
+            setPreselectedAction(customEvent.detail?.actionId || null);
+        };
+
+        window.addEventListener("guest_open_quick_actions", handleOpenQuickActions as EventListener);
+        return () => window.removeEventListener("guest_open_quick_actions", handleOpenQuickActions as EventListener);
+    }, []);
+
     const handleAction = async (action: typeof actions[0]) => {
         if (confirming !== action.id) {
             setConfirming(action.id);
+            setPreselectedAction(action.id);
             return;
         }
 
-        if (isSubmitting || !branding?.id || !roomNumber) return;
+        if (!roomNumber) {
+            setToast({ message: "Please verify your room or open My Identity first.", type: "error", isVisible: true });
+            setTimeout(() => router.push(`/${hotelSlug}/guest/profile`), 700);
+            return;
+        }
+
+        if (isSubmitting || !branding?.id) return;
         
         setIsSubmitting(action.id);
         
@@ -70,6 +91,7 @@ export function QuickActionFAB() {
             setToast({ message: `${action.label} Requested!`, type: "success", isVisible: true });
             setIsOpen(false);
             setConfirming(null);
+            setPreselectedAction(null);
         } catch (error) {
             setToast({ message: "Request failed. Try again.", type: "error", isVisible: true });
         } finally {
@@ -88,6 +110,14 @@ export function QuickActionFAB() {
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
                             className="flex flex-col items-end space-y-4 mb-6 w-full pointer-events-auto"
                         >
+                            {preselectedAction && (
+                                <div className="w-full rounded-[1.5rem] bg-white/95 border border-white/60 p-4 shadow-2xl mb-2">
+                                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-[#F55D2C] mb-1">Ready to confirm</p>
+                                    <p className="text-sm font-black text-slate-900">
+                                        Tap the highlighted request again to send it.
+                                    </p>
+                                </div>
+                            )}
                             {actions.map((action, index) => (
                                 <motion.div
                                     key={action.id}

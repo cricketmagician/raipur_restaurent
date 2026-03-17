@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Utensils, ShoppingBag, User, Bell, Droplets, ArrowLeft, Menu, Sparkles, RefreshCw, X } from "lucide-react";
+import { Utensils, ShoppingBag, User, Bell, Droplets, ArrowLeft, Menu, Sparkles, X, ChevronRight } from "lucide-react";
 import { useRouter, useParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, addSupabaseRequest, useCart } from "@/utils/store";
+import { useHotelBranding, useCart } from "@/utils/store";
 import { useTheme } from "@/utils/themes";
 import { useGuestRoom } from "../app/[hotel_slug]/guest/GuestAuthWrapper";
 
@@ -19,7 +19,6 @@ export function GlobalHeader() {
     const theme = useTheme(branding);
     
     const [scrolled, setScrolled] = useState(false);
-    const [requestLoading, setRequestLoading] = useState<string | null>(null);
     const [showUtility, setShowUtility] = useState(false);
 
     useEffect(() => {
@@ -30,24 +29,9 @@ export function GlobalHeader() {
 
     const isDashboard = pathname?.endsWith("/dashboard");
 
-    const handleQuickRequest = async (type: string, notes: string) => {
-        if (!branding?.id || !roomNumber) return;
-        setRequestLoading(type);
-        setShowUtility(false); // Close dropdown on action
-        
-        const { error } = await addSupabaseRequest(branding.id, {
-            room: roomNumber,
-            type: type,
-            notes: notes,
-            status: "Pending"
-        });
-
-        setRequestLoading(null);
-        if (error) {
-            alert(`Request failed: ${error.message}`);
-        } else {
-            alert(`${type} request sent!`);
-        }
+    const openQuickActions = (actionId: "water" | "waiter") => {
+        setShowUtility(false);
+        window.dispatchEvent(new CustomEvent("guest_open_quick_actions", { detail: { actionId } }));
     };
 
     return (
@@ -90,26 +74,24 @@ export function GlobalHeader() {
                                         <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: theme.primary }}>Guest Selection</p>
                                     </div>
                                     <button 
-                                        onClick={() => handleQuickRequest("Waiter Call", "Host requested from Header")}
-                                        disabled={!!requestLoading}
+                                        onClick={() => openQuickActions("waiter")}
                                         className="w-full px-6 py-4 flex items-center justify-between hover:bg-black/5 transition-colors group"
                                     >
                                         <div className="flex items-center space-x-4">
                                             <Bell className="w-5 h-5" style={{ color: theme.primary }} />
                                             <span className="text-xs font-bold uppercase tracking-widest" style={{ color: theme.text }}>Call Host</span>
                                         </div>
-                                        {requestLoading === "Waiter Call" && <RefreshCw className="w-3 h-3 animate-spin" style={{ color: theme.primary }} />}
+                                        <ChevronRight className="w-3 h-3 opacity-30" style={{ color: theme.primary }} />
                                     </button>
                                     <button 
-                                        onClick={() => handleQuickRequest("Mineral Water", "Sparkling Water requested")}
-                                        disabled={!!requestLoading}
+                                        onClick={() => openQuickActions("water")}
                                         className="w-full px-6 py-4 flex items-center justify-between hover:bg-black/5 transition-colors group"
                                     >
                                         <div className="flex items-center space-x-4">
                                             <Droplets className="w-5 h-5" style={{ color: theme.primary }} />
                                             <span className="text-xs font-bold uppercase tracking-widest" style={{ color: theme.text }}>Hydration</span>
                                         </div>
-                                        {requestLoading === "Mineral Water" && <RefreshCw className="w-3 h-3 animate-spin" style={{ color: theme.primary }} />}
+                                        <ChevronRight className="w-3 h-3 opacity-30" style={{ color: theme.primary }} />
                                     </button>
                                     <div className="h-px bg-slate-50 my-2" />
                                     <button 

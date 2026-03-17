@@ -193,10 +193,6 @@ const mapHotelBrandingRow = (data: any): HotelBranding => ({
 
 // --- Utilities ---
 
-/**
- * Sanitizes a phone number for WhatsApp links (wa.me)
- * Removes non-numeric characters and ensures the 91 prefix for Indian numbers
- */
 export const sanitizePhoneForWA = (phone: string) => {
     const numeric = phone.replace(/[^0-9]/g, '');
     // If it's 10 digits, add '91' prefix

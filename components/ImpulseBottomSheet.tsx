@@ -6,6 +6,7 @@ import { Plus, X, Sparkles } from "lucide-react";
 import { useTheme } from "@/utils/themes";
 import { useHotelBranding } from "@/utils/store";
 import { useParams } from "next/navigation";
+import { getDirectImageUrl } from "@/utils/image";
 
 interface ImpulseBottomSheetProps {
     item: {
@@ -71,7 +72,7 @@ export function ImpulseBottomSheet({ item, isVisible, onAdd, onClose }: ImpulseB
 
                         <div className="bg-white rounded-[2.5rem] p-6 flex items-center mb-10 border shadow-sm" style={{ borderColor: `${theme.primary}10`, borderRadius: theme.radius }}>
                             <div className="w-20 h-20 rounded-full overflow-hidden mr-5 shadow-xl shrink-0 border-2 border-white">
-                                <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                                <img src={getDirectImageUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1 min-w-0 mr-4 text-left">
                                 <h4 className="text-lg font-black truncate" style={{ color: theme.primary }}>{item.title}</h4>

@@ -2,17 +2,22 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Plus } from "lucide-react";
+import { Sparkles, Plus, Minus, Trash2 } from "lucide-react";
 import { getDirectImageUrl } from "@/utils/image";
+import { useAddEffectTrigger } from "./AddEffect";
 
 interface ChefRecommendCardProps {
     item: any;
     onAdd: () => void;
+    onRemove?: () => void;
     onClick: () => void;
     theme: any;
+    quantity?: number;
 }
 
-export function ChefRecommendCard({ item, onAdd, onClick, theme }: ChefRecommendCardProps) {
+export function ChefRecommendCard({ item, onAdd, onRemove, onClick, theme, quantity = 0 }: ChefRecommendCardProps) {
+    const triggerFly = useAddEffectTrigger();
+
     return (
         <motion.div 
             whileHover={{ y: -10 }}
@@ -39,15 +44,46 @@ export function ChefRecommendCard({ item, onAdd, onClick, theme }: ChefRecommend
                 </h3>
                 <div className="flex items-center justify-between">
                     <span className="text-lg font-black tracking-tighter">₹{item.price}</span>
-                    <button 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onAdd();
-                        }}
-                        className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
-                    >
-                        <Plus className="w-6 h-6" />
-                    </button>
+                    {quantity > 0 ? (
+                        <div
+                            className="flex items-center rounded-full p-1.5 bg-white/15 backdrop-blur-md border border-white/15 shadow-lg"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRemove?.();
+                                }}
+                                className="w-11 h-11 rounded-full flex items-center justify-center bg-white text-black active:scale-90 transition-transform"
+                            >
+                                {quantity === 1 ? <Trash2 className="w-5 h-5 text-red-500" /> : <Minus className="w-5 h-5" />}
+                            </button>
+                            <span className="w-10 text-center text-sm font-black tracking-widest text-white">
+                                {quantity}
+                            </span>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    triggerFly(item.id, item.image_url, e);
+                                    onAdd();
+                                }}
+                                className="w-11 h-11 rounded-full flex items-center justify-center bg-white text-black active:scale-90 transition-transform"
+                            >
+                                <Plus className="w-5 h-5" />
+                            </button>
+                        </div>
+                    ) : (
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                triggerFly(item.id, item.image_url, e);
+                                onAdd();
+                            }}
+                            className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+                        >
+                            <Plus className="w-6 h-6" />
+                        </button>
+                    )}
                 </div>
             </div>
         </motion.div>

@@ -364,8 +364,10 @@ export default function RestaurantPage() {
                                                 key={item.id} 
                                                 item={item} 
                                                 onAdd={() => addToCart(item)}
+                                                onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
                                                 onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
                                                 theme={theme}
+                                                quantity={cart[item.id] || 0}
                                             />
                                         ))}
                                     </div>

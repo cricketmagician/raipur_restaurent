@@ -26,8 +26,13 @@ export function AddEffect() {
     }, []);
 
     useEffect(() => {
-        window.addEventListener("trigger_fly", (e: any) => triggerFly(e.detail));
-        return () => window.removeEventListener("trigger_fly", (e: any) => triggerFly(e.detail));
+        const handleTriggerFly = (e: Event) => {
+            const customEvent = e as CustomEvent;
+            triggerFly(customEvent.detail);
+        };
+
+        window.addEventListener("trigger_fly", handleTriggerFly as EventListener);
+        return () => window.removeEventListener("trigger_fly", handleTriggerFly as EventListener);
     }, [triggerFly]);
 
     const removeItem = (id: string) => {
@@ -53,8 +58,12 @@ function FlyThumbnail({ item, onComplete }: { item: FlyItem, onComplete: () => v
     // Target is the cart button in GlobalHeader
     // We'll estimate or try to find its position. Usually it's top right.
     // In our GlobalHeader max-width is 520px centered.
-    
-    const [targetPos, setTargetPos] = useState({ x: window.innerWidth / 2 + 200, y: 40 });
+
+    const getDefaultTarget = () => ({
+        x: typeof window === "undefined" ? 300 : Math.min(window.innerWidth - 72, window.innerWidth / 2 + 220),
+        y: 54
+    });
+    const [targetPos, setTargetPos] = useState(getDefaultTarget);
 
     useEffect(() => {
         const cartBtn = document.getElementById("header-cart-button");
@@ -79,16 +88,16 @@ function FlyThumbnail({ item, onComplete }: { item: FlyItem, onComplete: () => v
                 x: [item.startX - 30, item.startX - 100, targetPos.x - 20],
                 y: [item.startY - 30, item.startY - 200, targetPos.y - 20],
                 scale: [0.5, 1.2, 0.2],
-                opacity: [0, 1, 1, 0.5],
+                opacity: [0, 1, 1, 0.8, 0],
                 rotate: [0, -10, 20]
             }}
             transition={{ 
                 duration: 0.8, 
                 ease: [0.16, 1, 0.3, 1], // Custom cubic-bezier for snappy feel
-                times: [0, 0.4, 1]
+                times: [0, 0.35, 0.75, 1]
             }}
             onAnimationComplete={onComplete}
-            className="fixed w-10 h-10 rounded-full overflow-hidden shadow-2xl border-2 border-white z-[200] bg-white"
+            className="fixed w-10 h-10 rounded-full overflow-hidden shadow-2xl border-2 border-white z-[999] bg-white"
         >
             <img src={item.imageUrl} className="w-full h-full object-cover" alt="" />
         </motion.div>

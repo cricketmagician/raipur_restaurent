@@ -38,7 +38,7 @@ export function GlobalHeader() {
         <motion.header 
             initial={{ y: -100 }}
             animate={{ y: 0 }}
-            className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[540px] z-[100] transition-all duration-500 py-6`}
+            className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[460px] z-[100] transition-all duration-500 py-4`}
             style={{ 
                 backgroundColor: scrolled ? `${theme.surface}f2` : "transparent", // f2 is ~95% opacity
                 backdropFilter: scrolled ? "blur(20px)" : "none",
@@ -46,20 +46,20 @@ export function GlobalHeader() {
                 borderBottom: scrolled ? `1px solid ${theme.primary}10` : "none"
             }}
         >
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4">
                 {/* Row 1: Menu (Left), Branding (Center), Cart (Right) */}
-                <div className="px-4 flex items-center justify-between gap-4">
+                <div className="px-3.5 flex items-center justify-between gap-3">
                     {/* Left: Menu & Utility Dropdown */}
                     <div className="flex-shrink-0 relative">
                         <button 
                             onClick={() => setShowUtility(!showUtility)}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-95 border border-slate-100 shadow-sm`}
+                            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-95 border border-slate-100 shadow-sm`}
                             style={{ 
                                 backgroundColor: showUtility ? theme.primary : "white",
                                 color: showUtility ? "white" : theme.primary
                             }}
                         >
-                            {showUtility ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                            {showUtility ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                         </button>
 
                         <AnimatePresence>
@@ -68,38 +68,38 @@ export function GlobalHeader() {
                                     initial={{ opacity: 0, y: 10, scale: 0.95, x: 0 }}
                                     animate={{ opacity: 1, y: 0, scale: 1, x: 0 }}
                                     exit={{ opacity: 0, y: 10, scale: 0.95, x: 0 }}
-                                    className="absolute top-14 left-0 w-56 bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,33,30,0.15)] border border-[#00704A]/5 overflow-hidden py-3 z-[110]"
+                                    className="absolute top-13 left-0 w-52 bg-white rounded-[1.8rem] shadow-[0_20px_60px_-15px_rgba(0,33,30,0.15)] border border-[#00704A]/5 overflow-hidden py-2 z-[110]"
                                 >
-                                    <div className="px-6 py-3 border-b border-slate-50 mb-2">
+                                    <div className="px-5 py-3 border-b border-slate-50 mb-1.5">
                                         <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: theme.primary }}>Guest Selection</p>
                                     </div>
                                     <button 
                                         onClick={() => openQuickActions("waiter")}
-                                        className="w-full px-6 py-4 flex items-center justify-between hover:bg-black/5 transition-colors group"
+                                        className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-black/5 transition-colors group"
                                     >
-                                        <div className="flex items-center space-x-4">
-                                            <Bell className="w-5 h-5" style={{ color: theme.primary }} />
-                                            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: theme.text }}>Call Host</span>
+                                        <div className="flex items-center space-x-3">
+                                            <Bell className="w-4.5 h-4.5" style={{ color: theme.primary }} />
+                                            <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: theme.text }}>Call Host</span>
                                         </div>
                                         <ChevronRight className="w-3 h-3 opacity-30" style={{ color: theme.primary }} />
                                     </button>
                                     <button 
                                         onClick={() => openQuickActions("water")}
-                                        className="w-full px-6 py-4 flex items-center justify-between hover:bg-black/5 transition-colors group"
+                                        className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-black/5 transition-colors group"
                                     >
-                                        <div className="flex items-center space-x-4">
-                                            <Droplets className="w-5 h-5" style={{ color: theme.primary }} />
-                                            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: theme.text }}>Hydration</span>
+                                        <div className="flex items-center space-x-3">
+                                            <Droplets className="w-4.5 h-4.5" style={{ color: theme.primary }} />
+                                            <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: theme.text }}>Hydration</span>
                                         </div>
                                         <ChevronRight className="w-3 h-3 opacity-30" style={{ color: theme.primary }} />
                                     </button>
                                     <div className="h-px bg-slate-50 my-2" />
                                     <button 
                                         onClick={() => { router.push(`/${hotelSlug}/guest/profile`); setShowUtility(false); }}
-                                        className="w-full px-6 py-4 flex items-center space-x-4 hover:bg-black/5 transition-colors"
+                                        className="w-full px-5 py-3.5 flex items-center space-x-3 hover:bg-black/5 transition-colors"
                                     >
-                                        <User className="w-5 h-5" style={{ color: `${theme.text}66` }} />
-                                        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: theme.text }}>My Identity</span>
+                                        <User className="w-4.5 h-4.5" style={{ color: `${theme.text}66` }} />
+                                        <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: theme.text }}>My Identity</span>
                                     </button>
                                 </motion.div>
                             )}
@@ -111,7 +111,7 @@ export function GlobalHeader() {
                         <div className="flex bg-slate-100/50 p-1 rounded-full border border-slate-100 backdrop-blur-md">
                             <button 
                                 onClick={switchToDineIn}
-                                className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
+                                className={`px-3.5 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.18em] transition-all duration-300 ${
                                     orderMode === "dine-in"
                                     ? 'bg-white text-slate-900 shadow-sm' 
                                     : 'text-slate-400 hover:text-slate-600'
@@ -121,7 +121,7 @@ export function GlobalHeader() {
                             </button>
                             <button 
                                 onClick={switchToTakeaway}
-                                className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
+                                className={`px-3.5 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.18em] transition-all duration-300 ${
                                     orderMode === "takeaway"
                                     ? 'bg-white text-slate-900 shadow-sm' 
                                     : 'text-slate-400 hover:text-slate-600'
@@ -138,7 +138,7 @@ export function GlobalHeader() {
                             id="header-cart-button"
                             onClick={() => window.dispatchEvent(new CustomEvent('open_cart'))}
                             className={`relative overflow-hidden flex items-center justify-center shadow-[0_18px_40px_-18px_rgba(0,0,0,0.28)] border border-white/80 active:scale-95 transition-all backdrop-blur-xl ${
-                                cartCount > 0 ? "h-12 min-w-[72px] px-3 rounded-[1.45rem] gap-2" : "w-12 h-12 rounded-full"
+                                cartCount > 0 ? "h-11 min-w-[68px] px-2.5 rounded-[1.3rem] gap-2" : "w-11 h-11 rounded-full"
                             }`}
                             style={{
                                 color: theme.primary,
@@ -153,7 +153,7 @@ export function GlobalHeader() {
                                     style={{ background: `radial-gradient(circle at top right, ${theme.accent}22, transparent 55%)` }}
                                 />
                             )}
-                            <ShoppingBag className="w-6 h-6" />
+                            <ShoppingBag className="w-5 h-5" />
                             {cartCount > 0 && (
                                 <>
                                     <div className="w-px h-5 bg-black/10" />

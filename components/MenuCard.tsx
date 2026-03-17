@@ -32,17 +32,12 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
     const globalTheme = useTheme(branding);
     
     // Merge global theme with category-specific overrides
-    const accentColor = categoryTheme?.accent || globalTheme.accent;
     const textColor = globalTheme.text;
     const primaryColor = globalTheme.primary;
     
     const popularEffect = isPopular ? `shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] scale-[1.02]` : 'shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border-slate-100/50';
     
     const triggerFly = useAddEffectTrigger();
-    const displayTag = badgeText || 
-        (isRecommended ? "Chef Recommend" : 
-         isPopular ? "Best Seller" : 
-         (id.includes('mock') && id.includes('combo')) || (id.startsWith('mock_')) ? null : null); // Fallback logic
 
     // Final tag logic
     const finalTag = badgeText || 
@@ -56,15 +51,15 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={onClick}
-            className={`group rounded-[2rem] ${popularEffect} border-none overflow-hidden flex flex-col hover:shadow-[0_40px_80px_rgba(0,33,30,0.1)] transition-all duration-700 ease-out active:scale-[0.98] relative ${onClick ? 'cursor-pointer' : ''}`}
+            className={`group rounded-[1.85rem] ${popularEffect} overflow-hidden flex flex-row hover:shadow-[0_28px_60px_rgba(0,33,30,0.1)] transition-all duration-500 ease-out active:scale-[0.985] relative ${onClick ? 'cursor-pointer' : ''}`}
             style={{ backgroundColor: globalTheme.surface }}
         >
             {image && (
-                <div className="relative w-full aspect-square overflow-hidden" style={{ backgroundColor: globalTheme.background }}>
+                <div className="relative w-[132px] sm:w-[148px] shrink-0 overflow-hidden" style={{ backgroundColor: globalTheme.background }}>
                     <img
                         src={getDirectImageUrl(image)}
                         alt={title}
-                        className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-1000 ease-out"
+                        className="object-cover w-full h-full min-h-full transform group-hover:scale-110 transition-transform duration-1000 ease-out"
                     />
                     
                     <div 
@@ -73,15 +68,15 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                     />
                     
                     <div 
-                        className="absolute top-4 right-4 px-4 py-1.5 rounded-full shadow-lg z-10 border"
+                        className="absolute top-3 right-3 px-3 py-1.5 rounded-full shadow-lg z-10 border"
                         style={{ backgroundColor: globalTheme.surface, borderColor: `${primaryColor}10` }}
                     >
-                        <span className="text-sm font-black" style={{ color: primaryColor }}>₹{price.toFixed(0)}</span>
+                        <span className="text-[11px] font-black" style={{ color: primaryColor }}>₹{price.toFixed(0)}</span>
                     </div>
  
                     {finalTag && (
                         <div 
-                            className="absolute top-4 left-4 text-white px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] z-10 border border-white/10 shadow-lg"
+                            className="absolute top-3 left-3 text-white px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.18em] z-10 border border-white/10 shadow-lg"
                             style={{ backgroundColor: isRecommended ? primaryColor : "#F59E0B" }}
                         >
                             {finalTag}
@@ -90,33 +85,36 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                     
                     {isPopular && (
                         <div 
-                            className="absolute bottom-4 left-4 px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest z-10 shadow-md flex items-center"
+                            className="absolute bottom-3 left-3 px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.18em] z-10 shadow-md flex items-center"
                             style={{ backgroundColor: globalTheme.secondary, color: primaryColor }}
                         >
-                            <Sparkles className="w-3 h-3 mr-2" />
-                            Best Seller
+                            <Sparkles className="w-3 h-3 mr-1.5" />
+                            Bestseller
                         </div>
                     )}
                 </div>
             )}
 
-            <div className="p-8 flex flex-col flex-1 relative z-10">
-                <div className="mb-2">
+            <div className="p-4 sm:p-5 flex flex-col flex-1 relative z-10 min-w-0">
+                <div className="mb-2 pr-1">
                     <h3 
-                        className="font-black text-2xl leading-tight tracking-tight transition-colors duration-500"
+                        className="font-black text-[1.1rem] sm:text-[1.25rem] leading-tight tracking-tight transition-colors duration-500 line-clamp-2"
                         style={{ color: primaryColor, fontFamily: globalTheme.fontSans }}
                     >
                         {title}
                     </h3>
                 </div>
                 <p 
-                    className="text-[12px] font-medium line-clamp-2 mb-8 leading-relaxed tracking-tight"
+                    className="text-[11px] sm:text-[12px] font-medium line-clamp-2 mb-4 leading-relaxed tracking-tight min-h-[34px]"
                     style={{ color: `${textColor}99`, fontFamily: globalTheme.fontSans }}
                 >
                     {description}
                 </p>
-                <div className="mt-auto flex items-center justify-between">
-                    <span className="text-xl font-black" style={{ color: primaryColor }}>₹{price}</span>
+                <div className="mt-auto flex items-end justify-between gap-3">
+                    <div className="min-w-0">
+                        <p className="text-[9px] font-black uppercase tracking-[0.22em] opacity-35 mb-1">Price</p>
+                        <span className="text-xl sm:text-[1.35rem] font-black" style={{ color: primaryColor }}>₹{price}</span>
+                    </div>
                     
                     <AnimatePresence mode="wait">
                         {quantity > 0 ? (
@@ -124,7 +122,7 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                                 initial={{ opacity: 0, scale: 0.8, x: 20 }}
                                 animate={{ opacity: 1, scale: 1, x: 0 }}
                                 exit={{ opacity: 0, scale: 0.8, x: 20 }}
-                                className="flex items-center rounded-full p-1 border shadow-sm"
+                                className="flex items-center justify-between rounded-full p-1 border shadow-sm min-w-[122px]"
                                 style={{ backgroundColor: globalTheme.background, borderColor: `${primaryColor}20` }}
                                 onClick={(e) => e.stopPropagation()}
                             >
@@ -133,15 +131,17 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                                         e.stopPropagation();
                                         onRemove?.();
                                     }}
-                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
+                                    className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
                                     style={{ color: primaryColor }}
                                 >
                                     {quantity === 1 ? <Trash2 className="w-4 h-4 text-red-500" /> : <Minus className="w-4 h-4" />}
                                 </button>
                                 
-                                <span className="w-8 text-center text-sm font-black" style={{ color: primaryColor }}>
-                                    {quantity}
-                                </span>
+                                <div className="flex-1 flex justify-center">
+                                    <span className="min-w-[34px] px-2 text-center text-sm font-black" style={{ color: primaryColor }}>
+                                        {quantity}
+                                    </span>
+                                </div>
                                 
                                 <button
                                     onClick={(e) => {
@@ -149,7 +149,7 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                                         if (image) triggerFly(id, image, e);
                                         onAdd?.();
                                     }}
-                                    className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md active:scale-90 transition-all font-black"
+                                    className="w-9 h-9 rounded-full flex items-center justify-center text-white shadow-md active:scale-90 transition-all font-black"
                                     style={{ backgroundColor: primaryColor }}
                                 >
                                     <Plus className="w-4 h-4" />
@@ -165,10 +165,11 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                                     if (image) triggerFly(id, image, e);
                                     onAdd?.();
                                 }}
-                                className="w-12 h-12 rounded-full text-white flex items-center justify-center transition-all hover:shadow-xl active:scale-95 shadow-lg font-black"
+                                className="h-11 px-4 rounded-full text-white flex items-center justify-center transition-all hover:shadow-xl active:scale-95 shadow-lg font-black text-[10px] uppercase tracking-[0.2em]"
                                 style={{ backgroundColor: primaryColor }}
                             >
-                                <Plus className="w-6 h-6" />
+                                <Plus className="w-4 h-4 mr-1.5" />
+                                Add
                             </motion.button>
                         )}
                     </AnimatePresence>

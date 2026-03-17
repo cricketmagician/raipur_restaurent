@@ -43,20 +43,20 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                 </span>
             </div>
 
-            <div className="flex space-x-6 overflow-x-auto no-scrollbar pb-10 -mx-4 px-4 items-end">
+            <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-8 -mx-4 px-4 items-end">
                 {items.map((item, idx) => (
                     <motion.div
                         key={item.id}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onItemClick(item.id)}
-                        className="flex-none w-[82%] sm:w-[75%] overflow-hidden cursor-pointer relative group border shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-500"
+                        className="flex-none w-[78%] sm:w-[72%] overflow-hidden cursor-pointer relative group border shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-500"
                         style={{ 
                             borderRadius: theme.radius,
                             backgroundColor: theme.surface,
                             borderColor: `${theme.primary}05`
                         }}
                     >
-                        <div className={`overflow-hidden relative ${idx === 0 ? 'aspect-[4/5]' : 'aspect-square'}`}>
+                        <div className={`overflow-hidden relative ${idx === 0 ? 'aspect-[5/6]' : 'aspect-[4/5]'}`}>
                             <img 
                                 src={item.image} 
                                 alt={item.title} 
@@ -85,13 +85,13 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                             </div>
                         </div>
 
-                        <div className="p-8">
+                        <div className="p-5 sm:p-6">
                             <div className="flex items-center justify-between">
-                                <span className="text-2xl font-black" style={{ color: theme.text }}>₹{item.price}</span>
+                                <span className="text-xl sm:text-2xl font-black" style={{ color: theme.text }}>₹{item.price}</span>
                                 
                                 {cart[item.menuItemId] > 0 ? (
                                     <div 
-                                        className="flex items-center rounded-full p-1 border" 
+                                        className="flex items-center justify-between rounded-full p-1 border min-w-[122px]"
                                         style={{ backgroundColor: `${theme.primary}0a`, borderColor: `${theme.primary}1a` }}
                                         onClick={(e) => e.stopPropagation()}
                                     >
@@ -105,7 +105,9 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                                         >
                                             -
                                         </button>
-                                        <span className="w-10 text-center text-xs font-black" style={{ color: theme.text }}>{cart[item.menuItemId]}</span>
+                                        <div className="flex-1 flex justify-center">
+                                            <span className="min-w-[34px] text-center text-xs font-black" style={{ color: theme.text }}>{cart[item.menuItemId]}</span>
+                                        </div>
                                         <button 
                                             onClick={(e) => {
                                                 e.stopPropagation();

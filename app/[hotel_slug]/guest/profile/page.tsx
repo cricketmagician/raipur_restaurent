@@ -23,7 +23,8 @@ const formatDateTime = (value?: string | null) => {
     return date.toLocaleString(undefined, {
         day: "numeric",
         month: "short",
-        timeStyle: "short",
+        hour: "numeric",
+        minute: "2-digit",
     });
 };
 
@@ -89,7 +90,7 @@ export default function GuestProfilePage() {
 
     return (
         <div
-            className="min-h-screen pb-32 pt-6 w-full max-w-[560px] mx-auto overflow-x-hidden px-4 relative"
+            className="min-h-screen pb-28 pt-5 w-full max-w-[460px] mx-auto overflow-x-hidden px-3.5 relative"
             style={{ backgroundColor: theme.background, color: theme.text, fontFamily: theme.fontSans }}
         >
             <div className="absolute inset-0 -z-20 pointer-events-none">
@@ -105,34 +106,34 @@ export default function GuestProfilePage() {
                 <div className="absolute top-40 -left-10 h-44 w-44 rounded-full blur-[100px]" style={{ backgroundColor: `${theme.primary}22` }} />
             </div>
 
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-5">
                 <button
                     onClick={() => router.back()}
-                    className="w-12 h-12 rounded-full flex items-center justify-center border shadow-[0_10px_30px_-16px_rgba(0,0,0,0.28)] active:scale-95 transition-all backdrop-blur-xl"
+                    className="w-11 h-11 rounded-full flex items-center justify-center border shadow-[0_10px_30px_-16px_rgba(0,0,0,0.28)] active:scale-95 transition-all backdrop-blur-xl"
                     style={{ color: theme.primary, backgroundColor: "rgba(255,255,255,0.64)", borderColor: "rgba(255,255,255,0.58)" }}
                 >
-                    <ArrowLeft className="w-6 h-6" />
+                    <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div className="text-center">
                     <p className="text-[9px] font-black uppercase tracking-[0.34em] opacity-40">My Identity</p>
-                    <h1 className="text-xl font-black tracking-tight mt-1" style={{ color: theme.primary }}>
+                    <h1 className="text-lg font-black tracking-tight mt-1" style={{ color: theme.primary }}>
                         Guest Card
                     </h1>
                 </div>
                 <button
                     onClick={() => setIsEditOpen(true)}
-                    className="w-12 h-12 rounded-full flex items-center justify-center border shadow-[0_10px_30px_-16px_rgba(0,0,0,0.28)] active:scale-95 transition-all backdrop-blur-xl"
+                    className="w-11 h-11 rounded-full flex items-center justify-center border shadow-[0_10px_30px_-16px_rgba(0,0,0,0.28)] active:scale-95 transition-all backdrop-blur-xl"
                     style={{ color: theme.primary, backgroundColor: "rgba(255,255,255,0.64)", borderColor: "rgba(255,255,255,0.58)" }}
                 >
                     <PencilLine className="w-5 h-5" />
                 </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3.5">
                 <motion.div
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-[2.8rem] p-6 border overflow-hidden relative shadow-[0_30px_90px_-34px_rgba(0,0,0,0.34)] backdrop-blur-2xl"
+                    className="rounded-[2.35rem] p-5 border overflow-hidden relative shadow-[0_30px_90px_-34px_rgba(0,0,0,0.34)] backdrop-blur-2xl"
                     style={{
                         background: "linear-gradient(135deg, rgba(255,255,255,0.46) 0%, rgba(255,255,255,0.18) 100%)",
                         borderColor: "rgba(255,255,255,0.42)",
@@ -140,30 +141,30 @@ export default function GuestProfilePage() {
                 >
                     <div className="absolute inset-0 pointer-events-none opacity-70" style={{ background: `radial-gradient(circle at top right, ${theme.secondary}66, transparent 48%)` }} />
                     <div className="relative z-10">
-                        <div className="flex items-start justify-between gap-4 mb-6">
-                            <div className="flex items-start gap-4">
-                                <div className="w-14 h-14 rounded-[1.4rem] flex items-center justify-center shadow-lg" style={{ backgroundColor: `${theme.primary}16`, color: theme.primary }}>
-                                    <User className="w-7 h-7" />
+                        <div className="flex flex-col gap-4 mb-5 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex items-start gap-3.5 min-w-0">
+                                <div className="w-12 h-12 rounded-[1.2rem] flex items-center justify-center shadow-lg shrink-0" style={{ backgroundColor: `${theme.primary}16`, color: theme.primary }}>
+                                    <User className="w-6 h-6" />
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full border mb-3 backdrop-blur-md" style={{ backgroundColor: "rgba(255,255,255,0.42)", borderColor: "rgba(255,255,255,0.42)" }}>
                                         <BadgeCheck className="w-3.5 h-3.5" style={{ color: theme.primary }} />
                                         <span className="text-[9px] font-black uppercase tracking-[0.24em]" style={{ color: theme.primary }}>
                                             {profile ? "Synced" : "Guest mode"}
                                         </span>
                                     </div>
-                                    <h2 className="text-[clamp(1.8rem,5vw,2.6rem)] font-black tracking-tight leading-none" style={{ color: theme.primary }}>
+                                    <h2 className="text-[clamp(1.45rem,6vw,2.15rem)] font-black tracking-tight leading-none line-clamp-2" style={{ color: theme.primary }}>
                                         {profile?.name || "Guest"}
                                     </h2>
-                                    <p className="mt-2 text-sm font-semibold opacity-65">
+                                    <p className="mt-1.5 text-sm font-semibold opacity-65 truncate">
                                         {profile?.phone || "Phone not linked yet"}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="text-right">
-                                <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-35 mb-2">Rewards</p>
-                                <p className="text-3xl font-black tracking-tight" style={{ color: theme.primary }}>
+                            <div className="rounded-[1.35rem] px-4 py-3 border backdrop-blur-md self-start sm:self-auto" style={{ backgroundColor: "rgba(255,255,255,0.34)", borderColor: "rgba(255,255,255,0.38)" }}>
+                                <p className="text-[8px] font-black uppercase tracking-[0.28em] opacity-35 mb-1">Rewards</p>
+                                <p className="text-2xl font-black tracking-tight" style={{ color: theme.primary }}>
                                     {points}
                                 </p>
                             </div>
@@ -202,7 +203,7 @@ export default function GuestProfilePage() {
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.06 }}
-                    className="rounded-[2.4rem] p-5 border shadow-[0_24px_70px_-28px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
+                    className="rounded-[2rem] p-[18px] border shadow-[0_24px_70px_-28px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
                     style={{
                         background: "linear-gradient(135deg, rgba(255,255,255,0.52) 0%, rgba(255,255,255,0.22) 100%)",
                         borderColor: "rgba(255,255,255,0.42)",
@@ -211,7 +212,7 @@ export default function GuestProfilePage() {
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-35">Order Mode</p>
-                            <h3 className="text-lg font-black mt-1" style={{ color: theme.primary }}>
+                            <h3 className="text-base font-black mt-1" style={{ color: theme.primary }}>
                                 {loginHint}
                             </h3>
                         </div>
@@ -291,19 +292,19 @@ function MiniStat({
 }) {
     return (
         <div
-            className="rounded-[1.6rem] p-4 border backdrop-blur-xl"
+            className="rounded-[1.35rem] p-3.5 border backdrop-blur-xl min-h-[102px]"
             style={{
                 backgroundColor: "rgba(255,255,255,0.34)",
                 borderColor: "rgba(255,255,255,0.4)",
             }}
         >
-            <div className="flex items-center justify-between mb-3">
-                <div className="w-9 h-9 rounded-[1rem] flex items-center justify-center" style={{ backgroundColor: `${theme.primary}14`, color: theme.primary }}>
+            <div className="flex items-center justify-between mb-2.5">
+                <div className="w-8 h-8 rounded-[0.9rem] flex items-center justify-center" style={{ backgroundColor: `${theme.primary}14`, color: theme.primary }}>
                     {icon}
                 </div>
                 <span className="text-[8px] font-black uppercase tracking-[0.25em] opacity-30">{label}</span>
             </div>
-            <p className="text-sm font-black tracking-tight leading-snug" style={{ color: theme.primary }}>
+            <p className="text-[13px] font-black tracking-tight leading-snug" style={{ color: theme.primary }}>
                 {value}
             </p>
         </div>

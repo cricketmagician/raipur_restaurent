@@ -46,7 +46,7 @@ export function ChefRecommendCard({ item, onAdd, onRemove, onClick, theme, quant
                     <span className="text-lg font-black tracking-tighter">₹{item.price}</span>
                     {quantity > 0 ? (
                         <div
-                            className="flex items-center rounded-full p-1.5 bg-white/15 backdrop-blur-md border border-white/15 shadow-lg"
+                            className="flex items-center justify-between rounded-full p-1.5 bg-white/15 backdrop-blur-md border border-white/15 shadow-lg min-w-[132px]"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <button
@@ -58,9 +58,11 @@ export function ChefRecommendCard({ item, onAdd, onRemove, onClick, theme, quant
                             >
                                 {quantity === 1 ? <Trash2 className="w-5 h-5 text-red-500" /> : <Minus className="w-5 h-5" />}
                             </button>
-                            <span className="w-10 text-center text-sm font-black tracking-widest text-white">
-                                {quantity}
-                            </span>
+                            <div className="flex-1 flex justify-center">
+                                <span className="min-w-[38px] text-center text-sm font-black tracking-widest text-white">
+                                    {quantity}
+                                </span>
+                            </div>
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();

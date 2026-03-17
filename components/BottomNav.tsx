@@ -35,7 +35,7 @@ export function BottomNav() {
 
     return (
         <div 
-            className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] px-4 pb-safe pt-3 backdrop-blur-2xl border-t flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.04)] transition-all duration-300 ${isHidden ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}
+            className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[460px] z-[100] px-3 pb-safe pt-2.5 backdrop-blur-2xl border-t flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.04)] transition-all duration-300 ${isHidden ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}
             style={{ 
                 backgroundColor: `${theme.background}CC`,
                 borderColor: `${theme.primary}10`,
@@ -50,17 +50,17 @@ export function BottomNav() {
                         key={item.id}
                         whileTap={{ scale: 0.92 }}
                         onClick={() => router.push(item.path)}
-                        className="flex flex-col items-center justify-center space-y-1.5 relative group min-w-[64px]"
+                        className="flex flex-col items-center justify-center space-y-1 relative group min-w-[58px]"
                     >
-                        <div className={`p-2 rounded-2xl transition-all duration-300 relative ${
+                        <div className={`p-1.5 rounded-2xl transition-all duration-300 relative ${
                             isActive 
                                 ? 'scale-110' 
                                 : 'text-slate-400 opacity-60'
-                        } ${item.id === 'menu' ? 'p-2.5 -mt-1' : ''}`}
+                        } ${item.id === 'menu' ? 'p-2 -mt-0.5' : ''}`}
                         style={{ color: isActive ? theme.primary : undefined }}>
                             <item.icon 
                                 className={`transition-all duration-300 ${isActive ? 'fill-current' : ''} ${
-                                    item.id === 'menu' ? 'w-7 h-7' : 'w-6 h-6'
+                                    item.id === 'menu' ? 'w-6.5 h-6.5' : 'w-5.5 h-5.5'
                                 }`} 
                                 strokeWidth={item.id === 'menu' ? (isActive ? 2.5 : 2.2) : (isActive ? 2.5 : 2)}
                             />
@@ -71,7 +71,7 @@ export function BottomNav() {
                                 />
                             )}
                         </div>
-                        <span className={`text-[9px] font-black uppercase tracking-[0.15em] transition-colors`} style={{ color: isActive ? theme.primary : `${theme.text}66` }}>
+                        <span className={`text-[8px] font-black uppercase tracking-[0.14em] transition-colors`} style={{ color: isActive ? theme.primary : `${theme.text}66` }}>
                             {item.label}
                         </span>
                         {isActive && (

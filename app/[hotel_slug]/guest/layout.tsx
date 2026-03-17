@@ -41,7 +41,7 @@ export default function GuestLayout({
 
     return (
         <div 
-            className="flex flex-col min-h-[100dvh] text-slate-900 antialiased pb-24 overflow-x-hidden pt-safe transition-colors duration-500"
+            className="flex flex-col min-h-[100dvh] text-slate-900 antialiased pb-[88px] overflow-x-hidden pt-safe transition-colors duration-500"
             style={{ backgroundColor: isDashboard ? 'transparent' : theme.background }}
         >
             <GuestAuthWrapper>
@@ -57,7 +57,7 @@ export default function GuestLayout({
                     ></div>
                 )}
 
-                <main className={`flex-1 w-full max-w-[500px] mx-auto relative ${isDashboard ? 'pt-0' : 'pt-32'}`}>
+                <main className={`flex-1 w-full max-w-[460px] mx-auto relative ${isDashboard ? 'pt-0' : 'pt-28'}`}>
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={pathname}

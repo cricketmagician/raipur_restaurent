@@ -77,19 +77,19 @@ export function CartOverlay({
                             <div className="w-16 h-1.5 opacity-10 rounded-full" style={{ backgroundColor: theme.primary }} />
                         </div>
 
-                        <div className="p-8 pt-6 overflow-y-auto no-scrollbar pb-safe">
-                            <div className="flex items-center justify-between mb-10">
+                        <div className="p-5 pt-4 overflow-y-auto no-scrollbar pb-safe">
+                            <div className="flex items-center justify-between mb-7 gap-4">
                                 <div>
                                     <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Cart Summary</h2>
-                                    <h2 className="text-4xl font-black italic tracking-tighter leading-none" style={{ color: theme.primary }}>Premium Bag</h2>
-                                    <p className="mt-2 text-xs font-bold uppercase tracking-[0.24em] text-slate-400">
+                                    <h2 className="text-3xl font-black italic tracking-tighter leading-none" style={{ color: theme.primary }}>Premium Bag</h2>
+                                    <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">
                                         {cartItems.length} item{cartItems.length === 1 ? "" : "s"} ready
                                     </p>
                                 </div>
                                 <motion.button
                                     whileTap={{ scale: 0.9 }}
                                     onClick={onClose}
-                                    className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl border"
+                                    className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl border shrink-0"
                                     style={{ 
                                         backgroundColor: theme.surface,
                                         color: theme.primary, 
@@ -97,24 +97,24 @@ export function CartOverlay({
                                         borderColor: `${theme.primary}10`
                                     }}
                                 >
-                                    <X className="w-6 h-6" />
+                                    <X className="w-5 h-5" />
                                 </motion.button>
                             </div>
 
-                            <div className="space-y-4 mb-12">
+                            <div className="space-y-3 mb-8">
                                 {cartItems.length > 0 ? (
                                     cartItems.map((item) => (
                                         <div
                                             key={item.id} 
-                                            className="flex items-center justify-between p-5 shadow-xl border group transition-all gap-4"
+                                            className="flex items-center justify-between p-4 shadow-xl border group transition-all gap-3"
                                             style={{ 
                                                 borderRadius: theme.radius,
                                                 backgroundColor: theme.surface,
                                                 borderColor: `${theme.primary}10`
                                             }}
                                         >
-                                            <div className="flex items-center space-x-4 min-w-0">
-                                                <div className="w-14 h-14 rounded-[1.1rem] overflow-hidden border border-black/5 bg-slate-100 shrink-0">
+                                            <div className="flex items-center space-x-3 min-w-0">
+                                                <div className="w-12 h-12 rounded-[1rem] overflow-hidden border border-black/5 bg-slate-100 shrink-0">
                                                     {item.image_url ? (
                                                         <img src={getDirectImageUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover" />
                                                     ) : (
@@ -124,8 +124,8 @@ export function CartOverlay({
                                                     )}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="font-black italic text-lg line-clamp-1" style={{ color: theme.text }}>{item.title}</p>
-                                                    <div className="flex items-center gap-3 mt-1">
+                                                    <p className="font-black italic text-base line-clamp-1" style={{ color: theme.text }}>{item.title}</p>
+                                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                                                         <p className="text-[10px] font-black tracking-[0.22em] uppercase text-slate-400">
                                                             Qty {item.quantity}
                                                         </p>
@@ -138,14 +138,14 @@ export function CartOverlay({
                                             <div className="flex items-center space-x-2 shrink-0">
                                                 <button 
                                                     onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                                                    className="w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
+                                                    className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
                                                     style={{ backgroundColor: `${theme.text}0a`, borderColor: `${theme.text}10`, color: theme.text }}
                                                 >
                                                     <Minus className="w-4 h-4" />
                                                 </button>
                                                 <button 
                                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                    className="w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
+                                                    className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
                                                     style={{ backgroundColor: `${theme.primary}10`, borderColor: `${theme.primary}20`, color: theme.primary }}
                                                 >
                                                     <Plus className="w-4 h-4" />
@@ -165,7 +165,7 @@ export function CartOverlay({
 
                             {/* 4. Complete your Order (Final Impulse) */}
                             {cartItems.length > 0 && (
-                                <div className="mb-12">
+                                <div className="mb-8">
                                     <div className="flex items-center space-x-3 mb-6 px-1">
                                         <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: theme.accent }}>Complete your Order</span>
                                         <div className="h-[1px] flex-1 opacity-10" style={{ backgroundColor: theme.accent }} />
@@ -184,7 +184,7 @@ export function CartOverlay({
                                                 <motion.div 
                                                     whileTap={{ scale: 0.98 }}
                                                     onClick={() => addToCart(suggestion)}
-                                                    className="rounded-[2rem] p-8 shadow-2xl relative overflow-hidden group border border-white/10"
+                                                    className="rounded-[2rem] p-6 shadow-2xl relative overflow-hidden group border border-white/10"
                                                     style={{ 
                                                         backgroundColor: theme.primary,
                                                         borderRadius: theme.radius
@@ -198,7 +198,7 @@ export function CartOverlay({
                                                             <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: theme.secondary }} />
                                                             <span>Chef's Final Touch</span>
                                                         </div>
-                                                        <h4 className="text-2xl font-black italic text-white mb-1">“Add a {suggestion.title}?” 🍰</h4>
+                                                        <h4 className="text-xl font-black italic text-white mb-1">“Add a {suggestion.title}?” 🍰</h4>
                                                         <p className="text-white/60 text-sm font-medium italic mb-6">End your experience on a perfect note.</p>
                                                         <button 
                                                             className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-xl shadow-lg active:scale-95 transition-all text-white"
@@ -216,15 +216,15 @@ export function CartOverlay({
                             )}
 
                             {/* 5. Checkout Action */}
-                            <div className="rounded-[2.5rem] p-8 shadow-2xl border" style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}>
+                            <div className="rounded-[2.2rem] p-6 shadow-2xl border" style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}>
                                 <div className="flex justify-between items-center mb-6">
                                     <span className="font-black uppercase text-[10px] tracking-widest opacity-40" style={{ color: theme.text }}>Grand Total</span>
-                                    <span className="text-4xl font-black italic" style={{ color: theme.text }}>₹{cartTotal.toFixed(0)}</span>
+                                    <span className="text-3xl font-black italic" style={{ color: theme.text }}>₹{cartTotal.toFixed(0)}</span>
                                 </div>
                                 <button
                                     onClick={onOrder}
                                     disabled={isOrdering || cartItems.length === 0}
-                                    className="w-full py-7 font-black text-xl uppercase tracking-[0.18em] shadow-2xl disabled:opacity-40 active:scale-95 transition-all flex items-center justify-center text-white"
+                                    className="w-full py-6 font-black text-lg uppercase tracking-[0.16em] shadow-2xl disabled:opacity-40 active:scale-95 transition-all flex items-center justify-center text-white"
                                     style={{ 
                                         backgroundColor: theme.primary,
                                         borderRadius: `calc(${theme.radius} * 0.75)`

@@ -515,43 +515,6 @@ export default function GuestDashboard() {
                     </div>
                 </motion.div>
 
-                {/* 🧾 Current Tab (Discovery First, Bill Last) */}
-                <AnimatePresence>
-                    {requests.some(r => (r.total || 0) > 0) && (
-                        <div className="space-y-6">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] px-2" style={{ color: theme.primary }}>🧾 Current Tab</h3>
-                            <button 
-                                onClick={() => router.push(`/${hotelSlug}/guest/bill`)}
-                                className="w-full rounded-[2rem] p-8 border flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative"
-                                style={{ 
-                                    backgroundColor: `${theme.primary}05`, 
-                                    borderColor: `${theme.primary}10`,
-                                    borderRadius: theme.radius
-                                }}
-                            >
-                                <div className="flex items-center relative z-10">
-                                    <div 
-                                        className="w-14 h-14 flex items-center justify-center mr-6 shadow-sm border" 
-                                        style={{ 
-                                            borderRadius: `calc(${theme.radius} * 0.6)`,
-                                            backgroundColor: theme.surface,
-                                            borderColor: `${theme.primary}10`
-                                        }}
-                                    >
-                                        <Receipt className="w-6 h-6" style={{ color: theme.primary }} />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="text-[8px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: theme.primary }}>Total Bill</p>
-                                        <span className="text-3xl font-black tracking-tighter" style={{ color: theme.text }}>
-                                            ₹{requests.reduce((sum, r) => sum + (r.total || 0), 0).toLocaleString()}
-                                        </span>
-                                    </div>
-                                </div>
-                                <ChevronRight className="w-8 h-8 opacity-20 group-hover:opacity-100 transition-all relative z-10" style={{ color: theme.text }} />
-                            </button>
-                        </div>
-                    )}
-                </AnimatePresence>
 
 
                 {/* Seasonal Collection (Optionalized at bottom or integrated elsewhere) */}

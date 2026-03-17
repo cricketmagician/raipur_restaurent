@@ -139,13 +139,26 @@ ALTER TABLE menu_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE special_offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
 
--- Basic Public Read Policy (Example for Hotels)
+-- Basic Public Read Policies
+DROP POLICY IF EXISTS "Allow public read hotels" ON hotels;
 CREATE POLICY "Allow public read hotels" ON hotels FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read rooms" ON rooms;
 CREATE POLICY "Allow public read rooms" ON rooms FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read guests" ON guests;
 CREATE POLICY "Allow public read guests" ON guests FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read requests" ON requests;
 CREATE POLICY "Allow public read requests" ON requests FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read menu_items" ON menu_items;
 CREATE POLICY "Allow public read menu_items" ON menu_items FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read special_offers" ON special_offers;
 CREATE POLICY "Allow public read special_offers" ON special_offers FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read offers" ON offers;
 CREATE POLICY "Allow public read offers" ON offers FOR SELECT USING (true);
 
 -- Admin/Staff policies should be added here...

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
 import { GlobalHeader } from "@/components/GlobalHeader";
+import { AddEffect } from "@/components/AddEffect";
 import { useEffect } from "react";
 import { initAudioContext } from "@/utils/audio";
 import { GuestAuthWrapper } from "./GuestAuthWrapper";
@@ -33,6 +34,7 @@ export default function GuestLayout({
     return (
         <div className="flex flex-col min-h-[100dvh] bg-[#FAF7F2] text-slate-900 antialiased pb-24 overflow-x-hidden pt-safe">
             <GlobalHeader />
+            <AddEffect />
 
             {/* Ambient Background Gradient - Refined for Warm Theme */}
             <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_#B8860B08,_transparent_60%)]"></div>

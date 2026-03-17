@@ -24,6 +24,7 @@ import { GlobalHeader } from "@/components/GlobalHeader";
 import { TrendingNow } from "@/components/TrendingNow";
 import { PerfectPairs } from "@/components/PerfectPairs";
 import { MoodSection } from "@/components/MoodSection";
+import { useAddEffectTrigger } from "@/components/AddEffect";
 
 
 // Helper to safely render icons with className
@@ -58,6 +59,8 @@ export default function GuestDashboard() {
         isVisible: false
     });
 
+    const triggerFly = useAddEffectTrigger();
+
     // Story State
     const [storyConfig, setStoryConfig] = React.useState({ 
         isVisible: false, 
@@ -69,7 +72,14 @@ export default function GuestDashboard() {
             setScrolled(window.scrollY > 20);
         };
         window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
+
+        const handleOpenCart = () => setShowCart(true);
+        window.addEventListener("open_cart", handleOpenCart);
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+            window.removeEventListener("open_cart", handleOpenCart);
+        };
     }, []);
 
     const categories = [

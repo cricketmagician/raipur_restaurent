@@ -4,6 +4,7 @@ import { CategoryTheme } from "@/utils/themes";
 import { motion } from "framer-motion";
 
 import { getDirectImageUrl } from "@/utils/image";
+import { useAddEffectTrigger } from "./AddEffect";
 
 interface MenuCardProps {
     id: string;
@@ -24,6 +25,7 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
     const textColor = theme?.textColor || "#3E2723";
     const popularEffect = isPopular ? `shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border-${accentColor}/20 scale-[1.02]` : 'shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border-slate-100/50';
     
+    const triggerFly = useAddEffectTrigger();
     const displayTag = badgeText || (isRecommended ? "Chef's Choice" : null);
 
     return (
@@ -82,6 +84,7 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
+                            if (image) triggerFly(id, image, e);
                             onAdd?.();
                         }}
                         className="w-12 h-12 rounded-full bg-[#00704A] text-white flex items-center justify-center transition-all hover:bg-[#1E3932] hover:shadow-xl active:scale-95 shadow-lg"

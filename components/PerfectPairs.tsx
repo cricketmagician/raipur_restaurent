@@ -3,6 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
+import { useAddEffectTrigger } from "./AddEffect";
 
 interface PairItem {
     id: string;
@@ -19,6 +20,8 @@ interface PerfectPairsProps {
 }
 
 export function PerfectPairs({ pairs, onAdd }: PerfectPairsProps) {
+    const triggerFly = useAddEffectTrigger();
+    
     return (
         <section className="space-y-6">
             <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em] px-2">
@@ -50,7 +53,10 @@ export function PerfectPairs({ pairs, onAdd }: PerfectPairsProps) {
                         </div>
 
                         <button
-                            onClick={() => onAdd(pair.originalId)}
+                            onClick={(e) => {
+                                triggerFly(pair.originalId, pair.image, e);
+                                onAdd(pair.originalId);
+                            }}
                             className="bg-[#00704A] text-white p-4 rounded-2xl shadow-lg shadow-[#00704A]/20 active:scale-90 transition-all relative z-10"
                         >
                             <Plus className="w-6 h-6" />

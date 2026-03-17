@@ -8,6 +8,7 @@ import { useHotelBranding, useSupabaseMenuItems, useCart } from "@/utils/store";
 import { CATEGORY_THEMES } from "@/utils/themes";
 import { BottomNav } from "@/components/BottomNav";
 import { getDirectImageUrl } from "@/utils/image";
+import { useAddEffectTrigger } from "@/components/AddEffect";
 
 export default function ItemPage() {
     const params = useParams();
@@ -20,6 +21,7 @@ export default function ItemPage() {
     const { cart, updateQuantity, cartCount } = useCart(branding?.id);
 
     const [isAdded, setIsAdded] = useState(false);
+    const triggerFly = useAddEffectTrigger();
 
     const item = useMemo(() => menuItems.find(i => i.id === itemId), [menuItems, itemId]);
     
@@ -31,15 +33,17 @@ export default function ItemPage() {
 
     const theme = CATEGORY_THEMES[(item?.category || "all").toLowerCase()] || CATEGORY_THEMES.all;
 
-    const handleAdd = () => {
+    const handleAdd = (e: React.MouseEvent) => {
         if (!item) return;
+        if (item.image_url) triggerFly(item.id, item.image_url, e);
         updateQuantity(item.id, (cart[item.id] || 0) + 1);
         setIsAdded(true);
         setTimeout(() => setIsAdded(false), 2000);
     };
 
-    const handleAddPairing = () => {
+    const handleAddPairing = (e: React.MouseEvent) => {
         if (!pairing) return;
+        if (pairing.image_url) triggerFly(pairing.id, pairing.image_url, e);
         updateQuantity(pairing.id, (cart[pairing.id] || 0) + 1);
     };
 
@@ -117,9 +121,8 @@ export default function ItemPage() {
                         </div>
                     </div>
 
-                    {/* Add to Order CTA */}
                     <button
-                        onClick={handleAdd}
+                        onClick={(e) => handleAdd(e)}
                         className={`w-full py-8 rounded-full flex items-center justify-center space-x-4 transition-all active:scale-95 shadow-xl relative overflow-hidden group ${
                             isAdded ? 'bg-emerald-500 text-white' : 'bg-[#00704A] text-white'
                         }`}
@@ -163,7 +166,7 @@ export default function ItemPage() {
                         </div>
 
                         <button 
-                            onClick={handleAddPairing}
+                            onClick={(e) => handleAddPairing(e)}
                             className="w-full bg-white p-6 rounded-[2.5rem] border border-[#00704A]/5 shadow-xl shadow-[#00704A]/5 flex items-center justify-between group active:scale-[0.98] transition-all text-left"
                         >
                             <div className="flex items-center flex-1 min-w-0">

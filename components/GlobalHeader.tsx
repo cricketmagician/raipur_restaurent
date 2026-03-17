@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Utensils, ShoppingBag, User, Bell, Droplets, ArrowLeft, Menu, Sparkles, RefreshCw } from "lucide-react";
+import { Utensils, ShoppingBag, User, Bell, Droplets, ArrowLeft, Menu, Sparkles, RefreshCw, X } from "lucide-react";
 import { useRouter, useParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, addSupabaseRequest } from "@/utils/store";
+import { useHotelBranding, addSupabaseRequest, useCart } from "@/utils/store";
 import { useGuestRoom } from "../app/[hotel_slug]/guest/GuestAuthWrapper";
 
 export function GlobalHeader() {
@@ -14,6 +14,7 @@ export function GlobalHeader() {
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
     const { roomNumber } = useGuestRoom();
+    const { cartCount } = useCart(branding?.id);
     
     const [scrolled, setScrolled] = useState(false);
     const [requestLoading, setRequestLoading] = useState<string | null>(null);
@@ -57,39 +58,9 @@ export function GlobalHeader() {
             } border-b border-[#00704A]/5`}
         >
             <div className="flex flex-col gap-6">
-                {/* Row 1: Logo, Name/Address, Profile */}
-                <div className="px-6 flex items-center justify-between gap-6">
-                    {/* Left: Logo/Back */}
-                    <div className="flex-shrink-0">
-                        {!isDashboard ? (
-                            <button 
-                                onClick={() => router.back()}
-                                className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 active:scale-95 transition-all text-[#00704A]"
-                            >
-                                <ArrowLeft className="w-6 h-6" />
-                            </button>
-                        ) : branding?.logo || branding?.logoImage ? (
-                            <div className="w-12 h-12 rounded-full overflow-hidden shadow-xl border-4 border-white">
-                                <img src={branding.logoImage || branding.logo} alt="Logo" className="w-full h-full object-cover" />
-                            </div>
-                        ) : (
-                            <div className="w-12 h-12 bg-[#00704A] rounded-full flex items-center justify-center shadow-xl shadow-[#00704A]/10">
-                                <div className="text-white font-serif italic text-xl">S</div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Center: Branding Info */}
-                    <div className="flex-1 text-center min-w-0">
-                        <h1 className="text-lg font-black text-[#1E3932] leading-tight truncate tracking-tight">
-                            {branding?.name || "Starbucks"}
-                        </h1>
-                        <p className="text-[10px] font-bold text-[#00704A]/60 uppercase tracking-[0.2em] truncate mt-1">
-                            {branding?.address || "Experience the Siren"}
-                        </p>
-                    </div>
-
-                    {/* Right: Profile & Utility Dropdown */}
+                {/* Row 1: Menu (Left), Branding (Center), Cart (Right) */}
+                <div className="px-6 flex items-center justify-between gap-4">
+                    {/* Left: Menu & Utility Dropdown */}
                     <div className="flex-shrink-0 relative">
                         <button 
                             onClick={() => setShowUtility(!showUtility)}
@@ -97,16 +68,16 @@ export function GlobalHeader() {
                                 showUtility ? "bg-[#1E3932] text-white" : "bg-white border border-slate-100 text-[#00704A] shadow-sm"
                             } active:scale-95`}
                         >
-                            <Menu className="w-6 h-6" />
+                            {showUtility ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                         </button>
 
                         <AnimatePresence>
                             {showUtility && (
                                 <motion.div 
-                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    className="absolute top-14 right-0 w-56 bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,33,30,0.15)] border border-[#00704A]/5 overflow-hidden py-3"
+                                    initial={{ opacity: 0, y: 10, scale: 0.95, x: 0 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1, x: 0 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95, x: 0 }}
+                                    className="absolute top-14 left-0 w-56 bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,33,30,0.15)] border border-[#00704A]/5 overflow-hidden py-3 z-[110]"
                                 >
                                     <div className="px-6 py-3 border-b border-slate-50 mb-2">
                                         <p className="text-[9px] font-black text-[#00704A] uppercase tracking-[0.3em]">Boutique Selection</p>
@@ -144,6 +115,53 @@ export function GlobalHeader() {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+                    </div>
+
+                    {/* Center: Branding & Logo */}
+                    <div 
+                        className="flex-1 flex flex-col items-center justify-center cursor-pointer"
+                        onClick={() => router.push(`/${hotelSlug}/guest/dashboard`)}
+                    >
+                        <div className="flex items-center space-x-2">
+                            {branding?.logoImage || branding?.logo ? (
+                                <div className="w-8 h-8 rounded-full overflow-hidden shadow-md border-2 border-white">
+                                    <img src={branding.logoImage || branding.logo} alt="Logo" className="w-full h-full object-cover" />
+                                </div>
+                            ) : (
+                                <div className="w-8 h-8 bg-[#00704A] rounded-full flex items-center justify-center shadow-md">
+                                    <div className="text-white font-serif italic text-sm">S</div>
+                                </div>
+                            )}
+                            <h1 className="text-base font-black text-[#1E3932] leading-tight tracking-tight">
+                                {branding?.name || "Starbucks"}
+                            </h1>
+                        </div>
+                        <p className="text-[8px] font-bold text-[#00704A]/60 uppercase tracking-[0.2em] truncate mt-0.5">
+                            {branding?.address || "Experience the Siren"}
+                        </p>
+                    </div>
+
+                    {/* Right: Shopping Bag / Cart */}
+                    <div className="flex-shrink-0">
+                        <button 
+                            id="header-cart-button"
+                            onClick={() => window.dispatchEvent(new CustomEvent('open_cart'))}
+                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 active:scale-95 transition-all text-[#00704A] relative"
+                        >
+                            <ShoppingBag className="w-6 h-6" />
+                            <AnimatePresence>
+                                {cartCount > 0 && (
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        exit={{ scale: 0 }}
+                                        className="absolute -top-1 -right-1 w-6 h-6 bg-[#D4AF37] text-[#3E2723] rounded-full text-[10px] font-black flex items-center justify-center shadow-lg border-2 border-white"
+                                    >
+                                        {cartCount}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </button>
                     </div>
                 </div>
 

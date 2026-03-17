@@ -217,14 +217,28 @@ export default function GuestDashboard() {
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between pt-4 border-t border-accent/10">
-                                    <span className="text-2xl font-black text-accent">₹{heroItem.price}</span>
-                                    <motion.button 
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={(e) => addToCart(heroItem, e as any)}
-                                        className="px-8 py-4 bg-accent text-primary rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-accent/20 hover:brightness-110 transition-all"
-                                    >
-                                        Add to Bag
-                                    </motion.button>
+                                    <div className="flex items-center gap-4">
+                                        <AnimatePresence mode="popLayout">
+                                            {cart[heroItem.id] > 0 && (
+                                                <motion.div 
+                                                    key="hero-qty"
+                                                    initial={{ scale: 0, opacity: 0 }}
+                                                    animate={{ scale: 1, opacity: 1 }}
+                                                    exit={{ scale: 0, opacity: 0 }}
+                                                    className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-primary font-black text-xs border-2 border-white shadow-xl"
+                                                >
+                                                    {cart[heroItem.id]}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                        <motion.button 
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={(e) => addToCart(heroItem, e as any)}
+                                            className="px-8 py-4 bg-accent text-primary rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-accent/20 hover:brightness-110 transition-all"
+                                        >
+                                            Add to Bag
+                                        </motion.button>
+                                    </div>
                                 </div>
                             </div>
                         </motion.section>
@@ -276,13 +290,27 @@ export default function GuestDashboard() {
                                     <h4 className="font-bold text-white truncate">{item.title}</h4>
                                     <p className="text-accent font-black text-sm">₹{item.price}</p>
                                 </div>
-                                <motion.button 
-                                    whileTap={{ scale: 0.8 }}
-                                    onClick={(e) => addToCart(item, e as any)}
-                                    className="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent"
-                                >
-                                    <Plus className="w-5 h-5" />
-                                </motion.button>
+                                <div className="flex items-center gap-3">
+                                    <AnimatePresence mode="popLayout">
+                                        {cart[item.id] > 0 && (
+                                            <motion.span 
+                                                key="qty"
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                className="text-accent font-black text-xs"
+                                            >
+                                                {cart[item.id]}x
+                                            </motion.span>
+                                        )}
+                                    </AnimatePresence>
+                                    <motion.button 
+                                        whileTap={{ scale: 0.8 }}
+                                        onClick={(e) => addToCart(item, e as any)}
+                                        className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-primary shadow-lg shadow-accent/20"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                    </motion.button>
+                                </div>
                             </motion.div>
                         ))}
                     </div>
@@ -313,6 +341,21 @@ export default function GuestDashboard() {
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-[#0F0A08]/80 to-transparent" />
+                                        
+                                        {/* Quantity Badge */}
+                                        <AnimatePresence>
+                                            {cart[item.id] > 0 && (
+                                                <motion.div 
+                                                    initial={{ x: 20, opacity: 0 }}
+                                                    animate={{ x: 0, opacity: 1 }}
+                                                    className="absolute top-4 right-4 bg-white text-primary px-3 py-1.5 rounded-full font-black text-[10px] shadow-2xl flex items-center gap-1.5 border border-accent/20"
+                                                >
+                                                    <ShoppingBag className="w-3 h-3" />
+                                                    <span>{cart[item.id]} in Bag</span>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
                                         <div className="absolute bottom-4 right-4 bg-accent text-primary px-4 py-2 rounded-xl font-black text-xs">
                                             ₹{item.price}
                                         </div>

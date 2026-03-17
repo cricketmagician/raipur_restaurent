@@ -9,7 +9,7 @@ import { getDirectImageUrl } from "@/utils/image";
 import { ImpulseBottomSheet } from "@/components/ImpulseBottomSheet";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequests, addSupabaseRequest, useSpecialOffers, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, useSeasonalStories } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequests, addSupabaseRequest, useSpecialOffers, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, useSeasonalStories, getRoomAccessState } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { Toast } from "@/components/Toast";
 import { ComboCard } from "@/components/ComboCard";
@@ -252,9 +252,21 @@ export default function GuestDashboard() {
 
     const handleOrder = async () => {
         if (!branding?.id) return;
-        if (orderMode === "takeaway" && !loyaltyProfile) {
+        if (!loyaltyProfile) {
             setIsLoyaltyOpen(true);
             return;
+        }
+
+        if (orderMode !== "takeaway") {
+            const accessState = await getRoomAccessState(branding.id, tableNumber);
+            if (!accessState.active) {
+                setToast({
+                    message: "This table is not active right now. Ask staff to activate the table before placing an order.",
+                    type: "error",
+                    isVisible: true,
+                });
+                return;
+            }
         }
 
         if (loyaltyProfile?.phone) {

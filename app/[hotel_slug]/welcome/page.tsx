@@ -16,6 +16,7 @@ export default function WelcomeSelectionPage() {
 
     const room = searchParams?.get("room") || "";
     const pin = searchParams?.get("pin") || "";
+    const hasTableContext = !!room && room.toLowerCase() !== "takeaway";
 
     if (loading) {
         return (
@@ -81,7 +82,9 @@ export default function WelcomeSelectionPage() {
                     <h2 className="text-5xl font-serif font-black text-white mb-4" style={{ color: branding.accentColor || "#fff" }}>
                         {branding.name}
                     </h2>
-                    <p className="text-white/80 font-medium text-lg">How would you like to enjoy your food today?</p>
+                    <p className="text-white/80 font-medium text-lg">
+                        {hasTableContext ? `Table ${room} detected. Continue to your table menu.` : "How would you like to enjoy your food today?"}
+                    </p>
                 </motion.div>
 
                 <div className="w-full space-y-4">
@@ -96,26 +99,30 @@ export default function WelcomeSelectionPage() {
                             <Utensils className="w-8 h-8" />
                         </div>
                         <div className="text-left flex-1">
-                            <h3 className="text-2xl font-black mb-1">Dine In</h3>
-                            <p className="text-white/60 text-sm font-medium">Enjoy your meal at your table</p>
+                            <h3 className="text-2xl font-black mb-1">{hasTableContext ? "Open Table Menu" : "Dine In"}</h3>
+                            <p className="text-white/60 text-sm font-medium">
+                                {hasTableContext ? "Browse and order for this table session" : "Enjoy your meal at your table"}
+                            </p>
                         </div>
                     </motion.button>
 
-                    <motion.button
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                        onClick={handleParcel}
-                        className="w-full bg-white text-slate-900 rounded-[2.5rem] p-6 flex items-center shadow-2xl transition-all group active:scale-95"
-                    >
-                        <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center shrink-0 mr-6 group-hover:scale-110 transition-transform">
-                            <ShoppingBag className="w-8 h-8 text-slate-900" />
-                        </div>
-                        <div className="text-left flex-1">
-                            <h3 className="text-2xl font-black mb-1">Takeaway / Parcel</h3>
-                            <p className="text-slate-500 text-sm font-medium">Pack your food to go</p>
-                        </div>
-                    </motion.button>
+                    {!hasTableContext && (
+                        <motion.button
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 }}
+                            onClick={handleParcel}
+                            className="w-full bg-white text-slate-900 rounded-[2.5rem] p-6 flex items-center shadow-2xl transition-all group active:scale-95"
+                        >
+                            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center shrink-0 mr-6 group-hover:scale-110 transition-transform">
+                                <ShoppingBag className="w-8 h-8 text-slate-900" />
+                            </div>
+                            <div className="text-left flex-1">
+                                <h3 className="text-2xl font-black mb-1">Takeaway / Parcel</h3>
+                                <p className="text-slate-500 text-sm font-medium">Pack your food to go</p>
+                            </div>
+                        </motion.button>
+                    )}
                 </div>
             </div>
         </div>

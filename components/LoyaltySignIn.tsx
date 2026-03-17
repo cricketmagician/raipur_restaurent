@@ -95,10 +95,10 @@ export function LoyaltySignIn({ isOpen, onClose, onSignIn, lastVisitAt, guestNam
                                 <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent" />
                             </div>
                             <h2 className="text-3xl font-black tracking-tighter mb-2" style={{ color: theme.primary }}>
-                                {step === 1 ? "Experience the Vibe" : "Almost there!"}
+                                {step === 1 ? "Confirm your identity" : "Almost there!"}
                             </h2>
                             <p className="text-xs font-bold uppercase tracking-widest opacity-40" style={{ color: theme.text }}>
-                                {step === 1 ? "Enter phone to track rewards" : "Give your vibe a name"}
+                                {step === 1 ? "Keeps table orders traceable and secure" : "Let the team know who is ordering"}
                             </p>
                             {lastVisitAt && (
                                 <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded-full bg-black/[0.03] border border-black/[0.04]">
@@ -164,7 +164,7 @@ export function LoyaltySignIn({ isOpen, onClose, onSignIn, lastVisitAt, guestNam
                             </button>
                             
                             <p className="text-[10px] text-center opacity-30 font-bold px-4 leading-relaxed" style={{ color: theme.text }}>
-                                By continuing, you agree to receive digital invoices and rewards updates on this number.
+                                This number is used for order updates, secure table access history and future return visits.
                             </p>
                         </div>
                     </motion.div>

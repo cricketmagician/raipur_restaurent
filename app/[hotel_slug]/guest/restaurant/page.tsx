@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MenuCard } from "@/components/MenuCard";
 import { CheckCircle, Sparkles, TrendingUp, Gift } from "lucide-react";
-import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, useGuestLoyalty, saveGuestLoyaltySession, addLoyaltyPoints, type MenuItem } from "@/utils/store";
+import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, useGuestLoyalty, saveGuestLoyaltySession, addLoyaltyPoints, getRoomAccessState, type MenuItem } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
@@ -406,9 +406,17 @@ export default function RestaurantPage() {
             return;
         }
 
-        if (orderMode === "takeaway" && !loyaltyProfile) {
+        if (!loyaltyProfile) {
             setIsLoyaltyOpen(true);
             return;
+        }
+
+        if (orderMode !== "takeaway") {
+            const accessState = await getRoomAccessState(branding.id, roomNumber);
+            if (!accessState.active) {
+                alert("This table is not active right now. Please ask staff to activate the table before placing an order.");
+                return;
+            }
         }
 
         if (loyaltyProfile?.phone) {

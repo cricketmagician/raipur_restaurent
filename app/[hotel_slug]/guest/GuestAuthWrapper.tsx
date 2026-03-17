@@ -149,7 +149,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
             console.log(`[${timestamp}] AuthLogic: Auto-verify for Room: ${effectiveRoom}`);
             setIsVerified(true);
             localStorage.setItem(`hotel_room_${hotelSlug}`, effectiveRoom);
-            localStorage.removeItem(`hotel_pin_${hotelSlug}`); // Ensure no stray pin
+            localStorage.removeItem(`hotel_pin_${hotelSlug}`);
         } else {
             setIsVerified(false);
         }

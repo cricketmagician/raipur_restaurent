@@ -1233,6 +1233,37 @@ export async function verifyBookingPin(hotelId: string, roomNumber: string, pin:
     return { success: true, data: roomData };
 }
 
+export async function getRoomAccessState(hotelId: string, roomNumber: string) {
+    const normalizedRoom = roomNumber?.trim();
+    if (!hotelId || !normalizedRoom) {
+        return { active: false, data: null, error: null };
+    }
+
+    const normalizedLower = normalizedRoom.toLowerCase();
+    if (normalizedLower === "takeaway" || normalizedLower === "takeout") {
+        return { active: true, data: null, error: null };
+    }
+
+    const { data, error } = await supabase
+        .from('rooms')
+        .select('id, room_number, is_occupied, checked_in_at')
+        .eq('hotel_id', hotelId)
+        .eq('room_number', normalizedRoom)
+        .limit(1)
+        .maybeSingle();
+
+    if (error) {
+        console.error("AuthStore: Room access lookup failed:", error.message);
+        return { active: false, data: null, error };
+    }
+
+    return {
+        active: Boolean(data?.is_occupied),
+        data,
+        error: null,
+    };
+}
+
 /**
  * Hook to fetch and subscribe to special offers for a specific hotel
  */

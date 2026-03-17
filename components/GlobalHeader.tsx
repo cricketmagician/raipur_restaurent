@@ -55,7 +55,7 @@ export function GlobalHeader() {
         <motion.header 
             initial={{ y: -100 }}
             animate={{ y: 0 }}
-            className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] transition-all duration-500 py-6`}
+            className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 py-6`}
             style={{ 
                 backgroundColor: scrolled ? `${theme.surface}f2` : "transparent", // f2 is ~95% opacity
                 backdropFilter: scrolled ? "blur(20px)" : "none",

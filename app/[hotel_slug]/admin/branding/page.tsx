@@ -216,16 +216,46 @@ export default function BrandingSettingsPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Homepage Hero Image (URL)</label>
+                                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Homepage Hero Image (URL)</label>
+                                
+                                {/* AI Presets Gallery */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                                    {[
+                                        { id: 'default', name: 'Premium Luxury', url: '/images/branding/hero.png' },
+                                        { id: 'cafe', name: 'Cozy Cafe', url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=1000' },
+                                        { id: 'fine', name: 'Fine Dining', url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=1000' },
+                                        { id: 'modern', name: 'Modern Vibe', url: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=1000' }
+                                    ].map((preset) => (
+                                        <button
+                                            key={preset.id}
+                                            type="button"
+                                            onClick={() => setFormData({...formData, bgPattern: preset.url})}
+                                            className={`group relative aspect-video rounded-2xl overflow-hidden border-2 transition-all ${
+                                                formData.bgPattern === preset.url ? 'border-indigo-600 ring-4 ring-indigo-500/10' : 'border-slate-100 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <img src={getDirectImageUrl(preset.url)} alt={preset.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-3">
+                                                <span className="text-[8px] font-black text-white uppercase tracking-widest">{preset.name}</span>
+                                            </div>
+                                            {formData.bgPattern === preset.url && (
+                                                <div className="absolute top-2 right-2 bg-indigo-600 text-white p-1 rounded-full">
+                                                    <CheckCircle className="w-3 h-3" />
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+
                                 <input
                                     type="url"
                                     value={formData.bgPattern}
                                     onChange={(e) => setFormData({...formData, bgPattern: e.target.value})}
                                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all"
-                                    placeholder="https://link-to-homepage-hero.jpg"
+                                    placeholder="Or paste custom image URL here..."
                                 />
                                 <p className="text-[9px] font-bold text-slate-400 mt-2 uppercase tracking-tight italic">
-                                    This image appears as the background for your guest dashboard and welcome screens.
+                                    Select a preset or paste a link. This image appears as the background for your guest dashboard.
                                 </p>
                             </div>
                         </div>

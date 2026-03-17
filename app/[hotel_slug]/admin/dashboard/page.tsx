@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
-import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, LayoutDashboard, ShieldAlert, BarChart3, Sparkles } from "lucide-react";
+import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, LayoutDashboard, ShieldAlert, BarChart3, Sparkles, Palette } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHotelBranding, useSupabaseRequestsState, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms, isDiningRequest, isHousekeepingRequest, isServiceRequest, requestTypeMatches, type SyncStatus } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
@@ -319,6 +319,14 @@ export default function AdminHub() {
                     >
                         <BarChart3 className="w-4 h-4 mr-2 text-indigo-500 group-hover:text-indigo-300" />
                         Business Performance
+                    </button>
+
+                    <button 
+                        onClick={() => router.push(`/${hotelSlug}/admin/branding`)}
+                        className="px-6 py-3 bg-slate-900 text-white border border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200/50 flex items-center group mb-2"
+                    >
+                        <Palette className="w-4 h-4 mr-2 text-indigo-400 group-hover:text-indigo-300" />
+                        Quick Visuals & Hero
                     </button>
                 </div>
 

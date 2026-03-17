@@ -345,7 +345,7 @@ export default function GuestDashboard() {
             {/* 1. Premium Hero Section */}
             <div className="absolute top-0 left-0 right-0 h-[45vh] overflow-hidden -z-10 bg-black">
                 <img 
-                    src="/images/branding/hero.png" 
+                    src={branding?.heroImage || "/images/branding/hero.png"} 
                     alt="Hotel Interior" 
                     className="w-full h-full object-cover opacity-60 scale-105"
                 />

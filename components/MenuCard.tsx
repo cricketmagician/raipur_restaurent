@@ -3,6 +3,8 @@ import { Plus, Sparkles } from "lucide-react";
 import { CategoryTheme } from "@/utils/themes";
 import { motion } from "framer-motion";
 
+import { getDirectImageUrl } from "@/utils/image";
+
 interface MenuCardProps {
     id: string;
     title: string;
@@ -35,7 +37,7 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
             {image && (
                 <div className="relative w-full aspect-square overflow-hidden bg-[#F2F0EB]">
                     <img
-                        src={image}
+                        src={getDirectImageUrl(image)}
                         alt={title}
                         className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-1000 ease-out"
                     />

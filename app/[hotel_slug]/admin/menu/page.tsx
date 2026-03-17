@@ -7,6 +7,7 @@ import { useHotelBranding, useSupabaseMenuItems, saveSupabaseMenuItem, deleteSup
 import { motion, AnimatePresence } from "framer-motion";
 import { MenuCard } from "@/components/MenuCard";
 import { CATEGORY_THEMES } from "@/utils/themes";
+import { getDirectImageUrl } from "@/utils/image";
 
 export default function MenuPage() {
     const params = useParams();
@@ -119,7 +120,7 @@ export default function MenuPage() {
                                     >
                                         <div className="aspect-square bg-slate-50 rounded-3xl overflow-hidden mb-6 relative">
                                             {item.image_url ? (
-                                                <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                                <img src={getDirectImageUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-slate-200">
                                                     <Utensils className="w-12 h-12" />
@@ -195,7 +196,7 @@ export default function MenuPage() {
                                 <td className="p-8">
                                     <div className="flex items-center">
                                         <div className="w-12 h-12 rounded-2xl bg-slate-50 overflow-hidden mr-4">
-                                            {item.image_url ? <img src={item.image_url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-200"><Utensils className="w-6 h-6" /></div>}
+                                            {item.image_url ? <img src={getDirectImageUrl(item.image_url)} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-200"><Utensils className="w-6 h-6" /></div>}
                                         </div>
                                         <div>
                                             <p className="font-serif italic text-lg text-[#3E2723]">{item.title}</p>
@@ -326,7 +327,7 @@ export default function MenuPage() {
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <div className="w-6 h-6 rounded-md bg-slate-100 overflow-hidden">
-                                                                {item.image_url && <img src={item.image_url} className="w-full h-full object-cover" />}
+                                                                {item.image_url && <img src={getDirectImageUrl(item.image_url)} className="w-full h-full object-cover" />}
                                                             </div>
                                                             <span className="text-xs font-medium text-slate-600 group-hover/pair:text-[#3E2723]">{item.title}</span>
                                                             <span className="text-[9px] font-black text-[#F59E0B]">₹{item.price}</span>

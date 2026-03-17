@@ -7,6 +7,7 @@ import { ArrowLeft, Plus, Sparkles, ShoppingBag, ChevronRight } from "lucide-rea
 import { useHotelBranding, useSupabaseMenuItems, useCart } from "@/utils/store";
 import { CATEGORY_THEMES } from "@/utils/themes";
 import { BottomNav } from "@/components/BottomNav";
+import { getDirectImageUrl } from "@/utils/image";
 
 export default function ItemPage() {
     const params = useParams();
@@ -78,7 +79,7 @@ export default function ItemPage() {
                     initial={{ scale: 1.1, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.8 }}
-                    src={item.image_url} 
+                    src={getDirectImageUrl(item.image_url)} 
                     alt={item.title} 
                     className="w-full h-full object-cover"
                 />
@@ -167,7 +168,7 @@ export default function ItemPage() {
                         >
                             <div className="flex items-center flex-1 min-w-0">
                                 <div className="w-16 h-16 rounded-full overflow-hidden mr-5 shrink-0 shadow-lg">
-                                    <img src={pairing.image_url} alt={pairing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    <img src={getDirectImageUrl(pairing.image_url)} alt={pairing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                 </div>
                                 <div className="min-w-0 mr-4">
                                     <h4 className="text-lg font-black text-[#1E3932] truncate">{pairing.title}</h4>

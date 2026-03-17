@@ -2,7 +2,8 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Plus } from "lucide-react";
+import { useAddEffectTrigger } from "./AddEffect";
 
 interface TrendingItem {
     id: string;
@@ -22,6 +23,8 @@ interface TrendingNowProps {
 }
 
 export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: TrendingNowProps) {
+    const triggerFly = useAddEffectTrigger();
+
     return (
         <section className="space-y-6">
             <div className="flex items-center justify-between px-2">
@@ -94,7 +97,16 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                                         </button>
                                     </div>
                                 ) : (
-                                    <span className="text-[10px] font-bold text-[#00704A] italic">Order like everyone else</span>
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            triggerFly(item.menuItemId, item.image, e);
+                                            onUpdateQuantity(item.menuItemId, 1);
+                                        }}
+                                        className="w-10 h-10 bg-[#00704A] text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                    </button>
                                 )}
                             </div>
                         </div>

@@ -125,8 +125,42 @@ export function GlobalHeader() {
                         </AnimatePresence>
                     </div>
 
-                    {/* Center: Empty Space (Branding Removed) */}
-                    <div className="flex-1" />
+                    {/* Center: Compact Mode Toggle */}
+                    <div className="flex-1 flex justify-center">
+                        <div className="flex bg-slate-100/50 p-1 rounded-full border border-slate-100 backdrop-blur-md">
+                            <button 
+                                onClick={() => {
+                                    if (tableNumber?.toLowerCase() === 'takeaway' || tableNumber?.toLowerCase() === 'takeout') {
+                                        localStorage.removeItem(`hotel_room_${hotelSlug}`);
+                                        window.location.href = window.location.pathname;
+                                    }
+                                }}
+                                className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
+                                    (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") 
+                                    ? 'bg-white text-slate-900 shadow-sm' 
+                                    : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                            >
+                                Dine-In
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    if (tableNumber?.toLowerCase() !== 'takeaway' && tableNumber?.toLowerCase() !== 'takeout') {
+                                        localStorage.setItem(`hotel_room_${hotelSlug}`, 'Takeaway');
+                                        localStorage.removeItem(`hotel_pin_${hotelSlug}`);
+                                        window.location.href = window.location.pathname + "?room=Takeaway";
+                                    }
+                                }}
+                                className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
+                                    (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") 
+                                    ? 'bg-white text-slate-900 shadow-sm' 
+                                    : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                            >
+                                Takeaway
+                            </button>
+                        </div>
+                    </div>
 
                     {/* Right: Shopping Bag / Cart */}
                     <div className="flex-shrink-0">
@@ -152,44 +186,6 @@ export function GlobalHeader() {
                             </AnimatePresence>
                         </button>
                     </div>
-                </div>
-
-                {/* Row 2: Premium Mode Selector (Separate Buttons) */}
-                <div className="px-6 flex items-center justify-center space-x-3">
-                    <button 
-                        onClick={() => {
-                            if (tableNumber?.toLowerCase() === 'takeaway' || tableNumber?.toLowerCase() === 'takeout') {
-                                localStorage.removeItem(`hotel_room_${hotelSlug}`);
-                                window.location.href = window.location.pathname;
-                            }
-                        }}
-                        className="flex-1 py-3 px-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 shadow-sm border"
-                        style={{ 
-                            backgroundColor: (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") ? theme.primary : "transparent",
-                            borderColor: (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") ? theme.primary : `${theme.primary}20`,
-                            color: (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") ? "white" : `${theme.primary}88`
-                        }}
-                    >
-                        <span>Dine-In</span>
-                    </button>
-                    <button 
-                        onClick={() => {
-                            if (tableNumber?.toLowerCase() !== 'takeaway' && tableNumber?.toLowerCase() !== 'takeout') {
-                                localStorage.setItem(`hotel_room_${hotelSlug}`, 'Takeaway');
-                                localStorage.removeItem(`hotel_pin_${hotelSlug}`);
-                                // Hard reload into the Takeaway URL
-                                window.location.href = window.location.pathname + "?room=Takeaway";
-                            }
-                        }}
-                        className="flex-1 py-3 px-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 shadow-sm border"
-                        style={{ 
-                            backgroundColor: (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? theme.primary : "transparent",
-                            borderColor: (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? theme.primary : `${theme.primary}20`,
-                            color: (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? "white" : `${theme.primary}88`
-                        }}
-                    >
-                        <span>Takeaway</span>
-                    </button>
                 </div>
             </div>
         </motion.header>

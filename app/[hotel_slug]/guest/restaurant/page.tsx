@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { MenuCard } from "@/components/MenuCard";
 import { CheckCircle, ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles, Search } from "lucide-react";
-import { addSupabaseRequest, useHotelBranding, useCart } from "@/utils/store";
+import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
@@ -42,15 +42,15 @@ export default function RestaurantPage() {
         { id: "desserts", name: "Desserts", icon: "🍰" },
     ];
 
-    const menuItems = SHARED_MENU_ITEMS;
+    const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
 
     const currentTheme = CATEGORY_THEMES[activeCategory] || CATEGORY_THEMES.all;
 
     const filteredItems = activeCategory === "all" ? menuItems : menuItems.filter(i => i.category === activeCategory);
     
     // Revenue Logic
-    const popularItems = menuItems.filter(i => i.isPopular);
-    const recommendedItems = menuItems.filter(i => i.isRecommended);
+    const popularItems = menuItems.filter(i => i.is_popular);
+    const recommendedItems = menuItems.filter(i => i.is_recommended);
 
     const addToCart = (item: any, isUpsell = false) => {
         const currentQty = cart[item.id] || 0;
@@ -62,16 +62,19 @@ export default function RestaurantPage() {
         }
 
         // --- Smart Pairing Logic (Premium Philosophy) ---
-        if (item.upsellIds && item.upsellIds.length > 0) {
+        if (item.upsell_ids && item.upsell_ids.length > 0) {
             // Find a pairing that isn't already in cart and hasn't been suggested in this session
-             const potentialUpsell = SHARED_MENU_ITEMS.find(m => 
-                item.upsellIds.includes(m.id) && 
+             const potentialUpsell = menuItems.find(m => 
+                item.upsell_ids.includes(m.id) && 
                 !cart[m.id] && 
                 !suggestedIds.includes(m.id)
             );
 
             if (potentialUpsell) {
-                setUpsellItem(potentialUpsell);
+                setUpsellItem({
+                    ...potentialUpsell,
+                    image: potentialUpsell.image_url
+                });
                 setSuggestedIds(prev => [...prev, potentialUpsell.id]);
                 
                 // Slightly delay for premium feel (Progressive Disclosure)
@@ -238,11 +241,17 @@ export default function RestaurantPage() {
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Most Loved</span>
                         <div className="h-[1px] flex-1 bg-slate-100/50" />
                     </div>
-                    {menuItems.slice(0, 1).map((item) => (
+                    {menuItems.filter(i => i.is_popular).slice(0, 1).map((item) => (
                         <MenuCard
                             key={item.id}
-                            {...item}
-                            theme={CATEGORY_THEMES[item.category] || CATEGORY_THEMES.all}
+                            id={item.id}
+                            title={item.title}
+                            description={item.description || ""}
+                            price={item.price}
+                            image={item.image_url}
+                            isPopular={item.is_popular}
+                            isRecommended={item.is_recommended}
+                            theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
                             onAdd={() => addToCart(item)}
                         />
                     ))}
@@ -266,14 +275,22 @@ export default function RestaurantPage() {
                     className="grid grid-cols-1 gap-10 pb-20"
                 >
                     <AnimatePresence mode="popLayout">
-                        {filteredItems.slice(activeCategory === 'all' ? 1 : 0).map((item) => (
-                            <MenuCard
-                                key={item.id}
-                                {...item}
-                                theme={CATEGORY_THEMES[item.category] || CATEGORY_THEMES.all}
-                                onAdd={() => addToCart(item)}
-                            />
-                        ))}
+                        {filteredItems
+                            .filter(i => !(activeCategory === 'all' && i.is_popular && menuItems.filter(m => m.is_popular).slice(0, 1).find(m => m.id === i.id)))
+                            .map((item) => (
+                                <MenuCard
+                                    key={item.id}
+                                    id={item.id}
+                                    title={item.title}
+                                    description={item.description || ""}
+                                    price={item.price}
+                                    image={item.image_url}
+                                    isPopular={item.is_popular}
+                                    isRecommended={item.is_recommended}
+                                    theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
+                                    onAdd={() => addToCart(item)}
+                                />
+                            ))}
                     </AnimatePresence>
                 </motion.div>
             </div>

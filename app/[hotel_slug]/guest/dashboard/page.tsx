@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequests, addSupabaseRequest, useSpecialOffers, useCart } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequests, addSupabaseRequest, useSpecialOffers, useCart, useSupabaseMenuItems } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { Toast } from "@/components/Toast";
 import { ComboCard } from "@/components/ComboCard";
@@ -40,7 +40,7 @@ import { MenuListItem } from "@/components/MenuListItem";
 import { BottomNav } from "@/components/BottomNav";
 import { FoodStory } from "@/components/FoodStory";
 import { CartOverlay } from "@/components/CartOverlay";
-import { SHARED_MENU_ITEMS, SHARED_COMBOS } from "@/utils/constants";
+import { SHARED_COMBOS } from "@/utils/constants";
 
 // Helper to safely render icons with className
 const renderIcon = (icon: React.ReactNode, className: string) => {
@@ -90,7 +90,7 @@ export default function GuestDashboard() {
         { id: "desserts", name: "Desserts", icon: "🍰" },
     ];
 
-    const menuItems = SHARED_MENU_ITEMS;
+    const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
 
 
     const stories = [
@@ -130,7 +130,7 @@ export default function GuestDashboard() {
         const enriched = menuItems.map(item => ({
             ...item,
             salesCount: salesMap[item.title] || 0,
-            isBestseller: (salesMap[item.title] || 0) >= 5 || !!item.isPopular
+            isBestseller: (salesMap[item.title] || 0) >= 5 || !!item.is_popular
         }));
 
         return enriched as any[];

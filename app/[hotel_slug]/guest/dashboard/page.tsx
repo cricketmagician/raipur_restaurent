@@ -323,6 +323,8 @@ export default function GuestDashboard() {
         </div>
     );
 
+    const isHungry = hungerLevel === 'very-hungry' || scrolled;
+
     const tableNumberDisplay = tableNumber;
     return (
         <div 
@@ -388,20 +390,30 @@ export default function GuestDashboard() {
                     }} 
                 />
 
-                {/* 3. 🤤 Perfect Pairs (AOV Booster) */}
-                <PerfectPairs 
-                    pairs={perfectPairs}
-                    cart={cart}
-                    onUpdateQuantity={(id, q) => {
-                        const item = menuItems.find(m => m.id === id);
-                        if (item) {
-                            updateQuantity(id, q);
-                            if (q > (cart[id] || 0)) {
-                                setToast({ message: "Excellent Choice! Added to Bag ✨", type: "success", isVisible: true });
-                            }
-                        }
-                    }}
-                />
+                {/* 3. 🤤 Perfect Pairs (AOV Booster - Contextual Appearance) */}
+                <AnimatePresence>
+                    {(cartCount > 0 || isHungry) && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                        >
+                            <PerfectPairs 
+                                pairs={perfectPairs}
+                                cart={cart}
+                                onUpdateQuantity={(id, q) => {
+                                    const item = menuItems.find(m => m.id === id);
+                                    if (item) {
+                                        updateQuantity(id, q);
+                                        if (q > (cart[id] || 0)) {
+                                            setToast({ message: "Excellent Choice! Added to Bag ✨", type: "success", isVisible: true });
+                                        }
+                                    }
+                                }} 
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* 4. 🌈 Mood Section (Decision Shortcut) */}
                 <MoodSection onMoodClick={(id) => router.push(`/${hotelSlug}/guest/restaurant?mood=${id}`)} />

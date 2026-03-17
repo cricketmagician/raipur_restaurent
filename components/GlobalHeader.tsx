@@ -175,63 +175,42 @@ export function GlobalHeader() {
                     </div>
                 </div>
 
-                {/* Row 2: Segmented Toggle */}
-                <div className="px-6">
-                    <div className="max-w-[200px] mx-auto p-1 rounded-full flex text-[10px] font-black uppercase tracking-widest relative overflow-hidden border shadow-sm transition-colors duration-500"
-                         style={{ 
-                             backgroundColor: `${theme.primary}08`, 
-                             borderColor: `${theme.primary}10` 
-                         }}>
-                        <motion.div 
-                            initial={false}
-                            animate={{ 
-                                x: (tableNumber?.toLowerCase() === 'takeaway' || tableNumber?.toLowerCase() === 'takeout') ? '100%' : '0%',
-                            }}
-                            transition={{ type: "spring", stiffness: 400, damping: 35 }}
-                            className="absolute inset-y-1 left-1 w-[calc(50%-2px)] rounded-full shadow-md z-0"
-                            style={{ backgroundColor: theme.primary }}
-                        />
-                        
-                        <button 
-                            onClick={() => {
-                                if (tableNumber?.toLowerCase() === 'takeaway' || tableNumber?.toLowerCase() === 'takeout') {
-                                    localStorage.removeItem(`hotel_room_${hotelSlug}`);
-                                    // Hard reload into the clean URL
-                                    window.location.href = window.location.pathname;
-                                }
-                            }}
-                            className={`relative z-10 flex-1 py-2 flex items-center justify-center transition-colors duration-300 ${
-                                (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") ? "text-white" : ""
-                            }`}
-                            style={{ 
-                                color: (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") 
-                                    ? "white" 
-                                    : `${theme.text}44` 
-                            }}
-                        >
-                            In-Store
-                        </button>
-                        <button 
-                            onClick={() => {
-                                if (tableNumber?.toLowerCase() !== 'takeaway' && tableNumber?.toLowerCase() !== 'takeout') {
-                                    localStorage.setItem(`hotel_room_${hotelSlug}`, 'Takeaway');
-                                    localStorage.removeItem(`hotel_pin_${hotelSlug}`);
-                                    // Hard reload into the Takeaway URL
-                                    window.location.href = window.location.pathname + "?room=Takeaway";
-                                }
-                            }}
-                            className={`relative z-10 flex-1 py-2 flex items-center justify-center transition-colors duration-300 ${
-                                (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? "text-white" : ""
-                            }`}
-                            style={{ 
-                                color: (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") 
-                                    ? "white" 
-                                    : `${theme.text}44` 
-                            }}
-                        >
-                            Takeout
-                        </button>
-                    </div>
+                {/* Row 2: Premium Mode Selector (Separate Buttons) */}
+                <div className="px-6 flex items-center justify-center space-x-3">
+                    <button 
+                        onClick={() => {
+                            if (tableNumber?.toLowerCase() === 'takeaway' || tableNumber?.toLowerCase() === 'takeout') {
+                                localStorage.removeItem(`hotel_room_${hotelSlug}`);
+                                window.location.href = window.location.pathname;
+                            }
+                        }}
+                        className="flex-1 py-3 px-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 shadow-sm border"
+                        style={{ 
+                            backgroundColor: (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") ? theme.primary : "transparent",
+                            borderColor: (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") ? theme.primary : `${theme.primary}20`,
+                            color: (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") ? "white" : `${theme.primary}88`
+                        }}
+                    >
+                        <span>Dine-In</span>
+                    </button>
+                    <button 
+                        onClick={() => {
+                            if (tableNumber?.toLowerCase() !== 'takeaway' && tableNumber?.toLowerCase() !== 'takeout') {
+                                localStorage.setItem(`hotel_room_${hotelSlug}`, 'Takeaway');
+                                localStorage.removeItem(`hotel_pin_${hotelSlug}`);
+                                // Hard reload into the Takeaway URL
+                                window.location.href = window.location.pathname + "?room=Takeaway";
+                            }
+                        }}
+                        className="flex-1 py-3 px-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 shadow-sm border"
+                        style={{ 
+                            backgroundColor: (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? theme.primary : "transparent",
+                            borderColor: (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? theme.primary : `${theme.primary}20`,
+                            color: (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? "white" : `${theme.primary}88`
+                        }}
+                    >
+                        <span>Takeaway</span>
+                    </button>
                 </div>
             </div>
         </motion.header>

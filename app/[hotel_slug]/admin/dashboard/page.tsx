@@ -18,14 +18,14 @@ function SyncHealth({ status, error, lastSyncedAt }: { status: SyncStatus; error
 
     if (status === "subscribed" && !error) {
         return (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 mb-2 shadow-sm">
+            <div className="bg-orange-50 border border-orange-100 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 mb-2 shadow-sm">
                 <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
-                        <CheckCircle className="w-6 h-6 text-emerald-600" />
+                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-xl shadow-[#3E2723]/5">
+                        <CheckCircle className="w-6 h-6 text-[#F59E0B]" />
                     </div>
                     <div>
-                        <h4 className="font-black text-emerald-900 leading-none mb-1">LIVE SYNC ONLINE</h4>
-                        <p className="text-xs font-bold text-emerald-700/80 uppercase tracking-wider">Realtime updates are healthy. Last sync at {lastSeen}.</p>
+                        <h4 className="font-black text-[#3E2723] leading-none mb-1 uppercase tracking-widest text-xs">Crave Network Healthy</h4>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Realtime pulse is active. Last check at {lastSeen}.</p>
                     </div>
                 </div>
             </div>
@@ -236,7 +236,7 @@ export default function AdminHub() {
     );
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto space-y-12 pb-20">
+        <div className="p-8 max-w-[1600px] mx-auto space-y-12 pb-20 bg-noise min-h-screen text-[#3E2723]">
             {/* Sync Status Banner */}
             {branding && branding.id && !branding.id.toString().startsWith('demo-') && (
                 <SyncHealth status={syncStatus} error={syncError} lastSyncedAt={syncLastSyncedAt} />
@@ -283,13 +283,13 @@ export default function AdminHub() {
                     <div>
                         <div className="flex items-center space-x-2 mb-2">
                             <span className="flex h-2 w-2 relative">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F59E0B] opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F59E0B]"></span>
                             </span>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Live Pulse</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Live Pulse</p>
                         </div>
-                        <h1 className="text-5xl font-black text-slate-900 tracking-tight leading-none mb-4">
-                            Operational <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">Overview</span>
+                        <h1 className="text-5xl font-black text-[#3E2723] tracking-tight leading-none mb-4 uppercase">
+                            Café <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3E2723] to-[#F59E0B]">Pulse</span>
                         </h1>
                         <div className="flex items-center space-x-6 text-slate-400 font-bold text-xs uppercase tracking-widest">
                             <div className="flex items-center">
@@ -297,8 +297,8 @@ export default function AdminHub() {
                                 Updated Now
                             </div>
                             <div className="flex items-center">
-                                <Search className="w-3 h-3 mr-2" />
-                                {requests.length} Active Signals
+                                <ShoppingBag className="w-3 h-3 mr-2 text-[#F59E0B]" />
+                                {requests.length} Active Cravings
                             </div>
                         </div>
                     </div>
@@ -329,10 +329,10 @@ export default function AdminHub() {
             {/* PRIMARY METRICS: Animated Cards */}
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: 'Incoming', value: queueRequests.length, color: 'emerald', icon: <Bell />, tab: 'queue' },
-                    { label: 'In Progress', value: activeRequests.length, color: 'indigo', icon: <RefreshCw />, tab: 'active' },
-                    { label: 'Daily Revenue', value: `₹${totalRevenue.toFixed(0)}`, color: 'blue', icon: <ShoppingBag /> },
-                    { label: 'Occupied Tables', value: Array.from(new Set(requests.filter(r => r.status !== 'Completed').map(r => r.room))).length, color: 'slate', icon: <Hotel /> }
+                    { label: 'Pending Cravings', value: queueRequests.length, color: 'orange', icon: <Bell />, tab: 'queue' },
+                    { label: 'Fulfilling', value: activeRequests.length, color: 'brown', icon: <RefreshCw />, tab: 'active' },
+                    { label: 'Crave Revenue', value: `₹${totalRevenue.toFixed(0)}`, color: 'orange', icon: <ShoppingBag /> },
+                    { label: 'Active Tables', value: Array.from(new Set(requests.filter(r => r.status !== 'Completed').map(r => r.room))).length, color: 'brown', icon: <Hotel /> }
                 ].map((stat, i) => (
                     <motion.button
                         key={stat.label}
@@ -537,21 +537,21 @@ export default function AdminHub() {
                                 <span>Signal Matrix Legend</span>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="flex items-center space-x-3 bg-slate-50 px-4 py-2.5 rounded-2xl">
-                                    <div className="w-3 h-3 rounded-full bg-indigo-600 shadow-lg shadow-indigo-100" />
-                                    <span className="text-[10px] font-black text-slate-500 uppercase">Paid Signal</span>
+                                <div className="flex items-center space-x-3 bg-white px-4 py-2.5 rounded-2xl border border-[#3E2723]/5 shadow-sm">
+                                    <div className="w-3 h-3 rounded-full bg-[#F59E0B] shadow-lg shadow-[#F59E0B]/20" />
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">High Craving</span>
                                 </div>
-                                <div className="flex items-center space-x-3 bg-slate-50 px-4 py-2.5 rounded-2xl">
-                                    <div className="w-3 h-3 rounded-full bg-slate-900 shadow-lg shadow-slate-100" />
-                                    <span className="text-[10px] font-black text-slate-500 uppercase">Service Call</span>
+                                <div className="flex items-center space-x-3 bg-white px-4 py-2.5 rounded-2xl border border-[#3E2723]/5 shadow-sm">
+                                    <div className="w-3 h-3 rounded-full bg-[#3E2723] shadow-lg shadow-[#3E2723]/10" />
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Impulse Alert</span>
                                 </div>
-                                <div className="flex items-center space-x-3 bg-slate-50 px-4 py-2.5 rounded-2xl">
+                                <div className="flex items-center space-x-3 bg-white px-4 py-2.5 rounded-2xl border border-[#3E2723]/5 shadow-sm">
                                     <div className="w-3 h-3 rounded-full bg-white border-2 border-slate-200" />
-                                    <span className="text-[10px] font-black text-slate-500 uppercase">Occupied</span>
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Seated</span>
                                 </div>
-                                <div className="flex items-center space-x-3 bg-slate-50 px-4 py-2.5 rounded-2xl">
+                                <div className="flex items-center space-x-3 bg-white px-4 py-2.5 rounded-2xl border border-[#3E2723]/5 shadow-sm">
                                     <div className="w-3 h-3 rounded-full bg-slate-100 border border-slate-200 border-dashed" />
-                                    <span className="text-[10px] font-black text-slate-500 uppercase">Vacant</span>
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Available</span>
                                 </div>
                             </div>
                         </div>

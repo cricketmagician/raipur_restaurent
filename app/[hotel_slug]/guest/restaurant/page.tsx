@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MenuCard } from "@/components/MenuCard";
-import { CheckCircle, Search, Sparkles, TrendingUp, Gift } from "lucide-react";
+import { CheckCircle, Sparkles, TrendingUp, Gift } from "lucide-react";
 import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, useGuestLoyalty, saveGuestLoyaltySession, addLoyaltyPoints, type MenuItem } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,9 +13,9 @@ import { CATEGORY_THEMES, useTheme } from "@/utils/themes";
 import { CategoryDiscoveryGrid } from "@/components/CategoryDiscoveryGrid";
 import { CategoryHeroHeader } from "@/components/CategoryHeroHeader";
 import { ChefRecommendCard } from "@/components/ChefRecommendCard";
-import { CategoryScroll } from "@/components/CategoryScroll";
 import { LoyaltySignIn } from "@/components/LoyaltySignIn";
 import { InlineUpsellRail } from "@/components/InlineUpsellRail";
+import { getDirectImageUrl } from "@/utils/image";
 
 const MOCK_FOOD_ITEMS = [
     {
@@ -185,6 +185,7 @@ export default function RestaurantPage() {
     // View State: 'discovery' or 'detail'
     const [view, setView] = useState<'discovery' | 'detail'>('discovery');
     const [activeCategory, setActiveCategory] = useState<string>("all");
+    const [searchTerm, setSearchTerm] = useState("");
 
     // Refs for auto-scroll
     const recommendSectionRef = useRef<HTMLDivElement>(null);
@@ -209,7 +210,7 @@ export default function RestaurantPage() {
     const categoryRecords = menuCategories.filter((category) => category.is_active !== false).length > 0
         ? menuCategories.filter((category) => category.is_active !== false)
         : deriveMenuCategories(effectiveItems as any);
-    const categories = [
+    const categories = useMemo(() => ([
         { id: "all", name: "All", icon: "🍱", tagline: "Explore the full menu" },
         ...categoryRecords.map((category) => ({
             id: normalizeCategoryKey(category.slug || category.name),
@@ -218,7 +219,44 @@ export default function RestaurantPage() {
             imageUrl: category.image_url,
             tagline: category.description,
         })),
-    ];
+    ]), [categoryRecords]);
+    const discoveryCategories = useMemo(() => {
+        return categories
+            .filter((category) => category.id !== "all")
+            .map((category) => {
+                const categoryItems = availableItems.filter((item) => normalizeCategoryKey(item.category) === category.id);
+                const heroItem = categoryItems.find((item) => item.is_popular || item.is_recommended) || categoryItems[0];
+                const searchIndex = [
+                    category.name,
+                    category.tagline,
+                    ...categoryItems.map((item) => `${item.title} ${item.description || ""}`),
+                ].join(" ").toLowerCase();
+
+                return {
+                    ...category,
+                    imageUrl: category.imageUrl || getDirectImageUrl(heroItem?.image_url) || CATEGORY_THEMES[category.id]?.image || CATEGORY_THEMES.all.image,
+                    tagline: category.tagline || heroItem?.description || CATEGORY_THEMES[category.id]?.tagline || "Freshly curated favourites",
+                    itemCount: categoryItems.length,
+                    popularity: categoryItems.filter((item) => item.is_popular || item.is_recommended).length,
+                    searchIndex,
+                };
+            });
+    }, [categories, availableItems]);
+    const filteredDiscoveryCategories = useMemo(() => {
+        const query = searchTerm.trim().toLowerCase();
+        if (!query) {
+            return discoveryCategories;
+        }
+
+        return discoveryCategories.filter((category) =>
+            category.searchIndex.includes(query) || category.name.toLowerCase().includes(query)
+        );
+    }, [discoveryCategories, searchTerm]);
+    const trendingCategory = useMemo(() => {
+        return [...discoveryCategories].sort((left, right) =>
+            right.popularity - left.popularity || right.itemCount - left.itemCount || left.name.localeCompare(right.name)
+        )[0] || null;
+    }, [discoveryCategories]);
 
     // Handle initial navigation or deep linking
     useEffect(() => {
@@ -256,6 +294,7 @@ export default function RestaurantPage() {
             setView('discovery');
             return;
         }
+        setSearchTerm("");
         setActiveCategory(id);
         setView('detail');
     };
@@ -455,13 +494,6 @@ export default function RestaurantPage() {
             style={{ backgroundColor: theme.background, fontFamily: theme.fontSans, color: theme.text }}
         >
             <div className="relative z-10">
-                {/* Top Categories Scroll - requested by user */}
-                <CategoryScroll 
-                    categories={categories}
-                    activeCategory={activeCategory}
-                    onCategoryChange={handleCategoryClick}
-                />
-
                 <AnimatePresence mode="wait">
                     {view === 'discovery' ? (
                         <motion.div
@@ -470,24 +502,14 @@ export default function RestaurantPage() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                         >
-                            <header className="mb-10 mt-8">
-                                <h1 className="text-3xl font-black tracking-tighter mb-8" style={{ color: theme.primary }}>Menu</h1>
-                                <div className="relative group">
-                                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" style={{ color: theme.primary }} />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Find something handcrafted..." 
-                                        className="w-full border rounded-full py-6 pl-16 pr-6 shadow-xl focus:outline-none transition-all font-bold text-sm uppercase tracking-widest"
-                                        style={{ borderRadius: theme.radius, backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}
-                                    />
-                                </div>
-                            </header>
-
                             <CategoryDiscoveryGrid 
-                                categories={categories.filter(c => c.id !== 'all')} 
+                                categories={filteredDiscoveryCategories}
+                                trendingCategory={trendingCategory}
                                 onCategoryClick={handleCategoryClick}
                                 activeCategory={activeCategory}
                                 theme={theme}
+                                searchTerm={searchTerm}
+                                onSearchChange={setSearchTerm}
                             />
                         </motion.div>
                     ) : (

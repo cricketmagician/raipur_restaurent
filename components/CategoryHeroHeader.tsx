@@ -13,12 +13,12 @@ interface CategoryHeroHeaderProps {
 
 export function CategoryHeroHeader({ name, tagline, theme, onBack }: CategoryHeroHeaderProps) {
     return (
-        <header className="mb-12">
+        <header className="mb-10">
             <motion.button 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 onClick={onBack}
-                className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.3em] mb-8 opacity-50 hover:opacity-100 transition-opacity"
+                className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.3em] mb-6 opacity-50 hover:opacity-100 transition-opacity"
                 style={{ color: theme.primary }}
             >
                 <ChevronRight className="w-4 h-4 rotate-180" />
@@ -29,12 +29,17 @@ export function CategoryHeroHeader({ name, tagline, theme, onBack }: CategoryHer
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
+                className="rounded-[2rem] border bg-white/82 backdrop-blur-xl px-5 py-5 shadow-[0_24px_80px_-44px_rgba(15,23,42,0.4)]"
+                style={{ borderColor: `${theme.primary}10` }}
             >
-                <h1 className="text-6xl font-black italic tracking-tighter mb-4" style={{ color: theme.primary }}>
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] opacity-40 mb-2" style={{ color: theme.primary }}>
+                    Category
+                </p>
+                <h1 className="text-4xl font-black tracking-tight mb-2" style={{ color: theme.primary }}>
                     {name}
                 </h1>
-                <p className="text-lg font-medium opacity-60 italic" style={{ color: theme.primary }}>
-                    “{tagline}”
+                <p className="text-sm font-medium opacity-60 leading-6" style={{ color: theme.primary }}>
+                    {tagline}
                 </p>
             </motion.div>
         </header>

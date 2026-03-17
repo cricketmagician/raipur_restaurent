@@ -2,8 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { CATEGORY_THEMES } from "@/utils/themes";
-import { Sparkles } from "lucide-react";
+import { Search, Flame, ArrowUpRight } from "lucide-react";
 
 interface Category {
     id: string;
@@ -11,78 +10,154 @@ interface Category {
     icon: string;
     imageUrl?: string;
     tagline?: string;
+    itemCount?: number;
 }
 
 interface CategoryDiscoveryGridProps {
     categories: Category[];
+    trendingCategory?: Category | null;
     onCategoryClick: (id: string) => void;
     activeCategory: string;
     theme: any;
+    searchTerm: string;
+    onSearchChange: (value: string) => void;
 }
 
-export function CategoryDiscoveryGrid({ categories, onCategoryClick, activeCategory, theme }: CategoryDiscoveryGridProps) {
+export function CategoryDiscoveryGrid({
+    categories,
+    trendingCategory,
+    onCategoryClick,
+    activeCategory,
+    theme,
+    searchTerm,
+    onSearchChange,
+}: CategoryDiscoveryGridProps) {
     return (
-        <div className="space-y-8">
-            <div className="px-1">
-                <h2 className="text-4xl font-black tracking-tighter mb-2" style={{ color: theme.primary }}>
-                    What are you craving?
-                </h2>
-                <p className="text-sm font-medium opacity-60 italic">
-                    Explore our handcrafted selection
-                </p>
-            </div>
+        <div className="space-y-6 mt-6">
+            <section className="space-y-3">
+                <div className="px-1">
+                    <p className="text-[10px] font-black uppercase tracking-[0.26em] opacity-45 mb-2" style={{ color: theme.primary }}>
+                        What are you craving?
+                    </p>
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                {categories.map((category) => {
-                    const categoryTheme = CATEGORY_THEMES[category.id] || CATEGORY_THEMES.all;
-                    const isActive = activeCategory === category.id;
+                <div
+                    className="relative rounded-[2rem] border bg-white/88 backdrop-blur-xl shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] overflow-hidden"
+                    style={{ borderColor: `${theme.primary}12` }}
+                >
+                    <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+                        <Search className="w-5 h-5 opacity-40" style={{ color: theme.primary }} />
+                    </div>
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(event) => onSearchChange(event.target.value)}
+                        placeholder="Try coffee, burger, pizza..."
+                        className="w-full bg-transparent py-5 pl-14 pr-5 text-sm font-black tracking-[0.08em] focus:outline-none placeholder:font-bold"
+                        style={{ color: theme.primary }}
+                    />
+                </div>
+            </section>
 
-                    return (
-                        <motion.button
-                            key={category.id}
-                            whileHover={{ y: -5, scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => onCategoryClick(category.id)}
-                            className="relative aspect-square rounded-[2rem] overflow-hidden text-left p-6 flex flex-col justify-end group shadow-lg transition-shadow hover:shadow-2xl"
-                            style={{ 
-                                border: `1px solid ${categoryTheme.accent}20`
-                            }}
-                        >
-                            <img 
-                                src={category.imageUrl || categoryTheme.image} 
-                                alt={category.name} 
-                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
-                            />
-                            
-                            <div 
-                                className="absolute inset-0 bg-gradient-to-t via-black/20 to-transparent opacity-80" 
-                                style={{ backgroundImage: `linear-gradient(to top, ${categoryTheme.accent}aa, transparent)` }}
-                            />
+            {trendingCategory && !searchTerm.trim() && (
+                <motion.button
+                    whileHover={{ scale: 1.01, y: -4 }}
+                    whileTap={{ scale: 0.985 }}
+                    onClick={() => onCategoryClick(trendingCategory.id)}
+                    className="relative w-full min-h-[220px] rounded-[2.4rem] overflow-hidden text-left p-6 flex flex-col justify-between shadow-[0_32px_90px_-48px_rgba(15,23,42,0.55)]"
+                >
+                    <img
+                        src={trendingCategory.imageUrl}
+                        alt={trendingCategory.name}
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
 
-                            <div className="absolute top-6 right-6 text-2xl group-hover:scale-125 transition-transform duration-500 z-10">
-                                {category.icon}
-                            </div>
-                            
-                            <div className="relative z-10">
-                                <h3 className="text-xl font-black italic tracking-tight mb-1 text-white">
-                                    {category.name}
-                                </h3>
-                                <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 text-white">
-                                    {category.tagline || categoryTheme.tagline}
-                                </p>
-                            </div>
+                    <div className="relative z-10 flex items-center justify-between">
+                        <div className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-xl">
+                            <Flame className="w-3.5 h-3.5 text-[#F59E0B] mr-2" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.24em] text-white">Trending Category</span>
+                        </div>
+                        <div className="w-11 h-11 rounded-full bg-white/12 border border-white/15 flex items-center justify-center text-white backdrop-blur-xl">
+                            <ArrowUpRight className="w-5 h-5" />
+                        </div>
+                    </div>
 
-                            {isActive && (
-                                <motion.div 
-                                    layoutId="active-highlight"
-                                    className="absolute inset-0 border-4 rounded-[2rem] z-20 pointer-events-none"
-                                    style={{ borderColor: categoryTheme.accent }}
+                    <div className="relative z-10">
+                        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-white/65 mb-3">
+                            Fastest moving picks right now
+                        </p>
+                        <h2 className="text-4xl font-black tracking-tight leading-none text-white mb-3">
+                            {trendingCategory.name}
+                        </h2>
+                        <p className="text-sm font-medium leading-6 text-white/78 max-w-[260px]">
+                            {trendingCategory.tagline}
+                        </p>
+                    </div>
+                </motion.button>
+            )}
+
+            {categories.length === 0 ? (
+                <div
+                    className="rounded-[2rem] border border-dashed bg-white/70 px-6 py-14 text-center"
+                    style={{ borderColor: `${theme.primary}15` }}
+                >
+                    <p className="text-lg font-black tracking-tight mb-2" style={{ color: theme.primary }}>
+                        No category match found
+                    </p>
+                    <p className="text-sm font-medium opacity-60" style={{ color: theme.primary }}>
+                        Try searching for burgers, coffee, desserts or snacks.
+                    </p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-2 gap-4">
+                    {categories.map((category, index) => {
+                        const isActive = activeCategory === category.id;
+
+                        return (
+                            <motion.button
+                                key={category.id}
+                                initial={{ opacity: 0, y: 18 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                                whileHover={{ scale: 1.03, y: -4 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => onCategoryClick(category.id)}
+                                className="relative aspect-[0.86] rounded-[2rem] overflow-hidden text-left p-5 flex flex-col justify-end group shadow-[0_24px_70px_-38px_rgba(15,23,42,0.45)]"
+                            >
+                                <img
+                                    src={category.imageUrl}
+                                    alt={category.name}
+                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                 />
-                            )}
-                        </motion.button>
-                    );
-                })}
-            </div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/5" />
+                                <div className="absolute top-4 right-4 text-2xl z-10 drop-shadow-lg">
+                                    {category.icon}
+                                </div>
+
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="menu-category-highlight"
+                                        className="absolute inset-0 rounded-[2rem] border-2 border-white/90 z-20 pointer-events-none"
+                                    />
+                                )}
+
+                                <div className="relative z-10">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/60 mb-2">
+                                        {category.itemCount ? `${category.itemCount} picks` : "Curated"}
+                                    </p>
+                                    <h3 className="text-[1.45rem] font-black tracking-tight leading-none text-white mb-2">
+                                        {category.name}
+                                    </h3>
+                                    <p className="text-xs font-medium leading-5 text-white/76 line-clamp-2">
+                                        {category.tagline}
+                                    </p>
+                                </div>
+                            </motion.button>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }

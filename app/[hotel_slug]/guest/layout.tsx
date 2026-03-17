@@ -57,7 +57,7 @@ export default function GuestLayout({
                     ></div>
                 )}
 
-                <main className={`flex-1 w-full max-w-[460px] mx-auto relative px-6 ${isDashboard ? 'pt-0' : 'pt-28'}`}>
+                <main className={`flex-1 w-full relative px-6 ${isDashboard ? 'pt-0' : 'pt-28'}`}>
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={pathname}

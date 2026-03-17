@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 export { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { RequestStatus } from '@/components/StatusBadge';
@@ -34,6 +34,11 @@ export interface HotelBranding {
     address?: string;
     heroImage?: string;
     guestTheme?: 'CAFE' | 'FAST_FOOD' | 'FINE_DINE';
+    hero_headline?: string;
+    hero_subtext?: string;
+    hero_cta?: string;
+    trust_signal?: string;
+    quick_order_ids?: string[];
 }
 
 export interface SpecialOffer {
@@ -1449,7 +1454,7 @@ export async function deleteSupabaseMenuItem(id: string, hotelId: string) {
  * Shared Cart Hook for Guest Ordering
  * Persists to localStorage to share state between Dashboard and Restaurant pages
  */
-export function useCart(hotelId: string | undefined) {
+export function useCart(hotelId: string | undefined, menuItems: any[] = []) {
     const [cart, setCart] = useState<Record<string, number>>({});
     const [isInitialized, setIsInitialized] = useState(false);
 
@@ -1536,7 +1541,14 @@ export function useCart(hotelId: string | undefined) {
 
     const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);
 
-    return { cart, updateQuantity, clearCart, cartCount, isInitialized };
+    const cartTotal = useMemo(() => {
+        return Object.entries(cart).reduce((sum, [id, q]) => {
+            const item = menuItems.find(m => m.id === id);
+            return sum + ((item?.price || 0) * q);
+        }, 0);
+    }, [cart, menuItems]);
+
+    return { cart, updateQuantity, clearCart, cartCount, cartTotal, isInitialized };
 }
 /**
  * Loyalty System (Vibe Points)

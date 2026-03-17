@@ -85,22 +85,22 @@ export function MenuListItem({
 
             {/* Info Section: Sophisticated Typography */}
             <div className={`p-6 flex flex-col flex-1 ${isLarge ? 'items-center text-center px-12' : ''}`}>
-                <div className="mb-3">
+                <div className="mb-4">
                     <h3 
-                        className={`${isLarge ? 'text-2xl mb-2' : 'text-base mb-1'} font-black leading-tight transition-colors line-clamp-2 uppercase tracking-tight`}
+                        className={`${isLarge ? 'text-3xl mb-3' : 'text-lg mb-1.5'} font-black leading-tight transition-colors line-clamp-2 uppercase tracking-tighter`}
                         style={{ color: "#1E3932" }}
                     >
                         {title}
                     </h3>
-                    <div className="flex items-center gap-2 opacity-40">
-                        <span className="text-[9px] font-bold uppercase tracking-widest">Handcrafted</span>
-                        <div className="w-1 h-1 rounded-full bg-current" />
-                        <span className="text-[9px] font-bold uppercase tracking-widest">Fresh</span>
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00704A]">Artisanal</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#1E3932]/10" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Premium</span>
                     </div>
                 </div>
 
                 <p 
-                    className={`${isLarge ? 'text-sm mb-8' : 'text-[10px] mb-6'} font-medium line-clamp-2 leading-relaxed tracking-tight opacity-60 italic`}
+                    className={`${isLarge ? 'text-base mb-10' : 'text-[11px] mb-8'} font-medium line-clamp-2 leading-relaxed tracking-tight opacity-50 italic`}
                     style={{ color: "#1E3932" }}
                 >
                     {description}

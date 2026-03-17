@@ -156,7 +156,6 @@ export default function GuestDashboard() {
     }, [availableMenuItems]);
 
     const perfectPairs = useMemo(() => {
-        // Try to find items with pairings, or just pick two interesting ones
         const itemsWithPairings = availableMenuItems.filter(i => i.is_recommended && i.upsell_items && i.upsell_items.length > 0);
         const pairs: any[] = [];
         
@@ -171,12 +170,11 @@ export default function GuestDashboard() {
                     subtitle: "Handcrafted Pairing",
                     image: main.image_url ? getDirectImageUrl(main.image_url) : "/images/menu_demo/coffee.png",
                     price: main.price + companion.price,
-                    originalId: main.id // We'll just add the main one for simplicity or handle both
+                    originalId: main.id
                 });
             }
         }
         
-        // Fallback or second pair
         if (pairs.length < 2) {
              const others = availableMenuItems.filter(i => !pairs.some(p => p.originalId === i.id)).slice(0, 2 - pairs.length);
              others.forEach((item, i) => {
@@ -193,27 +191,23 @@ export default function GuestDashboard() {
         return pairs;
     }, [availableMenuItems]);
 
-        // No change needed to updateQuantity itself as it's now from useCart
-
     const cartTotal = Object.entries(cart).reduce((sum, [id, q]) => {
         const item = availableMenuItems.find(m => m.id === id);
         const comboItem = (id.includes("combo") || id === "king_size") ? SHARED_COMBOS.find(c => c.id === id) : null;
         
         return sum + ((item?.price || comboItem?.price || 0) * q);
     }, 0);
+
     const liveBillTotal = requests
         .filter((request) => (request.total || 0) > 0 && !request.is_paid)
         .reduce((sum, request) => sum + (request.total || 0), 0);
+
     const openOrderCount = requests.filter((request) => request.status !== "Completed").length;
     
-    // Calculate REAL sales data from requests
     const menuItemsWithSales = React.useMemo(() => {
         const salesMap: Record<string, number> = {};
-        
-        // Parse "Dining Order" notes to count item sales
         requests.forEach(req => {
             if (req.type?.includes("Dining Order") && req.notes) {
-                // Regex matches patterns like "2x Item Name" or "1x Item Name"
                 const matches = req.notes.matchAll(/(\d+)x\s+([^,]+)/g);
                 for (const match of matches) {
                     const qty = parseInt(match[1]);
@@ -222,31 +216,26 @@ export default function GuestDashboard() {
                 }
             }
         });
-
-        // Enrich menu items with real sales data
         const enriched = availableMenuItems.map(item => ({
             ...item,
             salesCount: salesMap[item.title] || 0,
             isBestseller: (salesMap[item.title] || 0) >= 5 || !!item.is_popular
         }));
-
         return enriched as any[];
     }, [requests, availableMenuItems]);
 
     const filteredItems = (activeCategory === "all" ? menuItemsWithSales : menuItemsWithSales.filter(i => normalizeCategoryKey(i.category) === activeCategory))
         .filter(item => {
-            if (hungerLevel === 'light') return item.price < 300; // Prefer snacks/drinks
-            if (hungerLevel === 'very-hungry') return item.price > 150; // Prefer filling meals
-            return true; // Hungry = Everything
+            if (hungerLevel === 'light') return item.price < 300;
+            if (hungerLevel === 'very-hungry') return item.price > 150;
+            return true;
         });
 
     React.useEffect(() => {
         if (!menuItems.length) return;
-
         const soldOutIds = Object.keys(cart).filter((id) =>
             menuItems.some((item) => item.id === id && item.is_available === false)
         );
-
         soldOutIds.forEach((id) => updateQuantity(id, 0));
     }, [menuItems, cart, updateQuantity]);
 
@@ -326,7 +315,6 @@ export default function GuestDashboard() {
         if (error) {
             setToast({ message: `Order Failed: ${error.message}`, type: "error", isVisible: true });
         } else {
-            // Loyalty Integration
             if (loyaltyProfile?.phone) {
                 const earnedPoints = Math.floor(cartTotal / 10);
                 if (earnedPoints > 0) {
@@ -338,7 +326,6 @@ export default function GuestDashboard() {
             } else {
                 setToast({ message: "Order Placed Successfully!", type: "success", isVisible: true });
             }
-
             setOrderComplete(true);
             clearCart();
             setShowCart(false);
@@ -346,23 +333,16 @@ export default function GuestDashboard() {
     };
 
     const triggerUpsell = (item: any) => {
-        // --- Smart Pairing Logic (Revenue Engine V3) ---
-        // If it's a burger, auto-trigger the Perfect Pairs section
         if (item.name?.toLowerCase().includes('burger') || item.category === 'burgers') {
             setUpsellItem({ id: item.id, title: item.name });
             return;
         }
-
         if (item.is_available === false) return;
-
         if (item.upsell_items && item.upsell_items.length > 0) {
             const potentialUpsell = availableMenuItems.find(m =>
-                item.upsell_items.includes(m.id) &&
-                !cart[m.id]
+                item.upsell_items.includes(m.id) && !cart[m.id]
             );
-
             if (potentialUpsell) {
-                // 0.5s delay for natural feel
                 setTimeout(() => {
                     setUpsellItem(potentialUpsell);
                 }, 500);
@@ -375,137 +355,196 @@ export default function GuestDashboard() {
             setToast({ message: "This item is sold out right now.", type: "error", isVisible: true });
             return;
         }
-
         const currentQty = cart[item.id] || 0;
         updateQuantity(item.id, currentQty + 1);
-        
         if (isUpsell) {
             setUpsellItem(null);
             return;
         }
-
         triggerUpsell(item);
-    };
-
-    const handleQuickRequest = async (type: string, notes: string) => {
-        if (!branding?.id || submittingType) return;
-        setSubmittingType(type);
-        const { error } = await addSupabaseRequest(branding.id, {
-            room: tableNumber,
-            type: type,
-            notes: notes,
-            status: "Pending",
-            price: 0,
-            total: 0
-        });
-        setSubmittingType(null);
-        if (error) {
-            setToast({ message: `Error: ${error.message}`, type: "error", isVisible: true });
-        } else {
-            setToast({ message: `${type} Request Placed Successfully`, type: "success", isVisible: true });
-        }
     };
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-background">
-            <div className="w-12 h-12 border-4 border-[#F55D2C] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-[#00704A] border-t-transparent rounded-full animate-spin"></div>
         </div>
     );
 
     const isHungry = hungerLevel === 'very-hungry' || scrolled;
-
     const tableNumberDisplay = tableNumber;
+
     return (
         <div 
-            className="pb-40 pt-10 px-6 min-h-screen w-full max-w-[500px] mx-auto overflow-x-hidden transition-colors duration-500 relative"
+            className="pb-40 pt-10 px-6 min-h-screen w-full overflow-x-hidden transition-colors duration-500 relative bg-[#F1F8F5]"
             style={{ 
                 fontFamily: theme.fontSans,
                 color: theme.text
             }}
         >
+            {/* [Fix #10] Luxury Texture & Grain Overlay */}
+            <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-[200] mix-blend-overlay" 
+                 style={{ backgroundImage: `url('https://grainy-gradients.vercel.app/noise.svg')` }} />
+
             {/* Background Layer (only active when scrolled) */}
             <div 
                 className="fixed inset-0 -z-20 transition-opacity duration-500"
                 style={{ 
                     backgroundColor: theme.background,
-                    opacity: scrolled ? 1 : 0 // Fully transparent at top, solid on scroll
+                    opacity: scrolled ? 1 : 0
                 }}
             />
-            {/* 1. Premium Hero Section */}
-            <div className="absolute top-0 left-0 right-0 h-[38vh] overflow-hidden -z-10 bg-black">
+
+            {/* [Fix #1, #2] Premium Hero Section */}
+            <div className="absolute top-0 left-0 right-0 h-[48vh] overflow-hidden -z-10 bg-[#002B1B]">
                 <img 
                     src={getDirectImageUrl(branding?.heroImage) || "/images/branding/hero.png"} 
                     alt="Hotel Interior" 
-                    className="w-full h-full object-cover opacity-70 scale-100" // Reduced opacity and scale for stability
+                    className="w-full h-full object-cover opacity-60"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-background" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#F1F8F5] via-transparent to-black/40" />
+                
+                {/* Hero Content Overlay (Fix #1) */}
+                <div className="absolute inset-0 flex flex-col justify-end px-6 pb-20">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                    >
+                        <h1 className="text-[2.8rem] font-black text-white leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">
+                            {branding?.hero_headline || "Your Favorite Café. Now One Tap Away."}
+                        </h1>
+                        <p className="text-white/80 text-base font-medium mb-8 italic drop-shadow-md">
+                            {branding?.hero_subtext || "Order instantly. Skip the wait."}
+                        </p>
+                        
+                        <div className="flex items-center gap-4">
+                            <button 
+                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
+                                className="px-8 py-4 bg-[#00704A] text-white rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all flex items-center gap-3"
+                            >
+                                {branding?.hero_cta || "Start Ordering"}
+                                <ArrowRight className="w-4 h-4" />
+                            </button>
+                            
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-1">
+                                    <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                                    <span className="text-white font-black text-[11px]">4.8 rating</span>
+                                </div>
+                                <span className="text-white/40 text-[8px] font-black uppercase tracking-widest">Avg 7m Prep</span>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
             </div>
 
-            {/* 2. Floating Hotel Information Card (Ultra-Thin Glass Bar) */}
+            <div className="h-[38vh]" /> {/* Spacer for Hero */}
+
+            {/* [Fix #2] Sharp Hotel Info Bar */}
             <motion.div 
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="mt-[28vh] mb-10 bg-white/10 backdrop-blur-2xl px-6 py-4 shadow-sm relative overflow-hidden group border border-white/20"
-                style={{ 
-                    borderRadius: "1rem"
-                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mb-10 bg-white/40 backdrop-blur-xl px-6 py-5 shadow-xl border border-white/20"
+                style={{ borderRadius: "1.5rem" }}
             >
-                <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-lg font-black text-white tracking-[0.25em] uppercase leading-none">
-                            {branding?.name || "HOTEL TEEKLOVE"}
+                        <h2 className="text-[10px] font-black tracking-[0.3em] uppercase opacity-40 mb-1" style={{ color: "#1E3932" }}>Dining At</h2>
+                        <h1 className="text-xl font-black tracking-tight" style={{ color: "#1E3932" }}>
+                            {branding?.name || "ELITE CAFE"}
                         </h1>
-                        <div className="flex items-center gap-2 mt-1.5 opacity-60">
-                            <Utensils className="w-2.5 h-2.5 text-white" />
-                            <span className="text-[8px] font-bold text-white uppercase tracking-widest">{branding?.guestTheme === 'FINE_DINE' ? 'Fine Dining' : 'Urban Cafe'}</span>
-                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#00704A] shadow-lg border border-white/20">
+                        <MapPin className="w-3 h-3 text-white" />
+                        <span className="text-[10px] font-black text-white uppercase tracking-widest">TABLE {tableNumberDisplay}</span>
                     </div>
                 </div>
             </motion.div>
 
-            {/* 3. Operational Services Grid (From Screenshot) */}
+            <div className="space-y-14">
+                {/* [Fix #4] Quick Order Section (Dynamic) */}
+                <section>
+                    <div className="flex items-center justify-between mb-6 px-1">
+                        <h3 className="text-2xl font-black tracking-tighter" style={{ color: "#1E3932" }}>
+                            ⚡ Quick Order
+                        </h3>
+                        <button onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)} className="text-[10px] font-black uppercase tracking-widest text-[#00704A]">See Full Menu</button>
+                    </div>
+                    <div className="flex space-x-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+                        {(branding?.quick_order_ids && branding.quick_order_ids.length > 0 
+                            ? branding.quick_order_ids.map(id => menuItemsWithSales.find(i => i.id === id)).filter(Boolean)
+                            : menuItemsWithSales.filter(i => i.is_popular || i.isBestseller).slice(0, 4)
+                        ).map((item: any) => (
+                            <motion.div 
+                                key={item.id}
+                                whileTap={{ scale: 0.98 }}
+                                className="flex-none w-[200px] bg-white rounded-[2rem] p-4 shadow-xl border border-[#1E3932]/5 flex flex-col items-center text-center"
+                            >
+                                <div className="w-full aspect-square rounded-[1.5rem] overflow-hidden mb-4 shadow-sm border border-black/5">
+                                    <img src={getDirectImageUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover" />
+                                </div>
+                                <h4 className="text-sm font-black tracking-tight mb-1 line-clamp-1" style={{ color: "#1E3932" }}>{item.title}</h4>
+                                <p className="text-[12px] font-black text-[#00704A] mb-4">₹{item.price}</p>
+                                <button 
+                                    onClick={() => addToCart(item)}
+                                    className="w-full py-3 bg-[#00704A]/5 text-[#00704A] rounded-2xl font-black text-[9px] uppercase tracking-widest border border-[#00704A]/10 active:scale-95 active:bg-[#00704A] active:text-white transition-all"
+                                >
+                                    + Add to Bag
+                                </button>
+                            </motion.div>
+                        ))}
+                    </div>
+                </section>
 
-            <div className="space-y-12">
-                {/* Seasonal Stories moved below hero/card */}
-                <div className="mb-0">
-                    <div className="flex items-center justify-between mb-5 px-1">
-                        <h3 className="text-xl font-black tracking-tight" style={{ fontFamily: 'Georgia, serif', color: theme.primary }}>
+                {/* [Fix #3] Seasonal Stories (Conversion Optimized) */}
+                <section>
+                    <div className="flex items-center justify-between mb-6 px-1">
+                        <h3 className="text-2xl font-black tracking-tighter" style={{ color: "#1E3932" }}>
                             ✨ Seasonal Stories
                         </h3>
-                        <span className="text-[8px] font-black uppercase tracking-[0.3em] opacity-30">Swipe to Explore</span>
+                        <span className="text-[9px] font-bold text-[#00704A] uppercase tracking-[0.2em] bg-[#00704A]/5 px-3 py-1 rounded-full border border-[#00704A]/10">Viral Hits</span>
                     </div>
-                    <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-8 -mx-6 px-6">
+                    <div className="flex space-x-5 overflow-x-auto no-scrollbar pb-10 -mx-6 px-6">
                         {stories.map((story, index) => (
                             <motion.div 
                                 key={story.id}
-                                whileTap={{ scale: 0.96, rotate: -1 }}
-                                onClick={() => setStoryConfig({ isVisible: true, initialIndex: index })}
-                                className="flex-none w-[120px] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.2)] cursor-pointer group relative active:shadow-sm transition-all duration-300 border border-white/10"
-                                style={{ 
-                                    backgroundColor: theme.surface,
-                                    borderRadius: "1rem"
-                                }}
+                                whileTap={{ scale: 0.96 }}
+                                className="flex-none w-[160px] relative"
                             >
-                                <div className="aspect-[9/16] overflow-hidden relative">
-                                    <img src={getDirectImageUrl(story.image_url)} alt={story.label} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/20" />
+                                <div 
+                                    onClick={() => setStoryConfig({ isVisible: true, initialIndex: index })}
+                                    className="aspect-[3/4] overflow-hidden relative shadow-2xl mb-4 border border-white/20"
+                                    style={{ borderRadius: "1.75rem" }}
+                                >
+                                    <img src={getDirectImageUrl(story.image_url)} alt={story.label} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                                     
-                                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/20 scale-90 origin-left">
-                                        <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse" />
-                                        <span className="text-[7px] font-black text-white uppercase tracking-widest">{story.type || 'LIVE'}</span>
+                                    <div className="absolute top-4 left-4 bg-[#00704A] px-3 py-1 rounded-full border border-white/20 shadow-lg">
+                                        <span className="text-[8px] font-black text-white uppercase tracking-[0.2em]">🔥 Trending</span>
                                     </div>
 
-                                    <div className="absolute bottom-4 left-4 right-4">
-                                        <h4 className="text-[10px] font-black text-white leading-tight uppercase tracking-widest">{story.label}</h4>
+                                    <div className="absolute bottom-4 left-4">
+                                        <h4 className="text-sm font-black text-white uppercase tracking-tight leading-none mb-1">{story.label}</h4>
+                                        <p className="text-[#D4E9E2] text-[10px] font-bold tracking-widest uppercase">₹{story.price}</p>
                                     </div>
                                 </div>
+                                
+                                <button 
+                                    onClick={() => {
+                                        const item = menuItems.find(m => m.id === story.menu_item_id);
+                                        if (item) addToCart(item);
+                                    }}
+                                    className="w-full py-3.5 bg-white text-[#1E3932] rounded-[1.25rem] shadow-xl font-black text-[10px] uppercase tracking-[0.2em] border border-[#1E3932]/10 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    <span>Quick Add</span>
+                                </button>
                             </motion.div>
                         ))}
-                        <div className="flex-none w-10" /> {/* Spacer for scroll end */}
                     </div>
-                </div>
+                </section>
 
-                {/* 2. 🔥 Trending Now (Combo-focused) */}
+                {/* 2. 🔥 Trending Now */}
                 <TrendingNow 
                     items={trendingItems} 
                     cart={cart}
@@ -516,31 +555,29 @@ export default function GuestDashboard() {
                     }} 
                 />
 
-                {/* 3. Premium Editorial Strip */}
+                {/* 3. Immersive Promo Strip */}
                 <section className="space-y-4">
                     <div className="relative overflow-hidden rounded-[2.5rem] border shadow-[0_24px_80px_rgba(0,0,0,0.12)]">
                         <img
                             src={getDirectImageUrl(branding?.heroImage) || stories[0]?.image_url || "/images/branding/hero.png"}
                             alt="Dining atmosphere"
-                            className="absolute inset-0 w-full h-full object-cover"
+                            className="absolute inset-0 w-full h-full object-cover opacity-90"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/45 to-black/20" />
-                        <div className="relative z-10 px-6 py-7">
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/12 border border-white/10 backdrop-blur-xl mb-4">
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#1E3932]/95 via-[#1E3932]/60 to-transparent" />
+                        <div className="relative z-10 px-6 py-8">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur-xl mb-4">
                                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                                <span className="text-[9px] font-black uppercase tracking-[0.24em] text-white">Tonight&apos;s Edit</span>
+                                <span className="text-[9px] font-black uppercase tracking-[0.24em] text-white">Guest Choice</span>
                             </div>
-                            <h3 className="text-[2rem] font-black tracking-tight leading-[0.95] text-white mb-3">
-                                Explore the full menu,
-                                <br />
-                                not just a few shortcuts.
+                            <h3 className="text-[2.2rem] font-black tracking-tighter leading-[0.95] text-white mb-4">
+                                Explore every flavor,<br />not just the basics.
                             </h3>
-                            <p className="text-sm font-medium leading-6 text-white/72 max-w-[280px] mb-6">
-                                Mains, desserts, pairings and coffee live in one immersive menu flow designed for faster choices.
+                            <p className="text-sm font-medium leading-6 text-white/70 max-w-[280px] mb-8 italic">
+                                Handcrafted espresso, artisanal bowls and secret menu blends await.
                             </p>
                             <button
                                 onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                                className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all"
+                                className="inline-flex items-center gap-3 px-6 py-4 rounded-full bg-white text-[#1E3932] text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all"
                             >
                                 Open Full Menu
                                 <ArrowUpRight className="w-4 h-4" />
@@ -551,140 +588,129 @@ export default function GuestDashboard() {
                     <div className="grid grid-cols-2 gap-4">
                         <button
                             onClick={() => router.push(`/${hotelSlug}/guest/bill`)}
-                            className="rounded-[2rem] border bg-white/82 backdrop-blur-xl p-5 text-left shadow-[0_18px_50px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all"
+                            className="rounded-[2.25rem] border bg-white/60 backdrop-blur-xl p-6 text-left shadow-xl active:scale-[0.98] transition-all"
                             style={{ borderColor: `${theme.primary}10` }}
                         >
-                            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: `${theme.primary}10`, color: theme.primary }}>
-                                <Receipt className="w-5 h-5" />
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 bg-[#00704A]/10 text-[#00704A]">
+                                <Receipt className="w-6 h-6" />
                             </div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-40 mb-2" style={{ color: theme.primary }}>
-                                Live Bill
-                            </p>
-                            <h4 className="text-xl font-black tracking-tight mb-1" style={{ color: theme.primary }}>
-                                ₹{liveBillTotal.toFixed(0)}
-                            </h4>
-                            <p className="text-[11px] font-medium leading-5 opacity-60" style={{ color: theme.primary }}>
-                                {liveBillTotal > 0 ? "Review charges and request settlement anytime." : "Your table is clean. New orders will appear here."}
-                            </p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-40 mb-2">Live Bill</p>
+                            <h4 className="text-2xl font-black tracking-tight mb-1 text-[#1E3932]">₹{liveBillTotal.toFixed(0)}</h4>
+                            <p className="text-[10px] font-medium leading-relaxed opacity-60">View charges or request settlement.</p>
                         </button>
 
                         <button
                             onClick={() => loyaltyProfile ? router.push(`/${hotelSlug}/guest/profile`) : setIsLoyaltyOpen(true)}
-                            className="rounded-[2rem] border bg-white/82 backdrop-blur-xl p-5 text-left shadow-[0_18px_50px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all"
+                            className="rounded-[2.25rem] border bg-white/60 backdrop-blur-xl p-6 text-left shadow-xl active:scale-[0.98] transition-all"
                             style={{ borderColor: `${theme.primary}10` }}
                         >
-                            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: `${theme.secondary}55`, color: theme.primary }}>
-                                <Sparkles className="w-5 h-5" />
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 bg-amber-100 text-[#00704A]">
+                                <Sparkles className="w-6 h-6 text-amber-600" />
                             </div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-40 mb-2" style={{ color: theme.primary }}>
-                                {loyaltyProfile ? "Member Lounge" : "Guest Identity"}
-                            </p>
-                            <h4 className="text-lg font-black tracking-tight mb-1" style={{ color: theme.primary }}>
-                                {loyaltyProfile ? `${currentPoints} vibe points` : "Save your details"}
-                            </h4>
-                            <p className="text-[11px] font-medium leading-5 opacity-60" style={{ color: theme.primary }}>
-                                {loyaltyProfile
-                                    ? `${openOrderCount > 0 ? `${openOrderCount} live table updates` : "Ready for a fresh order"}`
-                                    : "Faster takeaway checkout and known guest recognition."}
-                            </p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-40 mb-2">Member</p>
+                            <h4 className="text-xl font-black tracking-tight mb-1 text-[#1E3932]">{loyaltyProfile ? `${currentPoints} Pts` : "Join Vibe"}</h4>
+                            <p className="text-[10px] font-medium leading-relaxed opacity-60">Earn points on every elite order.</p>
                         </button>
                     </div>
                 </section>
 
-                {/* 4. 🤤 Perfect Pairs (AOV Booster - Contextual Appearance) */}
-                <div className="space-y-6">
+                {/* 4. Perfect Pairs */}
+                <section>
                     <AnimatePresence>
                         {(cartCount > 0 || isHungry || upsellItem) && (
                             <motion.div
-                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                animate={{ opacity: 1, height: 'auto', marginTop: 24 }}
-                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                className="overflow-hidden"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
                             >
                                 <PerfectPairs 
                                     pairs={perfectPairs}
                                     cart={cart}
                                     onUpdateQuantity={(id, q) => {
-                                        const item = menuItems.find(m => m.id === id);
-                                        if (item) {
-                                            updateQuantity(id, q);
-                                            if (q > (cart[id] || 0)) {
-                                                setToast({ message: "Excellent Choice! Added to Bag ✨", type: "success", isVisible: true });
-                                            }
+                                        updateQuantity(id, q);
+                                        if (q > (cart[id] || 0)) {
+                                            setToast({ message: "Excellent Choice! Added to Bag ✨", type: "success", isVisible: true });
                                         }
                                     }} 
                                 />
                             </motion.div>
                         )}
                     </AnimatePresence>
-                </div>
+                </section>
 
-                {/* 5. 🌈 Mood Section (Decision Shortcut) */}
+                {/* [Fix #7] Trust Injection Bar */}
+                <section className="py-8 border-y border-[#1E3932]/10">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="flex -space-x-2.5">
+                                {[1,2,3,4].map(i => (
+                                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden shadow-sm">
+                                        <img src={`https://i.pravatar.cc/150?u=${i+10}`} alt="User" />
+                                    </div>
+                                ))}
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-black tracking-tight text-[#1E3932]">{branding?.trust_signal || "1,000+ Happy Customers"}</p>
+                                <p className="text-[9px] font-bold text-[#00704A] uppercase tracking-widest opacity-60">Most loved in Raipur</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-between opacity-30 invert px-2">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" className="h-5" alt="UPI" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" className="h-5" alt="PayPal" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" className="h-3.5" alt="Visa" />
+                    </div>
+                </section>
+
+                {/* 5. Mood Section */}
                 <MoodSection onMoodClick={(id) => router.push(`/${hotelSlug}/guest/restaurant?mood=${id}`)} />
 
-                {/* 🎁 Glassy & Thin Rewards Section (Moved lower) */}
+                {/* 🎁 Rewards Section */}
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     onClick={() => !loyaltyProfile && setIsLoyaltyOpen(true)}
-                    className={`rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden group transition-all duration-500 backdrop-blur-3xl border ${!loyaltyProfile ? 'cursor-pointer hover:scale-[1.01]' : ''}`}
-                    style={{ 
-                        backgroundColor: `${theme.primary}05`, // Ultra-light tint
-                        borderColor: `${theme.primary}20`,
-                        borderRadius: theme.radius
-                    }}
+                    className="rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group transition-all duration-500 border border-[#00704A]/10"
+                    style={{ backgroundColor: "#00704A" }}
                 >
-                    <div className="relative z-10 flex items-center justify-between">
-                        <div>
-                            <div className="flex items-center space-x-2 mb-1">
-                                <Sparkles className="w-3 h-3 text-amber-500" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
-                                    {loyaltyProfile ? `Welcome, ${loyaltyProfile.name}` : "Member Lounge"}
-                                </span>
-                            </div>
-                            
-                            {loyaltyProfile ? (
-                                <div className="flex items-baseline space-x-2">
-                                    <span className="text-3xl font-black" style={{ color: theme.primary }}>{currentPoints}</span>
-                                    <span className="text-xs font-bold opacity-40 tracking-tight uppercase">vibe points</span>
-                                </div>
-                            ) : (
-                                <div>
-                                    <h3 className="text-xl font-black italic tracking-tighter" style={{ color: theme.primary }}>Join the Vibe.</h3>
-                                    <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-0.5">Earn points while you order</p>
-                                </div>
-                            )}
+                    <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-110 transition-transform">
+                        <Sparkles className="w-32 h-32 text-white" />
+                    </div>
+                    
+                    <div className="relative z-10 flex flex-col items-center text-center">
+                        <div className="flex items-center space-x-2 mb-4 bg-white/10 px-4 py-1.5 rounded-full border border-white/20">
+                            <Sparkles className="w-4 h-4 text-amber-400" />
+                            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white">ELITE STATUS</span>
                         </div>
-
-                        {!loyaltyProfile && (
-                            <div className="w-10 h-10 rounded-full flex items-center justify-center transition-all border"
-                                 style={{ backgroundColor: `${theme.primary}10`, borderColor: `${theme.primary}20`, color: theme.primary }}>
-                                <ArrowRight className="w-5 h-5" />
-                            </div>
-                        )}
-
-                        {loyaltyProfile && (
-                            <div className="text-right">
-                                <div className="w-24 bg-black/5 h-1 rounded-full overflow-hidden mb-1">
+                        
+                        {loyaltyProfile ? (
+                            <>
+                                <h3 className="text-3xl font-black text-white italic tracking-tighter mb-1">Welcome, {loyaltyProfile.name.split(' ')[0]}</h3>
+                                <p className="text-white/60 text-xs font-medium mb-6">You have {currentPoints} points ready</p>
+                                <div className="w-full max-w-[200px] h-2 bg-white/20 rounded-full overflow-hidden mb-2">
                                     <motion.div 
                                         initial={{ width: 0 }}
                                         animate={{ width: `${progressPercent}%` }}
-                                        className="h-full" 
-                                        style={{ backgroundColor: theme.primary }}
+                                        className="h-full bg-amber-400" 
                                     />
                                 </div>
-                                <p className="text-[8px] font-black opacity-30 tracking-widest uppercase">
-                                    {pointsToNextTreat} TO GO
-                                </p>
-                            </div>
+                                <p className="text-[9px] font-black text-white/40 tracking-[0.2em] uppercase">{pointsToNextTreat} TO NEXT REWARD</p>
+                            </>
+                        ) : (
+                            <>
+                                <h3 className="text-4xl font-black text-white italic tracking-tighter mb-2 leading-none">Vibe with Us.</h3>
+                                <p className="text-white/70 text-sm font-medium italic mb-8">Join the elite circle and earn rewards on every order.</p>
+                                <button className="px-10 py-5 bg-white text-[#00704A] rounded-full font-black text-xs uppercase tracking-[0.3em] shadow-2xl active:scale-95 transition-all">
+                                    Join The Lounge
+                                </button>
+                            </>
                         )}
                     </div>
                 </motion.div>
-
-
             </div>
 
+            {/* Modals & Overlays */}
             <LoyaltySignIn
                 isOpen={isLoyaltyOpen}
                 onClose={() => setIsLoyaltyOpen(false)}

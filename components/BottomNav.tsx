@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { Home, Utensils, ClipboardList, Receipt } from "lucide-react";
+import { Home, Utensils, ClipboardList, Receipt, ShoppingBag, ChevronRight } from "lucide-react";
 import { useRouter, useParams, usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/utils/themes";
-import { useHotelBranding } from "@/utils/store";
+import { useHotelBranding, useCart } from "@/utils/store";
 
 export function BottomNav() {
     const router = useRouter();
@@ -16,11 +16,14 @@ export function BottomNav() {
     const theme = useTheme(branding);
     const [isHidden, setIsHidden] = React.useState(false);
 
+    const { cartCount, cartTotal } = useCart(branding?.id);
+
     const navItems = [
         { id: "home", label: "Home", icon: Home, path: `/${hotelSlug}/guest/dashboard` },
         { id: "menu", label: "Menu", icon: Utensils, path: `/${hotelSlug}/guest/restaurant` },
+        { id: "bag", label: "Bag", icon: ShoppingBag, path: "#", onClick: () => window.dispatchEvent(new CustomEvent("open_cart")) },
         { id: "status", label: "Orders", icon: ClipboardList, path: `/${hotelSlug}/guest/status` },
-        { id: "bill", label: "Live Bill", icon: Receipt, path: `/${hotelSlug}/guest/bill` },
+        { id: "bill", label: "Bill", icon: Receipt, path: `/${hotelSlug}/guest/bill` },
     ];
 
     React.useEffect(() => {
@@ -34,56 +37,88 @@ export function BottomNav() {
     }, []);
 
     return (
-        <div 
-            className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[460px] z-[100] px-3 pb-safe pt-2.5 backdrop-blur-2xl border-t flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.04)] transition-all duration-300 ${isHidden ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}
-            style={{ 
-                backgroundColor: `${theme.background}CC`,
-                borderColor: `${theme.primary}10`,
-                borderRadius: `${theme.radius} ${theme.radius} 0 0`
-            }}
-        >
-            {navItems.map((item) => {
-                const isActive = pathname === item.path;
-                
-                return (
-                    <motion.button
-                        key={item.id}
-                        whileTap={{ scale: 0.92 }}
-                        onClick={() => router.push(item.path)}
-                        className="flex flex-col items-center justify-center space-y-1 relative group min-w-[58px]"
+        <div className={`fixed bottom-0 left-0 right-0 z-[100] transition-transform duration-500 ${isHidden ? "translate-y-full" : "translate-y-0"}`}>
+            {/* [Fix #5] Sticky Cart CTA (High-Conversion Bar) */}
+            <AnimatePresence>
+                {cartCount > 0 && pathname !== `/${hotelSlug}/guest/checkout` && (
+                    <motion.div 
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 20, opacity: 0 }}
+                        className="mx-4 mb-4"
                     >
-                        <div className={`p-1.5 rounded-2xl transition-all duration-300 relative ${
-                            isActive 
-                                ? 'scale-110' 
-                                : 'text-slate-400 opacity-60'
-                        } ${item.id === 'menu' ? 'p-2 -mt-0.5' : ''}`}
-                        style={{ color: isActive ? theme.primary : undefined }}>
-                            <item.icon 
-                                className={`transition-all duration-300 ${isActive ? 'fill-current' : ''} ${
-                                    item.id === 'menu' ? 'w-6.5 h-6.5' : 'w-5.5 h-5.5'
-                                }`} 
-                                strokeWidth={item.id === 'menu' ? (isActive ? 2.5 : 2.2) : (isActive ? 2.5 : 2)}
-                            />
-                            {isActive && (
-                                <div 
-                                    className="absolute inset-0 blur-xl rounded-full" 
-                                    style={{ backgroundColor: `${theme.primary}1a` }} // 10% opacity
+                        <button 
+                            onClick={() => window.dispatchEvent(new CustomEvent("open_cart"))}
+                            className="w-full h-14 bg-[#00704A] text-white rounded-[1.25rem] shadow-2xl flex items-center justify-between px-6 active:scale-[0.98] transition-all border border-white/20"
+                        >
+                            <div className="flex flex-col items-start">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">View Bag</span>
+                                <span className="text-sm font-black tracking-tight">{cartCount} {cartCount === 1 ? 'Item' : 'Items'} • ₹{cartTotal}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Review Bag</span>
+                                <ChevronRight className="w-4 h-4" />
+                            </div>
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Navigation Bar */}
+            <div 
+                className="w-full px-4 pb-safe pt-2 backdrop-blur-3xl border-t flex items-center justify-around shadow-[0_-20px_50px_rgba(0,0,0,0.1)]"
+                style={{ 
+                    backgroundColor: `rgba(255, 255, 255, 0.8)`,
+                    borderColor: `${theme.primary}15`,
+                    borderRadius: `2rem 2rem 0 0`
+                }}
+            >
+                {navItems.map((item) => {
+                    const isActive = pathname === item.path;
+                    
+                    return (
+                        <motion.button
+                            key={item.id}
+                            whileTap={{ scale: 0.92 }}
+                            onClick={() => item.onClick ? item.onClick() : router.push(item.path)}
+                            className="flex flex-col items-center justify-center py-2 relative group min-w-[64px]"
+                        >
+                            <div className={`p-1 transition-all duration-300 relative ${
+                                isActive 
+                                    ? 'scale-110' 
+                                    : 'text-slate-400'
+                            }`}
+                            style={{ color: isActive ? theme.primary : undefined }}>
+                                <item.icon 
+                                    className={`w-6 h-6 transition-all duration-300 ${isActive ? 'fill-current' : ''}`} 
+                                    strokeWidth={isActive ? 2.5 : 2}
                                 />
-                            )}
-                        </div>
-                        <span className={`text-[8px] font-black uppercase tracking-[0.14em] transition-colors`} style={{ color: isActive ? theme.primary : `${theme.text}66` }}>
-                            {item.label}
-                        </span>
-                        {isActive && (
-                            <motion.div 
-                                layoutId="activeTab"
-                                className="absolute -bottom-1 w-1.5 h-1.5 rounded-full shadow-[0_0_12px_rgba(0,0,0,0.1)]"
-                                style={{ backgroundColor: theme.primary }}
-                            />
-                        )}
-                    </motion.button>
-                );
-            })}
+                                
+                                {/* Cart Badge */}
+                                {item.id === 'bag' && cartCount > 0 && (
+                                    <motion.div 
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="absolute -top-1 -right-1 w-4 h-4 bg-[#00704A] text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-lg"
+                                    >
+                                        {cartCount}
+                                    </motion.div>
+                                )}
+
+                                {isActive && (
+                                    <div 
+                                        className="absolute inset-0 blur-xl rounded-full translate-y-2" 
+                                        style={{ backgroundColor: `${theme.primary}20` }}
+                                    />
+                                )}
+                            </div>
+                            <span className={`text-[8px] font-black uppercase tracking-[0.15em] mt-1 transition-colors`} style={{ color: isActive ? theme.primary : `rgba(30, 57, 50, 0.4)` }}>
+                                {item.label}
+                            </span>
+                        </motion.button>
+                    );
+                })}
+            </div>
         </div>
     );
 }

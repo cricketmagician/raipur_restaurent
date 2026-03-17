@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Utensils, ShoppingBag, User, Bell, Droplets, ArrowLeft, Menu, Sparkles, X, ChevronRight } from "lucide-react";
+import { Utensils, ShoppingBag, User, Bell, Droplets, ArrowLeft, Menu, Sparkles, X, ChevronRight, MapPin } from "lucide-react";
 import { useRouter, useParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHotelBranding, useCart } from "@/utils/store";
@@ -38,7 +38,7 @@ export function GlobalHeader() {
         <motion.header 
             initial={{ y: -100 }}
             animate={{ y: 0 }}
-            className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[460px] z-[100] transition-all duration-500 py-3`}
+            className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 py-3`}
             style={{ 
                 backgroundColor: scrolled ? theme.primary : "transparent",
                 backdropFilter: scrolled ? "blur(30px) saturate(180%)" : "none",
@@ -98,27 +98,32 @@ export function GlobalHeader() {
                         </AnimatePresence>
                     </div>
 
-                    {/* Center: Compact Mode Toggle */}
+                    {/* Center: Compact Mode Toggle (Fix #8) */}
                     <div className="flex-1 flex justify-center">
-                        <div className="flex bg-white/40 p-1 rounded-full border border-white/60 backdrop-blur-xl shadow-sm">
+                        <div className="flex bg-white/20 p-1 rounded-full border border-white/40 backdrop-blur-xl shadow-inner relative">
+                            {/* Sliding Highlight */}
+                            <motion.div 
+                                animate={{ x: orderMode === "dine-in" ? 0 : "100%" }}
+                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                className="absolute top-1 left-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-full shadow-lg"
+                            />
+                            
                             <button 
                                 onClick={switchToDineIn}
-                                className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
-                                    orderMode === "dine-in"
-                                    ? 'bg-white text-black shadow-sm' 
-                                    : 'text-black/40 hover:text-black/60'
+                                className={`relative z-10 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-colors duration-300 flex items-center gap-2 ${
+                                    orderMode === "dine-in" ? 'text-black' : 'text-white/60'
                                 }`}
                             >
+                                <MapPin className="w-3 h-3" />
                                 Dine-In
                             </button>
                             <button 
                                 onClick={switchToTakeaway}
-                                className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
-                                    orderMode === "takeaway"
-                                    ? 'bg-white text-black shadow-sm' 
-                                    : 'text-black/40 hover:text-black/60'
+                                className={`relative z-10 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-colors duration-300 flex items-center gap-2 ${
+                                    orderMode === "takeaway" ? 'text-black' : 'text-white/60'
                                 }`}
                             >
+                                <ShoppingBag className="w-3 h-3" />
                                 Takeaway
                             </button>
                         </div>

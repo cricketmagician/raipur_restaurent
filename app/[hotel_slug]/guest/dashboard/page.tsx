@@ -377,36 +377,6 @@ export default function GuestDashboard() {
             </motion.div>
 
             {/* 3. Operational Services Grid (From Screenshot) */}
-            <div className="grid grid-cols-4 gap-6 mb-12">
-                {[
-                    { label: 'Wi-Fi Info', icon: <Wifi />, color: '#B4C424' },
-                    { label: 'Room Service', icon: <Utensils />, color: '#B4C424' },
-                    { label: 'Taxi', icon: <Car />, color: '#B4C424' },
-                    { label: 'Maintenance', icon: <Hammer />, color: '#B4C424' },
-                    { label: 'Laundry', icon: <Shirt />, color: '#B4C424' },
-                    { label: 'Luggage', icon: <Briefcase />, color: '#B4C424' },
-                    { label: 'Cleaning', icon: <Bath />, color: '#B4C424' },
-                    { label: 'More', icon: <MoreHorizontal />, color: '#B4C424' }
-                ].map((service) => (
-                    <motion.button
-                        key={service.label}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex flex-col items-center group"
-                    >
-                        <div 
-                            className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center mb-3 transition-all group-hover:shadow-lg group-hover:-translate-y-1"
-                            style={{ 
-                                backgroundColor: 'white',
-                                color: service.color,
-                                border: '1px solid rgba(0,0,0,0.05)'
-                            }}
-                        >
-                            {React.cloneElement(service.icon as React.ReactElement<any>, { className: "w-8 h-8 opacity-70 stroke-[1.5]" })}
-                        </div>
-                        <span className="text-[10px] font-bold text-center leading-tight opacity-60 whitespace-pre-wrap">{service.label}</span>
-                    </motion.button>
-                ))}
-            </div>
 
             <div className="space-y-12">
                 {/* Seasonal Stories moved below hero/card */}

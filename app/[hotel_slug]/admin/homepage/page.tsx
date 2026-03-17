@@ -19,6 +19,7 @@ export default function AdminHomepage() {
         hero_subtext: "",
         hero_cta: "Start Ordering",
         trust_signal: "1,000+ happy customers in Raipur",
+        hero_image: "",
         bg_pattern: "",
         quick_order_ids: [] as string[]
     });
@@ -33,6 +34,7 @@ export default function AdminHomepage() {
                 hero_subtext: branding.hero_subtext || "Order instantly. Skip the wait.",
                 hero_cta: branding.hero_cta || "Start Ordering",
                 trust_signal: branding.trust_signal || "1,000+ happy customers in Raipur",
+                hero_image: branding.hero_image || branding.heroImage || "",
                 bg_pattern: branding.bgPattern || "",
                 quick_order_ids: branding.quick_order_ids || []
             });
@@ -50,6 +52,7 @@ export default function AdminHomepage() {
                     hero_subtext: form.hero_subtext,
                     hero_cta: form.hero_cta,
                     trust_signal: form.trust_signal,
+                    hero_image: form.hero_image,
                     bg_pattern: form.bg_pattern,
                     quick_order_ids: form.quick_order_ids
                 })
@@ -192,13 +195,13 @@ export default function AdminHomepage() {
                                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Hero Section Image URL</label>
                                 <div className="flex gap-3">
                                     <input 
-                                        value={form.bg_pattern}
-                                        onChange={e => setForm({...form, bg_pattern: e.target.value})}
+                                        value={form.hero_image}
+                                        onChange={e => setForm({...form, hero_image: e.target.value})}
                                         className="flex-1 px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                                        placeholder="Image URL or Path"
+                                        placeholder="Full URL or /images/..."
                                     />
                                     <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
-                                        <img src={getDirectImageUrl(form.bg_pattern)} className="w-full h-full object-cover" alt="Preview" />
+                                        <img src={getDirectImageUrl(form.hero_image)} className="w-full h-full object-cover" alt="Preview" />
                                     </div>
                                 </div>
                                 <p className="text-[10px] text-slate-400 mt-2">Recommended: 1600x900px high-quality luxury shot.</p>

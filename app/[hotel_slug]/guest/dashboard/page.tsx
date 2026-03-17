@@ -217,10 +217,6 @@ export default function GuestDashboard() {
 
     const handleOrder = async () => {
         if (!branding?.id) return;
-        if (!loyaltyProfile) {
-            setIsLoyaltyOpen(true);
-            return;
-        }
 
         if (orderMode !== "takeaway") {
             const accessState = await getRoomAccessState(branding.id, tableNumber);
@@ -351,67 +347,32 @@ export default function GuestDashboard() {
                 }}
             />
 
-            {/* [Fix #1, #2] Premium Hero Section */}
+            {/* Simple Hero Section */}
             <div className="absolute top-0 left-0 right-0 h-[48vh] overflow-hidden -z-10 bg-[#002B1B]">
                 <img 
-                    src={getDirectImageUrl(branding?.heroImage) || "/images/branding/hero.png"} 
+                    src={getDirectImageUrl(branding?.hero_image || branding?.heroImage) || "/images/branding/hero.png"} 
                     alt="Hotel Interior" 
-                    className="w-full h-full object-cover opacity-60"
+                    className="w-full h-full object-cover opacity-90"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#F1F8F5] via-transparent to-black/40" />
-                
-                {/* Hero Content Overlay (Fix #1) */}
-                <div className="absolute inset-0 flex flex-col justify-end pb-20 px-6">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                    >
-                        <h1 className="text-[clamp(1.75rem,8vw,3rem)] font-black text-white leading-[0.9] tracking-tighter mb-4">
-                            {branding?.hero_headline || "Your Favorite Café.\nNow One Tap Away."}
-                        </h1>
-                        <p className="text-sm font-medium text-white/60 leading-relaxed mb-8 italic">
-                            {branding?.hero_subtext || "Order instantly. Skip the wait."}
-                        </p>
-                        
-                        <div className="flex items-center gap-4">
-                            <button 
-                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                                className="px-8 py-4 bg-[#00704A] text-white rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all flex items-center gap-3"
-                            >
-                                {branding?.hero_cta || "Start Ordering"}
-                                <ArrowRight className="w-4 h-4" />
-                            </button>
-                            
-                            <div className="flex flex-col">
-                                <div className="flex items-center gap-1">
-                                    <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                                    <span className="text-white font-black text-[11px]">4.8 rating</span>
-                                </div>
-                                <span className="text-white/40 text-[8px] font-black uppercase tracking-widest">Avg 7m Prep</span>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#F1F8F5] via-transparent to-black/30" />
             </div>
 
-            <div className="h-[38vh]" /> {/* Spacer for Hero */}
+            <div className="h-[32vh]" /> {/* Spacer for Hero */}
 
-            {/* [Fix #2] Sharp Hotel Info Bar */}
+            {/* Simple Hotel Info Bar */}
             <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mb-10 bg-white/40 backdrop-blur-xl px-6 py-5 shadow-xl border border-white/20 mx-6"
-                style={{ borderRadius: "1.5rem" }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-8 px-6"
             >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between bg-white px-6 py-5 rounded-[2rem] shadow-xl border border-black/5">
                     <div>
                         <h2 className="text-[10px] font-black tracking-[0.3em] uppercase opacity-40 mb-1" style={{ color: "#1E3932" }}>Dining At</h2>
                         <h1 className="text-xl font-black tracking-tight" style={{ color: "#1E3932" }}>
                             {branding?.name || "ELITE CAFE"}
                         </h1>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#00704A] shadow-lg border border-white/20">
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#00704A] shadow-lg">
                         <MapPin className="w-3 h-3 text-white" />
                         <span className="text-[10px] font-black text-white uppercase tracking-widest">TABLE {tableNumberDisplay}</span>
                     </div>
@@ -459,7 +420,6 @@ export default function GuestDashboard() {
                         <h3 className="text-2xl font-black tracking-tighter" style={{ color: "#1E3932" }}>
                             ✨ Seasonal Stories
                         </h3>
-                        <span className="text-[9px] font-bold text-[#00704A] uppercase tracking-[0.2em] bg-[#00704A]/5 px-3 py-1 rounded-full border border-[#00704A]/10">Viral Hits</span>
                     </div>
                     <div className="flex space-x-5 overflow-x-auto no-scrollbar pb-10 -mx-6 px-6">
                         {stories.map((story, index) => (
@@ -476,9 +436,7 @@ export default function GuestDashboard() {
                                     <img src={getDirectImageUrl(story.image_url)} alt={story.label} className="w-full h-full object-cover" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                                     
-                                    <div className="absolute top-4 left-4 bg-[#00704A] px-3 py-1 rounded-full border border-white/20 shadow-lg">
-                                        <span className="text-[8px] font-black text-white uppercase tracking-[0.2em]">🔥 Trending</span>
-                                    </div>
+
 
                                     <div className="absolute bottom-4 left-4">
                                         <h4 className="text-sm font-black text-white uppercase tracking-tight leading-none mb-1">{story.label}</h4>

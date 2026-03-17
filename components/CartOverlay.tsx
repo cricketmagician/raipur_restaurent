@@ -48,6 +48,13 @@ export function CartOverlay({
         updateQuantity(item.id, currentQty + 1);
     };
 
+    const [isConfirming, setIsConfirming] = React.useState(false);
+
+    // Reset confirmation state when drawer closes
+    React.useEffect(() => {
+        if (!isOpen) setIsConfirming(false);
+    }, [isOpen]);
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -80,15 +87,17 @@ export function CartOverlay({
                         <div className="p-5 pt-4 overflow-y-auto no-scrollbar pb-safe">
                             <div className="flex items-center justify-between mb-7 gap-4">
                                 <div>
-                                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Cart Summary</h2>
-                                    <h2 className="text-3xl font-black italic tracking-tighter leading-none" style={{ color: theme.primary }}>Premium Bag</h2>
+                                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">{isConfirming ? "Confirm Order" : "Cart Summary"}</h2>
+                                    <h2 className="text-3xl font-black italic tracking-tighter leading-none" style={{ color: theme.primary }}>
+                                        {isConfirming ? "Final Check" : "Premium Bag"}
+                                    </h2>
                                     <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">
-                                        {cartItems.length} item{cartItems.length === 1 ? "" : "s"} ready
+                                        {isConfirming ? "Review before we start cooking" : `${cartItems.length} item${cartItems.length === 1 ? "" : "s"} ready`}
                                     </p>
                                 </div>
                                 <motion.button
                                     whileTap={{ scale: 0.9 }}
-                                    onClick={onClose}
+                                    onClick={isConfirming ? () => setIsConfirming(false) : onClose}
                                     className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl border shrink-0"
                                     style={{ 
                                         backgroundColor: theme.surface,
@@ -97,130 +106,155 @@ export function CartOverlay({
                                         borderColor: `${theme.primary}10`
                                     }}
                                 >
-                                    <X className="w-5 h-5" />
+                                    {isConfirming ? <div className="text-xs font-black">BACK</div> : <X className="w-5 h-5" />}
                                 </motion.button>
                             </div>
 
-                            <div className="space-y-3 mb-8">
-                                {cartItems.length > 0 ? (
-                                    cartItems.map((item) => (
-                                        <div
-                                            key={item.id} 
-                                            className="flex items-center justify-between p-4 shadow-xl border group transition-all gap-3"
-                                            style={{ 
-                                                borderRadius: theme.radius,
-                                                backgroundColor: theme.surface,
-                                                borderColor: `${theme.primary}10`
-                                            }}
-                                        >
-                                            <div className="flex items-center space-x-3 min-w-0">
-                                                <div className="w-12 h-12 rounded-[1rem] overflow-hidden border border-black/5 bg-slate-100 shrink-0">
-                                                    {item.image_url ? (
-                                                        <img src={getDirectImageUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center font-bold" style={{ backgroundColor: `${theme.primary}10`, color: theme.primary }}>
-                                                            {item.quantity}x
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="font-black italic text-base line-clamp-1" style={{ color: theme.text }}>{item.title}</p>
-                                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                                        <p className="text-xs font-bold tracking-widest uppercase" style={{ color: theme.accent }}>
-                                                            Rs {((item.price || 0) * item.quantity).toFixed(0)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center space-x-3 shrink-0">
-                                                <button 
-                                                    onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                                                    className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
-                                                    style={{ backgroundColor: `${theme.text}0a`, borderColor: `${theme.text}10`, color: theme.text }}
-                                                >
-                                                    <Minus className="w-4 h-4" />
-                                                </button>
-                                                <span className="text-sm font-black w-4 text-center" style={{ color: theme.text }}>{item.quantity}</span>
-                                                <button 
-                                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                    className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
-                                                    style={{ backgroundColor: `${theme.primary}10`, borderColor: `${theme.primary}20`, color: theme.primary }}
-                                                >
-                                                    <Plus className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="py-20 text-center space-y-4">
-                                        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto" style={{ backgroundColor: `${theme.primary}0a` }}>
-                                            <ShoppingBag className="w-8 h-8 opacity-20" style={{ color: theme.primary }} />
-                                        </div>
-                                        <p className="font-serif italic text-xl opacity-40" style={{ color: theme.text }}>Your bag is empty</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* 4. Complete your Order (Final Impulse) */}
-                            {cartItems.length > 0 && (
-                                <div className="mb-8">
-                                    <div className="flex items-center space-x-3 mb-6 px-1">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: theme.accent }}>Complete your Order</span>
-                                        <div className="h-[1px] flex-1 opacity-10" style={{ backgroundColor: theme.accent }} />
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-4">
-                                        {(() => {
-                                            // Suggest a dessert if not already in cart, otherwise suggest a drink/side
-                                            const suggestion = menuItems.find(m => 
-                                                (m.category.toLowerCase() === 'desserts' || m.category.toLowerCase() === 'drinks') && 
-                                                !cart[m.id]
-                                            );
-                                            
-                                            if (!suggestion) return null;
-
-                                            return (
-                                                <motion.div 
-                                                    whileTap={{ scale: 0.98 }}
-                                                    onClick={() => addToCart(suggestion)}
-                                                    className="rounded-[2rem] p-6 shadow-2xl relative overflow-hidden group border border-white/10"
+                            {!isConfirming ? (
+                                <>
+                                    <div className="space-y-3 mb-8">
+                                        {cartItems.length > 0 ? (
+                                            cartItems.map((item) => (
+                                                <div
+                                                    key={item.id} 
+                                                    className="flex items-center justify-between p-4 shadow-xl border group transition-all gap-3"
                                                     style={{ 
-                                                        backgroundColor: theme.primary,
-                                                        borderRadius: theme.radius
+                                                        borderRadius: theme.radius,
+                                                        backgroundColor: theme.surface,
+                                                        borderColor: `${theme.primary}10`
                                                     }}
                                                 >
-                                                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform text-white">
-                                                        <Sparkles className="w-20 h-20" />
-                                                    </div>
-                                                    <div className="relative z-10 text-left">
-                                                        <div className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.2em] mb-3" style={{ color: theme.secondary }}>
-                                                            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: theme.secondary }} />
-                                                            <span>Chef's Final Touch</span>
+                                                    <div className="flex items-center space-x-3 min-w-0">
+                                                        <div className="w-12 h-12 rounded-[1rem] overflow-hidden border border-black/5 bg-slate-100 shrink-0">
+                                                            {item.image_url ? (
+                                                                <img src={getDirectImageUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center font-bold" style={{ backgroundColor: `${theme.primary}10`, color: theme.primary }}>
+                                                                    {item.quantity}x
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                        <h4 className="text-xl font-black italic text-white mb-1">“Add a {suggestion.title}?” 🍰</h4>
-                                                        <p className="text-white/60 text-sm font-medium italic mb-6">End your experience on a perfect note.</p>
+                                                        <div className="min-w-0">
+                                                            <p className="font-black italic text-base line-clamp-1" style={{ color: theme.text }}>{item.title}</p>
+                                                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                                <p className="text-xs font-bold tracking-widest uppercase" style={{ color: theme.accent }}>
+                                                                    Rs {((item.price || 0) * item.quantity).toFixed(0)}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center space-x-3 shrink-0">
                                                         <button 
-                                                            className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-xl shadow-lg active:scale-95 transition-all text-white"
-                                                            style={{ backgroundColor: theme.accent }}
+                                                            onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                                                            className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
+                                                            style={{ backgroundColor: `${theme.text}0a`, borderColor: `${theme.text}10`, color: theme.text }}
+                                                        >
+                                                            <Minus className="w-4 h-4" />
+                                                        </button>
+                                                        <span className="text-sm font-black w-4 text-center" style={{ color: theme.text }}>{item.quantity}</span>
+                                                        <button 
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                            className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
+                                                            style={{ backgroundColor: `${theme.primary}10`, borderColor: `${theme.primary}20`, color: theme.primary }}
                                                         >
                                                             <Plus className="w-4 h-4" />
-                                                            <span>Add for ₹{suggestion.price}</span>
                                                         </button>
                                                     </div>
-                                                </motion.div>
-                                            );
-                                        })()}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="py-20 text-center space-y-4">
+                                                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto" style={{ backgroundColor: `${theme.primary}0a` }}>
+                                                    <ShoppingBag className="w-8 h-8 opacity-20" style={{ color: theme.primary }} />
+                                                </div>
+                                                <p className="font-serif italic text-xl opacity-40" style={{ color: theme.text }}>Your bag is empty</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* 4. Complete your Order (Final Impulse) */}
+                                    {cartItems.length > 0 && (
+                                        <div className="mb-8">
+                                            <div className="flex items-center space-x-3 mb-6 px-1">
+                                                <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: theme.accent }}>Complete your Order</span>
+                                                <div className="h-[1px] flex-1 opacity-10" style={{ backgroundColor: theme.accent }} />
+                                            </div>
+                                            <div className="grid grid-cols-1 gap-4">
+                                                {(() => {
+                                                    // Suggest a dessert if not already in cart, otherwise suggest a drink/side
+                                                    const suggestion = menuItems.find(m => 
+                                                        (m.category.toLowerCase() === 'desserts' || m.category.toLowerCase() === 'drinks') && 
+                                                        !cart[m.id]
+                                                    );
+                                                    
+                                                    if (!suggestion) return null;
+
+                                                    return (
+                                                        <motion.div 
+                                                            whileTap={{ scale: 0.98 }}
+                                                            onClick={() => addToCart(suggestion)}
+                                                            className="rounded-[2rem] p-6 shadow-2xl relative overflow-hidden group border border-white/10"
+                                                            style={{ 
+                                                                backgroundColor: theme.primary,
+                                                                borderRadius: theme.radius
+                                                            }}
+                                                        >
+                                                            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform text-white">
+                                                                <Sparkles className="w-20 h-20" />
+                                                            </div>
+                                                            <div className="relative z-10 text-left">
+                                                                <div className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.2em] mb-3" style={{ color: theme.secondary }}>
+                                                                    <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: theme.secondary }} />
+                                                                    <span>Chef's Final Touch</span>
+                                                                </div>
+                                                                <h4 className="text-xl font-black italic text-white mb-1">“Add a {suggestion.title}?” 🍰</h4>
+                                                                <p className="text-white/60 text-sm font-medium italic mb-6">End your experience on a perfect note.</p>
+                                                                <button 
+                                                                    className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-xl shadow-lg active:scale-95 transition-all text-white"
+                                                                    style={{ backgroundColor: theme.accent }}
+                                                                >
+                                                                    <Plus className="w-4 h-4" />
+                                                                    <span>Add for ₹{suggestion.price}</span>
+                                                                </button>
+                                                            </div>
+                                                        </motion.div>
+                                                    );
+                                                })()}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="mb-10 p-6 rounded-[2.5rem] bg-slate-50 border border-slate-100">
+                                    <div className="space-y-4">
+                                        {cartItems.map(item => (
+                                            <div key={item.id} className="flex justify-between items-center">
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-black text-slate-900">{item.quantity}x {item.title}</span>
+                                                    <span className="text-[10px] font-bold text-slate-400">₹{item.price} each</span>
+                                                </div>
+                                                <span className="text-sm font-black text-slate-900">₹{(item.price * item.quantity).toFixed(0)}</span>
+                                            </div>
+                                        ))}
+                                        <div className="h-[1px] bg-slate-200 mt-4 divider" />
+                                        <div className="flex justify-between items-center pt-2">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Order Value</span>
+                                            <span className="text-xl font-black text-slate-900">₹{cartTotal.toFixed(0)}</span>
+                                        </div>
                                     </div>
                                 </div>
                             )}
 
                             {/* 5. Checkout Action */}
                             <div className="rounded-[2.2rem] p-6 shadow-2xl border" style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}>
-                                <div className="flex justify-between items-center mb-6">
-                                    <span className="font-black uppercase text-[10px] tracking-widest opacity-40" style={{ color: theme.text }}>Grand Total</span>
-                                    <span className="text-3xl font-black italic" style={{ color: theme.text }}>₹{cartTotal.toFixed(0)}</span>
-                                </div>
+                                {!isConfirming && (
+                                    <div className="flex justify-between items-center mb-6">
+                                        <span className="font-black uppercase text-[10px] tracking-widest opacity-40" style={{ color: theme.text }}>Grand Total</span>
+                                        <span className="text-3xl font-black italic" style={{ color: theme.text }}>₹{cartTotal.toFixed(0)}</span>
+                                    </div>
+                                )}
                                 <button
-                                    onClick={onOrder}
+                                    onClick={isConfirming ? onOrder : () => setIsConfirming(true)}
                                     disabled={isOrdering || cartItems.length === 0}
                                     className="w-full py-6 font-black text-lg uppercase tracking-[0.16em] shadow-2xl disabled:opacity-40 active:scale-95 transition-all flex items-center justify-center text-white"
                                     style={{ 
@@ -232,11 +266,16 @@ export function CartOverlay({
                                         <RefreshCw className="w-8 h-8 animate-spin" />
                                     ) : (
                                         <span className="flex items-center space-x-3">
-                                            <span>Checkout</span>
+                                            <span>{isConfirming ? "Confirm & Place Order" : "Checkout Bag"}</span>
                                             <ArrowUpRight className="w-6 h-6 mt-1" />
                                         </span>
                                     )}
                                 </button>
+                                {isConfirming && (
+                                    <p className="text-center mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        Clicking confirm will send your order to the kitchen
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </motion.div>

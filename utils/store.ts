@@ -33,6 +33,7 @@ export interface HotelBranding {
     welcomeMessage?: string;
     address?: string;
     heroImage?: string;
+    hero_image?: string;
     guestTheme?: 'CAFE' | 'FAST_FOOD' | 'FINE_DINE';
     hero_headline?: string;
     hero_subtext?: string;
@@ -388,8 +389,14 @@ const mapHotelBrandingRow = (data: any): HotelBranding => ({
     welcomeMessage: data.welcome_message,
     bgPattern: data.bg_pattern,
     address: data.address,
-    heroImage: data.bg_pattern, // Use bg_pattern as source for hero image
+    heroImage: data.hero_image || data.bg_pattern, // Handle both for migration
+    hero_image: data.hero_image,
     guestTheme: data.guest_theme?.toUpperCase(),
+    hero_headline: data.hero_headline,
+    hero_subtext: data.hero_subtext,
+    hero_cta: data.hero_cta,
+    trust_signal: data.trust_signal,
+    quick_order_ids: data.quick_order_ids || [],
 });
 
 // --- Utilities ---

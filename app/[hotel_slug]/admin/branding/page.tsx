@@ -17,7 +17,8 @@ export default function BrandingSettingsPage() {
         logoImage: "",
         primaryColor: "#2563eb",
         accentColor: "#4f46e5",
-        bgPattern: ""
+        bgPattern: "",
+        guestTheme: "CAFE" as "CAFE" | "FAST_FOOD" | "FINE_DINE"
     });
 
     const [isSaving, setIsSaving] = useState(false);
@@ -31,7 +32,8 @@ export default function BrandingSettingsPage() {
                 logoImage: branding.logoImage || "",
                 primaryColor: branding.primaryColor || "#2563eb",
                 accentColor: branding.accentColor || "#4f46e5",
-                bgPattern: branding.bgPattern || ""
+                bgPattern: branding.bgPattern || "",
+                guestTheme: (branding.guestTheme as any) || "CAFE"
             });
         }
     }, [branding]);
@@ -52,7 +54,8 @@ export default function BrandingSettingsPage() {
                     logo_image: formData.logoImage,
                     primary_color: formData.primaryColor,
                     accent_color: formData.accentColor,
-                    bg_pattern: formData.bgPattern 
+                    bg_pattern: formData.bgPattern,
+                    guest_theme: formData.guestTheme
                 })
                 .eq("id", branding.id);
 
@@ -132,6 +135,53 @@ export default function BrandingSettingsPage() {
                                     placeholder="e.g. Grand Plaza Hotel"
                                 />
                             </div>
+                        </div>
+                    </section>
+                    
+                    {/* Theme Experience Selector */}
+                    <section className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/20">
+                        <div className="flex items-center space-x-4 mb-8">
+                            <div className="p-3 bg-fuchsia-50 text-fuchsia-600 rounded-2xl">
+                                <Smartphone className="w-5 h-5" />
+                            </div>
+                            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Experience Theme</h2>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {[
+                                { id: 'CAFE', name: 'Modern Café', desc: 'Starbucks vibes, Cozy entry', colors: ['#00704A', '#F2F0EB'] },
+                                { id: 'FAST_FOOD', name: 'Quick Service', desc: 'High energy, Bold colors', colors: ['#E31837', '#FFBC0D'] },
+                                { id: 'FINE_DINE', name: 'Fine Dining', desc: 'Minimalist, Luxury, Elite', colors: ['#1A1A1A', '#C5A059'] }
+                            ].map((theme) => (
+                                <button
+                                    key={theme.id}
+                                    type="button"
+                                    onClick={() => setFormData({...formData, guestTheme: theme.id as any})}
+                                    className={`relative p-5 rounded-3xl border-2 text-left transition-all group overflow-hidden ${
+                                        formData.guestTheme === theme.id 
+                                            ? "border-indigo-600 bg-indigo-50/30" 
+                                            : "border-slate-50 hover:border-slate-200 bg-slate-50/50"
+                                    }`}
+                                >
+                                    <div className="flex space-x-1 mb-3">
+                                        {theme.colors.map(c => (
+                                            <div key={c} className="w-4 h-4 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: c }} />
+                                        ))}
+                                    </div>
+                                    <h3 className={`text-xs font-black uppercase tracking-widest mb-1 ${formData.guestTheme === theme.id ? 'text-indigo-600' : 'text-slate-900'}`}>
+                                        {theme.name}
+                                    </h3>
+                                    <p className="text-[10px] font-bold text-slate-400 leading-tight">
+                                        {theme.desc}
+                                    </p>
+                                    
+                                    {formData.guestTheme === theme.id && (
+                                        <div className="absolute top-3 right-3">
+                                            <CheckCircle className="w-4 h-4 text-indigo-600" />
+                                        </div>
+                                    )}
+                                </button>
+                            ))}
                         </div>
                     </section>
 

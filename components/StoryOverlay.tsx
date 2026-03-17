@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingBag, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { useTheme } from "@/utils/themes";
+import { useHotelBranding } from "@/utils/store";
+import { useParams } from "next/navigation";
 
 interface Story {
     id: string;
@@ -22,6 +25,11 @@ interface StoryOverlayProps {
 }
 
 export function StoryOverlay({ stories, initialIndex, isVisible, onClose, onOrder }: StoryOverlayProps) {
+    const params = useParams();
+    const hotelSlug = params?.hotel_slug as string;
+    const { branding } = useHotelBranding(hotelSlug);
+    const theme = useTheme(branding);
+    
     const [currentIndex, setCurrentIndex] = useState(initialIndex);
     const [progress, setProgress] = useState(0);
 
@@ -129,7 +137,10 @@ export function StoryOverlay({ stories, initialIndex, isVisible, onClose, onOrde
                                         animate={{ y: 0, opacity: 1 }}
                                         transition={{ delay: 0.2 }}
                                     >
-                                        <span className="bg-[#D4E9E2] text-[#00704A] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 inline-block shadow-lg">
+                                        <span 
+                                            className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 inline-block shadow-lg"
+                                            style={{ backgroundColor: theme.secondary, color: theme.primary }}
+                                        >
                                             {currentStory.type}
                                         </span>
                                         <h2 className="text-5xl font-black tracking-tighter mb-2 leading-tight">
@@ -147,7 +158,8 @@ export function StoryOverlay({ stories, initialIndex, isVisible, onClose, onOrde
                                     <motion.button 
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => onOrder(currentStory)}
-                                        className="w-full bg-white text-[#1E3932] py-8 rounded-full font-black uppercase tracking-widest flex items-center justify-center space-x-4 shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+                                        className="w-full py-8 rounded-full font-black uppercase tracking-widest flex items-center justify-center space-x-4 shadow-2xl"
+                                        style={{ backgroundColor: theme.background, color: theme.primary, borderRadius: theme.radius }}
                                     >
                                         <Plus className="w-6 h-6" />
                                         <span>Add to Bag</span>

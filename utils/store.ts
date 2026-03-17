@@ -32,6 +32,7 @@ export interface HotelBranding {
     googleReviewLink?: string;
     welcomeMessage?: string;
     address?: string;
+    guestTheme?: 'CAFE' | 'FAST_FOOD' | 'FINE_DINE';
 }
 
 export interface SpecialOffer {
@@ -186,6 +187,7 @@ const mapHotelBrandingRow = (data: any): HotelBranding => ({
     welcomeMessage: data.welcome_message,
     bgPattern: data.bg_pattern,
     address: data.address,
+    guestTheme: data.guest_theme?.toUpperCase(),
 });
 
 // --- Utilities ---
@@ -751,6 +753,7 @@ export async function saveHotelBranding(id: string, updates: Partial<HotelBrandi
             welcome_message: updates.welcomeMessage,
             bg_pattern: updates.bgPattern,
             address: updates.address,
+            guest_theme: updates.guestTheme,
         })
         .eq('id', id);
 

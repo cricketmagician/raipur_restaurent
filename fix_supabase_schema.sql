@@ -30,6 +30,9 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'hotels' AND column_name = 'address') THEN
         ALTER TABLE hotels ADD COLUMN address TEXT;
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'hotels' AND column_name = 'guest_theme') THEN
+        ALTER TABLE hotels ADD COLUMN guest_theme TEXT DEFAULT 'CAFE';
+    END IF;
 
     -- Menu items columns
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'menu_items' AND column_name = 'is_popular') THEN

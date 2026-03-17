@@ -4,12 +4,16 @@ import React from "react";
 import { Home, Utensils, ClipboardList, Receipt } from "lucide-react";
 import { useRouter, useParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import { useTheme } from "@/utils/themes";
+import { useHotelBranding } from "@/utils/store";
 
 export function BottomNav() {
     const router = useRouter();
     const params = useParams();
     const pathname = usePathname();
     const hotelSlug = params?.hotel_slug as string;
+    const { branding } = useHotelBranding(hotelSlug);
+    const theme = useTheme(branding);
 
     const navItems = [
         { id: "home", label: "Home", icon: Home, path: `/${hotelSlug}/guest/dashboard` },
@@ -19,7 +23,14 @@ export function BottomNav() {
     ];
 
     return (
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] px-4 pb-safe pt-3 bg-white/80 backdrop-blur-2xl border-t border-white/20 flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.04)] rounded-t-[2.5rem]">
+        <div 
+            className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] px-4 pb-safe pt-3 backdrop-blur-2xl border-t flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.04)]"
+            style={{ 
+                backgroundColor: `${theme.background}CC`,
+                borderColor: `${theme.primary}10`,
+                borderRadius: `${theme.radius} ${theme.radius} 0 0`
+            }}
+        >
             {navItems.map((item) => {
                 const isActive = pathname === item.path;
                 
@@ -32,9 +43,10 @@ export function BottomNav() {
                     >
                         <div className={`p-2 rounded-2xl transition-all duration-300 relative ${
                             isActive 
-                                ? 'text-[#F55D2C] scale-110' 
+                                ? 'scale-110' 
                                 : 'text-slate-400 group-hover:text-slate-600'
-                        } ${item.id === 'menu' ? 'p-2.5 -mt-1' : ''}`}>
+                        } ${item.id === 'menu' ? 'p-2.5 -mt-1' : ''}`}
+                        style={{ color: isActive ? theme.primary : undefined }}>
                             <item.icon 
                                 className={`transition-all duration-300 ${isActive ? 'fill-current' : ''} ${
                                     item.id === 'menu' ? 'w-7 h-7' : 'w-6 h-6'
@@ -45,13 +57,14 @@ export function BottomNav() {
                                 <div className="absolute inset-0 bg-[#F55D2C]/10 blur-xl rounded-full" />
                             )}
                         </div>
-                        <span className={`text-[9px] font-black uppercase tracking-[0.15em] transition-colors ${isActive ? 'text-[#F55D2C]' : 'text-slate-400'}`}>
+                        <span className={`text-[9px] font-black uppercase tracking-[0.15em] transition-colors ${isActive ? '' : 'text-slate-400'}`} style={{ color: isActive ? theme.primary : undefined }}>
                             {item.label}
                         </span>
                         {isActive && (
                             <motion.div 
                                 layoutId="activeTab"
-                                className="absolute -bottom-1 w-1.5 h-1.5 bg-[#F55D2C] rounded-full shadow-[0_0_12px_rgba(245,93,44,0.6)]"
+                                className="absolute -bottom-1 w-1.5 h-1.5 rounded-full shadow-[0_0_12px_rgba(0,0,0,0.1)]"
+                                style={{ backgroundColor: theme.primary }}
                             />
                         )}
                     </motion.button>

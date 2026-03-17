@@ -18,7 +18,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { FoodStory } from "@/components/FoodStory";
 import { CartOverlay } from "@/components/CartOverlay";
 import { SHARED_COMBOS } from "@/utils/constants";
-import { getTimeTheme, CATEGORY_THEMES } from "@/utils/themes";
+import { getTimeTheme, CATEGORY_THEMES, useTheme } from "@/utils/themes";
 import { StoryOverlay } from "@/components/StoryOverlay";
 import { GlobalHeader } from "@/components/GlobalHeader";
 import { TrendingNow } from "@/components/TrendingNow";
@@ -44,6 +44,7 @@ export default function GuestDashboard() {
     const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id);
     const requests = useSupabaseRequests(branding?.id, tableNumber, checkedInAt);
     const timeTheme = getTimeTheme();
+    const theme = useTheme(branding);
 
     const [scrolled, setScrolled] = useState(false);
     const [activeCategory, setActiveCategory] = useState("all");
@@ -286,7 +287,14 @@ export default function GuestDashboard() {
 
     const tableNumberDisplay = tableNumber;
     return (
-        <div className="pb-40 px-6 pt-10 min-h-screen bg-[#F2F0EB] max-w-[500px] mx-auto overflow-x-hidden font-sans">
+        <div 
+            className="pb-40 px-6 pt-10 min-h-screen max-w-[500px] mx-auto overflow-x-hidden transition-colors duration-500"
+            style={{ 
+                backgroundColor: theme.background,
+                fontFamily: theme.fontSans,
+                color: theme.text
+            }}
+        >
             {/* 1. Starbucks Style Greeting & Rewards */}
             <header className="mb-10">
                 <div className="flex items-center justify-between mb-8">
@@ -294,10 +302,10 @@ export default function GuestDashboard() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                     >
-                        <h1 className="text-3xl font-black text-[#1E3932] tracking-tighter">
+                        <h1 className="text-3xl font-black tracking-tighter" style={{ color: theme.primary }}>
                             {timeTheme.greeting.split(" ")[0]}, {tableNumber !== "Takeaway" ? `Table ${tableNumber}` : "Guest"}
                         </h1>
-                        <p className="text-sm font-bold text-[#00704A] mt-1 italic italic">It's a beautiful day for coffee.</p>
+                        <p className="text-sm font-bold mt-1 italic" style={{ color: theme.accent }}>{timeTheme.subtext}</p>
                     </motion.div>
                 </div>
 
@@ -305,7 +313,11 @@ export default function GuestDashboard() {
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#1E3932] rounded-[2rem] p-8 text-white shadow-2xl shadow-[#1E3932]/20 relative overflow-hidden"
+                    className="rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden"
+                    style={{ 
+                        backgroundColor: theme.primary,
+                        borderRadius: theme.radius
+                    }}
                 >
                     <div className="relative z-10">
                         <div className="flex items-center justify-between mb-6">
@@ -320,10 +332,13 @@ export default function GuestDashboard() {
                             <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: '65%' }}
-                                className="h-full bg-[#D4E9E2]" 
+                                className="h-full" 
+                                style={{ backgroundColor: theme.secondary }}
                             />
                         </div>
-                        <p className="text-[10px] font-bold mt-4 opacity-70 tracking-widest text-[#D4E9E2]">30 POINTS UNTIL YOUR NEXT TREAT</p>
+                        <p className="text-[10px] font-bold mt-4 opacity-70 tracking-widest uppercase" style={{ color: theme.secondary }}>
+                            30 POINTS UNTIL YOUR NEXT TREAT
+                        </p>
                     </div>
                     {/* Abstract Siren Shape Background */}
                     <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl" />
@@ -362,7 +377,7 @@ export default function GuestDashboard() {
 
                 {/* 5. ⚡ Quick Picks (Refactored Visual Hierarchy) */}
                 <div className="space-y-6">
-                    <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em] px-2">⚡ Quick Picks</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] px-2" style={{ color: theme.primary }}>⚡ Quick Picks</h3>
                     <div className="flex flex-nowrap overflow-x-auto pb-6 gap-4 no-scrollbar -mx-2 px-2">
                         {[
                             { label: 'Coffee', icon: '☕' },
@@ -373,10 +388,11 @@ export default function GuestDashboard() {
                             <button 
                                 key={chip.label}
                                 onClick={() => router.push(`/${hotelSlug}/guest/restaurant?cat=${chip.label.toLowerCase()}`)}
-                                className="flex-none px-10 py-5 rounded-[1.5rem] border border-[#00704A]/5 shadow-xl shadow-[#00704A]/5 active:scale-95 hover:shadow-2xl hover:shadow-[#00704A]/10 transition-all flex items-center space-x-4 bg-white group"
+                                className="flex-none px-10 py-5 rounded-[1.5rem] border border-black/5 shadow-xl active:scale-95 transition-all flex items-center space-x-4 bg-white group"
+                                style={{ borderRadius: theme.radius }}
                             >
                                 <span className="text-2xl group-hover:scale-125 transition-transform duration-500">{chip.icon}</span>
-                                <span className="font-black text-[10px] uppercase tracking-widest text-[#1E3932]">{chip.label}</span>
+                                <span className="font-black text-[10px] uppercase tracking-widest" style={{ color: theme.text }}>{chip.label}</span>
                             </button>
                         ))}
                     </div>
@@ -385,14 +401,18 @@ export default function GuestDashboard() {
                 {/* 6. 🍽 Categories / Navigation */}
                 <div className="space-y-6">
                     <div className="flex items-center justify-between px-2">
-                        <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em]">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: theme.primary }}>
                             🍽 Browse Menu
                         </h3>
                     </div>
                     <motion.button 
                         whileTap={{ scale: 0.97 }}
                         onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                        className="w-full bg-[#00704A] text-white py-8 rounded-[1.75rem] shadow-2xl shadow-[#00704A]/20 flex items-center justify-between px-8 group overflow-hidden relative"
+                        className="w-full text-white py-8 shadow-2xl flex items-center justify-between px-8 group overflow-hidden relative"
+                        style={{ 
+                            backgroundColor: theme.primary,
+                            borderRadius: theme.radius 
+                        }}
                     >
                         <span className="text-2xl font-black tracking-tighter relative z-10">All Categories</span>
                         <ArrowUpRight className="w-8 h-8 relative z-10 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
@@ -404,24 +424,29 @@ export default function GuestDashboard() {
                 <AnimatePresence>
                     {requests.some(r => (r.total || 0) > 0) && (
                         <div className="space-y-6">
-                            <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em] px-2">🧾 Current Tab</h3>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] px-2" style={{ color: theme.primary }}>🧾 Current Tab</h3>
                             <button 
                                 onClick={() => router.push(`/${hotelSlug}/guest/bill`)}
-                                className="w-full bg-[#D4E9E2]/30 rounded-[2rem] p-8 border border-[#00704A]/5 flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative"
+                                className="w-full rounded-[2rem] p-8 border flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative"
+                                style={{ 
+                                    backgroundColor: `${theme.primary}10`, // 10% opacity
+                                    borderColor: `${theme.primary}20`,
+                                    borderRadius: theme.radius
+                                }}
                             >
                                 <div className="flex items-center relative z-10">
-                                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mr-6 shadow-sm">
-                                        <Receipt className="w-6 h-6 text-[#00704A]" />
+                                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mr-6 shadow-sm" style={{ borderRadius: `calc(${theme.radius} * 0.6)` }}>
+                                        <Receipt className="w-6 h-6" style={{ color: theme.primary }} />
                                     </div>
                                     <div className="text-left">
-                                        <p className="text-[10px] font-black text-[#00704A] uppercase tracking-[0.2em] mb-1">Total Bill</p>
-                                        <span className="text-3xl font-black text-[#1E3932] tracking-tighter">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: theme.primary }}>Total Bill</p>
+                                        <span className="text-3xl font-black tracking-tighter" style={{ color: theme.text }}>
                                             ₹{requests.reduce((sum, r) => sum + (r.total || 0), 0).toLocaleString()}
                                         </span>
                                     </div>
                                 </div>
-                                <ChevronRight className="w-8 h-8 text-[#00704A]/30 group-hover:text-[#00704A] transition-all relative z-10" />
-                                <div className="absolute bottom-0 right-0 w-40 h-40 bg-[#00704A]/5 rounded-full blur-2xl translate-y-1/4 translate-x-1/4" />
+                                <ChevronRight className="w-8 h-8 text-black/10 group-hover:text-black transition-all relative z-10" />
+                                <div className="absolute bottom-0 right-0 w-40 h-40 bg-black/5 rounded-full blur-2xl translate-y-1/4 translate-x-1/4" />
                             </button>
                         </div>
                     )}

@@ -4,6 +4,9 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { useAddEffectTrigger } from "./AddEffect";
+import { useTheme } from "@/utils/themes";
+import { useHotelBranding } from "@/utils/store";
+import { useParams } from "next/navigation";
 
 interface PairItem {
     id: string;
@@ -22,10 +25,14 @@ interface PerfectPairsProps {
 
 export function PerfectPairs({ pairs, cart, onUpdateQuantity }: PerfectPairsProps) {
     const triggerFly = useAddEffectTrigger();
+    const params = useParams();
+    const hotelSlug = params?.hotel_slug as string;
+    const { branding } = useHotelBranding(hotelSlug);
+    const theme = useTheme(branding);
     
     return (
         <section className="space-y-6">
-            <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em] px-2">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] px-2" style={{ color: theme.primary }}>
                 🤤 Perfect Pairs
             </h3>
 
@@ -36,21 +43,28 @@ export function PerfectPairs({ pairs, cart, onUpdateQuantity }: PerfectPairsProp
                         initial={{ opacity: 0, scale: 0.95 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        className="bg-white rounded-[2rem] p-6 border border-[#00704A]/5 shadow-xl shadow-[#00704A]/5 flex items-center group relative overflow-hidden"
+                        className="bg-white p-6 border flex items-center group relative overflow-hidden shadow-xl"
+                        style={{ 
+                            borderRadius: theme.radius,
+                            borderColor: `${theme.primary}10`
+                        }}
                     >
                         {/* Abstract background shape */}
-                        <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#D4E9E2]/20 rounded-full blur-3xl group-hover:bg-[#D4E9E2]/40 transition-colors" />
+                        <div 
+                            className="absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl transition-colors" 
+                            style={{ backgroundColor: `${theme.secondary}66` }} 
+                        />
 
                         <div className="w-24 h-24 rounded-full overflow-hidden mr-6 shadow-xl border-4 border-white shrink-0 relative z-10">
                             <img src={pair.image} alt={pair.title} className="w-full h-full object-cover" />
                         </div>
 
                         <div className="flex-1 min-w-0 relative z-10">
-                            <h4 className="text-lg font-black text-[#1E3932] tracking-tight">{pair.title}</h4>
-                            <p className="text-[#00704A] text-[10px] font-bold uppercase tracking-widest mt-1 mb-3">
+                            <h4 className="text-lg font-black tracking-tight" style={{ color: theme.text }}>{pair.title}</h4>
+                            <p className="text-[10px] font-bold uppercase tracking-widest mt-1 mb-3" style={{ color: theme.primary }}>
                                 {pair.subtitle}
                             </p>
-                            <span className="text-xl font-black text-[#1E3932]">₹{pair.price}</span>
+                            <span className="text-xl font-black" style={{ color: theme.text }}>₹{pair.price}</span>
                         </div>
 
                         {cart[pair.originalId] > 0 ? (
@@ -81,7 +95,11 @@ export function PerfectPairs({ pairs, cart, onUpdateQuantity }: PerfectPairsProp
                                     triggerFly(pair.originalId, pair.image, e);
                                     onUpdateQuantity(pair.originalId, 1);
                                 }}
-                                className="bg-[#00704A] text-white p-4 rounded-2xl shadow-lg shadow-[#00704A]/20 active:scale-90 transition-all relative z-10"
+                                className="text-white p-4 rounded-2xl shadow-lg active:scale-90 transition-all relative z-10 font-black"
+                                style={{ 
+                                    backgroundColor: theme.primary,
+                                    borderRadius: `calc(${theme.radius} * 0.5)`
+                                }}
                             >
                                 <Plus className="w-6 h-6" />
                             </button>

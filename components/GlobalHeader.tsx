@@ -5,6 +5,7 @@ import { Utensils, ShoppingBag, User, Bell, Droplets, ArrowLeft, Menu, Sparkles,
 import { useRouter, useParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHotelBranding, addSupabaseRequest, useCart } from "@/utils/store";
+import { useTheme } from "@/utils/themes";
 import { useGuestRoom } from "../app/[hotel_slug]/guest/GuestAuthWrapper";
 
 export function GlobalHeader() {
@@ -15,6 +16,7 @@ export function GlobalHeader() {
     const { branding } = useHotelBranding(hotelSlug);
     const { roomNumber } = useGuestRoom();
     const { cartCount } = useCart(branding?.id);
+    const theme = useTheme(branding);
     
     const [scrolled, setScrolled] = useState(false);
     const [requestLoading, setRequestLoading] = useState<string | null>(null);
@@ -53,9 +55,13 @@ export function GlobalHeader() {
         <motion.header 
             initial={{ y: -100 }}
             animate={{ y: 0 }}
-            className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] transition-all duration-500 ${
-                scrolled ? "bg-white/95 backdrop-blur-3xl shadow-[0_8px_30px_rgb(0,33,30,0.08)] py-4" : "bg-[#F2F0EB] py-6"
-            } border-b border-[#00704A]/5`}
+            className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-[100] transition-all duration-500 py-6`}
+            style={{ 
+                backgroundColor: scrolled ? "rgba(255, 255, 255, 0.95)" : theme.background,
+                backdropFilter: scrolled ? "blur(20px)" : "none",
+                boxShadow: scrolled ? "0 8px 30px rgba(0,0,0,0.04)" : "none",
+                borderBottom: `1px solid ${theme.primary}10`
+            }}
         >
             <div className="flex flex-col gap-6">
                 {/* Row 1: Menu (Left), Branding (Center), Cart (Right) */}
@@ -64,9 +70,11 @@ export function GlobalHeader() {
                     <div className="flex-shrink-0 relative">
                         <button 
                             onClick={() => setShowUtility(!showUtility)}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                                showUtility ? "bg-[#1E3932] text-white" : "bg-white border border-slate-100 text-[#00704A] shadow-sm"
-                            } active:scale-95`}
+                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-95 border border-slate-100 shadow-sm`}
+                            style={{ 
+                                backgroundColor: showUtility ? theme.primary : "white",
+                                color: showUtility ? "white" : theme.primary
+                            }}
                         >
                             {showUtility ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                         </button>
@@ -128,16 +136,16 @@ export function GlobalHeader() {
                                     <img src={branding.logoImage || branding.logo} alt="Logo" className="w-full h-full object-cover" />
                                 </div>
                             ) : (
-                                <div className="w-8 h-8 bg-[#00704A] rounded-full flex items-center justify-center shadow-md">
-                                    <div className="text-white font-serif italic text-sm">S</div>
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-md" style={{ backgroundColor: theme.primary }}>
+                                    <div className="text-white font-serif italic text-sm">{branding?.name?.charAt(0) || "S"}</div>
                                 </div>
                             )}
-                            <h1 className="text-base font-black text-[#1E3932] leading-tight tracking-tight">
+                            <h1 className="text-base font-black leading-tight tracking-tight" style={{ color: theme.text }}>
                                 {branding?.name || "Starbucks"}
                             </h1>
                         </div>
-                        <p className="text-[8px] font-bold text-[#00704A]/60 uppercase tracking-[0.2em] truncate mt-0.5">
-                            {branding?.address || "Experience the Siren"}
+                        <p className="text-[8px] font-bold uppercase tracking-[0.2em] truncate mt-0.5" style={{ color: `${theme.primary}99` }}>
+                            {branding?.address || "Experience the Modern Dining"}
                         </p>
                     </div>
 
@@ -155,7 +163,8 @@ export function GlobalHeader() {
                                         initial={{ scale: 0 }}
                                         animate={{ scale: 1 }}
                                         exit={{ scale: 0 }}
-                                        className="absolute -top-1 -right-1 w-6 h-6 bg-[#D4AF37] text-[#3E2723] rounded-full text-[10px] font-black flex items-center justify-center shadow-lg border-2 border-white"
+                                        className="absolute -top-1 -right-1 w-6 h-6 text-white rounded-full text-[10px] font-black flex items-center justify-center shadow-lg border-2 border-white"
+                                        style={{ backgroundColor: theme.accent }}
                                     >
                                         {cartCount}
                                     </motion.div>
@@ -174,7 +183,8 @@ export function GlobalHeader() {
                                 x: (tableNumber?.toLowerCase() === 'takeaway' || tableNumber?.toLowerCase() === 'takeout') ? '100.5%' : '0%',
                             }}
                             transition={{ type: "spring", stiffness: 400, damping: 40 }}
-                            className="absolute inset-y-1 left-1 w-[calc(50%-2px)] bg-[#00704A] rounded-full shadow-lg shadow-[#00704A]/20"
+                            className="absolute inset-y-1 left-1 w-[calc(50%-2px)] rounded-full shadow-lg"
+                            style={{ backgroundColor: theme.primary }}
                         />
                         
                         <button 

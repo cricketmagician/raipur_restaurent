@@ -6,6 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CartProgressBar } from "./CartProgressBar";
 import { UpsellSection } from "./UpsellSection";
 import { SHARED_MENU_ITEMS, SHARED_COMBOS } from "@/utils/constants";
+import { useTheme } from "@/utils/themes";
+import { useHotelBranding } from "@/utils/store";
+import { useParams } from "next/navigation";
 
 interface CartOverlayProps {
     isOpen: boolean;
@@ -30,6 +33,10 @@ export function CartOverlay({
     hotelId,
     menuItems
 }: CartOverlayProps) {
+    const params = useParams();
+    const hotelSlug = params?.hotel_slug as string;
+    const { branding } = useHotelBranding(hotelSlug);
+    const theme = useTheme(branding);
     
     const cartItems = Object.entries(cart).map(([id, q]) => {
         let item = menuItems.find(m => m.id === id);
@@ -52,30 +59,37 @@ export function CartOverlay({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-[#3E2723]/80 backdrop-blur-md z-[120]"
+                        className="fixed inset-0 backdrop-blur-md z-[120]"
+                        style={{ backgroundColor: `${theme.primary}CC` }}
                     />
                     <motion.div
                         initial={{ y: "100%" }}
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
                         transition={{ type: "spring", damping: 35, stiffness: 350, mass: 0.8 }}
-                        className="fixed bottom-0 left-0 right-0 bg-[#FFF8F2] rounded-t-[3rem] z-[130] shadow-[0_-20px_80px_rgba(62,39,35,0.2)] flex flex-col max-h-[95vh] border-t border-[#3E2723]/5 shadow-2xl"
+                        className="fixed bottom-0 left-0 right-0 z-[130] flex flex-col max-h-[95vh] border-t shadow-2xl"
+                        style={{ 
+                            backgroundColor: theme.background,
+                            borderRadius: `${theme.radius} ${theme.radius} 0 0`,
+                            borderColor: `${theme.primary}10`
+                        }}
                     >
                         {/* Native Handle Bar */}
                         <div className="flex justify-center pt-4 pb-2">
-                            <div className="w-16 h-1.5 bg-[#3E2723]/10 rounded-full" />
+                            <div className="w-16 h-1.5 opacity-10 rounded-full" style={{ backgroundColor: theme.primary }} />
                         </div>
 
                         <div className="p-8 pt-6 overflow-y-auto no-scrollbar pb-safe">
                             <div className="flex items-center justify-between mb-10">
                                 <div>
                                     <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Your Bag</h2>
-                                    <h2 className="text-4xl font-serif text-[#3E2723] italic tracking-tighter leading-none">Cravings</h2>
+                                    <h2 className="text-4xl font-black italic tracking-tighter leading-none" style={{ color: theme.primary }}>Cravings</h2>
                                 </div>
                                 <motion.button
                                     whileTap={{ scale: 0.9 }}
                                     onClick={onClose}
-                                    className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-[#3E2723] shadow-xl shadow-[#3E2723]/5 border border-[#3E2723]/5"
+                                    className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-xl border border-black/5"
+                                    style={{ color: theme.primary, borderRadius: `calc(${theme.radius} * 0.5)` }}
                                 >
                                     <X className="w-6 h-6" />
                                 </motion.button>
@@ -84,14 +98,14 @@ export function CartOverlay({
                             <div className="space-y-4 mb-12">
                                 {cartItems.length > 0 ? (
                                     cartItems.map((item) => (
-                                        <div key={item.id} className="flex items-center justify-between p-6 bg-white rounded-[2rem] shadow-xl shadow-[#3E2723]/5 border border-[#3E2723]/5 group">
+                                        <div key={item.id} className="flex items-center justify-between p-6 bg-white shadow-xl border border-black/5 group" style={{ borderRadius: theme.radius }}>
                                             <div className="flex items-center space-x-4">
-                                                <div className="w-12 h-12 bg-[#3E2723]/5 rounded-xl flex items-center justify-center font-bold text-[#3E2723]">
+                                                <div className="w-12 h-12 rounded-xl flex items-center justify-center font-bold" style={{ backgroundColor: `${theme.primary}10`, color: theme.primary }}>
                                                     {item.quantity}×
                                                 </div>
                                                 <div>
-                                                    <p className="font-serif text-[#3E2723] italic text-lg">{item.title}</p>
-                                                    <p className="text-xs font-bold text-[#F59E0B] tracking-widest uppercase">₹{((item.price || 0) * item.quantity).toFixed(0)}</p>
+                                                    <p className="font-black italic text-lg" style={{ color: theme.text }}>{item.title}</p>
+                                                    <p className="text-xs font-bold tracking-widest uppercase" style={{ color: theme.accent }}>₹{((item.price || 0) * item.quantity).toFixed(0)}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center space-x-2">
@@ -141,19 +155,29 @@ export function CartOverlay({
                                                 <motion.div 
                                                     whileTap={{ scale: 0.98 }}
                                                     onClick={() => addToCart(suggestion)}
-                                                    className="bg-[#3E2723] rounded-[2rem] p-8 shadow-2xl shadow-[#3E2723]/20 relative overflow-hidden group border border-white/10"
+                                                    className="rounded-[2rem] p-8 shadow-2xl relative overflow-hidden group border border-white/10"
+                                                    style={{ 
+                                                        backgroundColor: theme.primary,
+                                                        borderRadius: theme.radius
+                                                    }}
                                                 >
-                                                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-                                                        <Sparkles className="w-20 h-20 text-white" />
+                                                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform text-white">
+                                                        <Sparkles className="w-20 h-20" />
                                                     </div>
                                                     <div className="relative z-10 text-left">
-                                                        <div className="flex items-center space-x-2 text-[#F59E0B] text-[10px] font-black uppercase tracking-[0.2em] mb-3">
-                                                            <div className="w-1.5 h-1.5 bg-[#F59E0B] rounded-full animate-pulse" />
+                                                        <div className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.2em] mb-3" style={{ color: theme.secondary }}>
+                                                            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: theme.secondary }} />
                                                             <span>Chef's Final Touch</span>
                                                         </div>
-                                                        <h4 className="text-2xl font-serif italic text-white mb-1">“Add a {suggestion.title}?” 🍰</h4>
+                                                        <h4 className="text-2xl font-black italic text-white mb-1">“Add a {suggestion.title}?” 🍰</h4>
                                                         <p className="text-white/60 text-sm font-medium italic mb-6">End your experience on a perfect note.</p>
-                                                        <button className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest text-[#3E2723] bg-[#F59E0B] px-6 py-4 rounded-xl shadow-lg active:scale-95 transition-all">
+                                                        <button 
+                                                            className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-xl shadow-lg active:scale-95 transition-all"
+                                                            style={{ 
+                                                                backgroundColor: theme.accent,
+                                                                color: "white" 
+                                                            }}
+                                                        >
                                                             <Plus className="w-4 h-4" />
                                                             <span>Add for ₹{suggestion.price}</span>
                                                         </button>
@@ -169,18 +193,22 @@ export function CartOverlay({
                             <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-[#3E2723]/5 border border-[#3E2723]/5">
                                 <div className="flex justify-between items-center mb-6">
                                     <span className="text-slate-400 font-black uppercase text-[10px] tracking-widest">Grand Total</span>
-                                    <span className="text-4xl font-serif italic text-[#3E2723]">₹{cartTotal.toFixed(0)}</span>
+                                    <span className="text-4xl font-black italic" style={{ color: theme.text }}>₹{cartTotal.toFixed(0)}</span>
                                 </div>
                                 <button
                                     onClick={onOrder}
                                     disabled={isOrdering || cartItems.length === 0}
-                                    className="w-full bg-[#3E2723] text-[#FFF8F2] py-8 rounded-[1.75rem] font-serif text-2xl italic shadow-2xl shadow-[#3E2723]/20 disabled:opacity-40 active:scale-95 transition-all flex items-center justify-center"
+                                    className="w-full py-8 font-black text-2xl italic shadow-2xl disabled:opacity-40 active:scale-95 transition-all flex items-center justify-center text-white"
+                                    style={{ 
+                                        backgroundColor: theme.primary,
+                                        borderRadius: `calc(${theme.radius} * 0.75)`
+                                    }}
                                 >
                                     {isOrdering ? (
                                         <RefreshCw className="w-8 h-8 animate-spin" />
                                     ) : (
                                         <span className="flex items-center space-x-3">
-                                            <span>Start the Vibe</span>
+                                            <span>Place Order</span>
                                             <ArrowUpRight className="w-6 h-6 mt-1" />
                                         </span>
                                     )}

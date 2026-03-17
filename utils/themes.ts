@@ -67,7 +67,6 @@ export function useTheme(branding?: { guestTheme?: string, primaryColor?: string
 }
 
 export type CategoryTheme = {
-// ... existing CategoryTheme code ...
     id: string;
     gradient: string;
     accent: string;
@@ -75,6 +74,8 @@ export type CategoryTheme = {
     effect?: 'shine' | 'glow' | 'condensation' | 'none';
     emotion: string;
     textColor: string;
+    tagline: string;
+    image: string;
 };
 
 export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
@@ -83,61 +84,77 @@ export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
         gradient: "from-[#FDFBF7] to-[#EADBC8]",
         accent: "#3C2A21",
         emotion: "discovery",
-        textColor: "#3C2A21"
+        textColor: "#3C2A21",
+        tagline: "Explore our full collection",
+        image: "/images/categories/all.png"
     },
     coffee: {
         id: "coffee",
-        gradient: "from-[#3C2A21] to-[#3C2A21]",
+        gradient: "linear-gradient(135deg, #3C2A21 0%, #1A120B 100%)",
         accent: "#EADBC8",
         emotion: "comfort",
         textColor: "#FFFFFF",
-        effect: "none"
+        effect: "none",
+        tagline: "Warm, aromatic & handcrafted",
+        image: "/images/categories/coffee.png"
     },
     burgers: {
         id: "burgers",
-        gradient: "from-[#FDFBF7] to-[#FDFBF7]",
-        accent: "#3C2A21",
+        gradient: "linear-gradient(135deg, #2D1F18 0%, #000000 100%)",
+        accent: "#F59E0B",
         emotion: "satisfaction",
-        textColor: "#3C2A21"
+        textColor: "#FFFFFF",
+        tagline: "Juicy, bold & heavy shadows",
+        image: "/images/categories/burgers.png"
     },
     pizzas: {
         id: "pizzas",
-        gradient: "from-[#FDFBF7] to-[#FDFBF7]",
-        accent: "#2D1F18",
+        gradient: "linear-gradient(135deg, #7F1D1D 0%, #450A0A 100%)",
+        accent: "#FBBF24",
         texture: "none",
         effect: "none",
         emotion: "sharing",
-        textColor: "#3C2A21"
+        textColor: "#FFFFFF",
+        tagline: "Cheesy, oven-fresh & irresistible",
+        image: "/images/categories/pizzas.png"
     },
     fries: {
         id: "fries",
-        gradient: "from-[#EADBC8] to-[#EADBC8]",
+        gradient: "linear-gradient(135deg, #FBBF24 0%, #D97706 100%)",
         accent: "#3C2A21",
         emotion: "fun",
-        textColor: "#3C2A21"
+        textColor: "#3C2A21",
+        tagline: "Crispy, golden & perfectly salted",
+        image: "/images/categories/fries.png"
     },
     desserts: {
         id: "desserts",
-        gradient: "from-[#FDFBF7] to-[#FDFBF7]",
-        accent: "#3C2A21",
-        effect: "none",
+        gradient: "linear-gradient(135deg, #FCE7F3 0%, #F9A8D4 100%)",
+        accent: "#BE185D",
+        effect: "glow",
         emotion: "indulgence",
-        textColor: "#3C2A21"
+        textColor: "#831843",
+        tagline: "Sweet, soft & heavenly",
+        image: "/images/categories/desserts.png"
     },
     drinks: {
         id: "drinks",
-        gradient: "from-[#EADBC8] to-[#EADBC8]",
-        accent: "#3C2A21",
-        effect: "none",
+        gradient: "linear-gradient(135deg, #E0F2FE 0%, #7DD3FC 100%)",
+        accent: "#0369A1",
+        effect: "condensation",
         emotion: "refreshment",
-        textColor: "#3C2A21"
+        textColor: "#0C4A6E",
+        tagline: "Chilled, bubbly & revitalizing",
+        image: "/images/categories/drinks.png"
     },
     sides: {
         id: "sides",
-        gradient: "from-[#FDFBF7] to-[#FDFBF7]",
+        gradient: "from-[#FDFBF7] to-[#EADBC8]",
         accent: "#3C2A21",
         emotion: "extra",
-        textColor: "#3C2A21"
+        textColor: "#3C2A21",
+        tagline: "The perfect companions",
+        image: "/images/categories/sides.png"
     }
 };
 

@@ -28,10 +28,10 @@ CREATE TABLE IF NOT EXISTS hotels (
     google_review_link TEXT,
     welcome_message TEXT,
     address TEXT,
+    guest_theme TEXT DEFAULT 'CAFE',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 2. Profiles Table (Staff)
 CREATE TABLE IF NOT EXISTS profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS requests (
     room TEXT NOT NULL,
     type TEXT NOT NULL,
     notes TEXT,
-    status TEXT CHECK (status IN ('Pending', 'Processing', 'Completed', 'Cancelled')) DEFAULT 'Pending',
+    status TEXT CHECK (status IN ('Pending', 'Assigned', 'In Progress', 'Completed', 'Cancelled')) DEFAULT 'Pending',
     timestamp BIGINT NOT NULL,
     time TEXT NOT NULL,
     price DECIMAL(10, 2) DEFAULT 0,

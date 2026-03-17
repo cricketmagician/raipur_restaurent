@@ -189,7 +189,7 @@ const mapHotelBrandingRow = (data: any): HotelBranding => ({
     welcomeMessage: data.welcome_message,
     bgPattern: data.bg_pattern,
     address: data.address,
-    heroImage: data.hero_image,
+    heroImage: data.bg_pattern, // Use bg_pattern as source for hero image
     guestTheme: data.guest_theme?.toUpperCase(),
 });
 

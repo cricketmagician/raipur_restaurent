@@ -18,7 +18,6 @@ export default function BrandingSettingsPage() {
         primaryColor: "#3C2A21", // Coffee Brown default
         accentColor: "#8B4513", // Warm Wood default
         bgPattern: "",
-        heroImage: "",
         guestTheme: "CAFE" as "CAFE" | "FINE_DINE"
     });
 
@@ -34,7 +33,6 @@ export default function BrandingSettingsPage() {
                 primaryColor: branding.primaryColor || "#2563eb",
                 accentColor: branding.accentColor || "#4f46e5",
                 bgPattern: branding.bgPattern || "",
-                heroImage: branding.heroImage || "",
                 guestTheme: (branding.guestTheme as any) || "CAFE"
             });
         }
@@ -57,7 +55,6 @@ export default function BrandingSettingsPage() {
                     primary_color: formData.primaryColor,
                     accent_color: formData.accentColor,
                     bg_pattern: formData.bgPattern,
-                    hero_image: formData.heroImage,
                     guest_theme: formData.guestTheme
                 })
                 .eq("id", branding.id);
@@ -218,24 +215,17 @@ export default function BrandingSettingsPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Welcome Wall Background (URL)</label>
+                                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Homepage Hero Image (URL)</label>
                                 <input
                                     type="url"
                                     value={formData.bgPattern}
                                     onChange={(e) => setFormData({...formData, bgPattern: e.target.value})}
                                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all"
-                                    placeholder="https://link-to-full-bg-image.jpg"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Homepage Hero Image (URL)</label>
-                                <input
-                                    type="url"
-                                    value={formData.heroImage}
-                                    onChange={(e) => setFormData({...formData, heroImage: e.target.value})}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all"
                                     placeholder="https://link-to-homepage-hero.jpg"
                                 />
+                                <p className="text-[9px] font-bold text-slate-400 mt-2 uppercase tracking-tight italic">
+                                    This image appears as the background for your guest dashboard and welcome screens.
+                                </p>
                             </div>
                         </div>
                     </section>

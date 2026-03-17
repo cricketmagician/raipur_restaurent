@@ -61,6 +61,20 @@ CREATE TABLE IF NOT EXISTS offers (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS menu_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    hotel_id UUID REFERENCES hotels(id) ON DELETE CASCADE,
+    slug TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    icon_emoji TEXT,
+    sort_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(hotel_id, slug)
+);
+
 -- 3. Normalize request status values used by the UI
 ALTER TABLE requests DROP CONSTRAINT IF EXISTS requests_status_check;
 ALTER TABLE requests
@@ -77,6 +91,7 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE menu_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE menu_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE special_offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
@@ -102,6 +117,9 @@ CREATE POLICY "Allow public insert requests" ON requests FOR INSERT WITH CHECK (
 
 DROP POLICY IF EXISTS "Allow public read menu_items" ON menu_items;
 CREATE POLICY "Allow public read menu_items" ON menu_items FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read menu_categories" ON menu_categories;
+CREATE POLICY "Allow public read menu_categories" ON menu_categories FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Allow public read special_offers" ON special_offers;
 CREATE POLICY "Allow public read special_offers" ON special_offers FOR SELECT USING (true);
@@ -220,6 +238,23 @@ CREATE POLICY "Staff can manage menu items" ON menu_items
         )
     );
 
+DROP POLICY IF EXISTS "Staff can manage menu categories" ON menu_categories;
+CREATE POLICY "Staff can manage menu categories" ON menu_categories
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM profiles
+            WHERE profiles.user_id = auth.uid()
+            AND profiles.hotel_id = menu_categories.hotel_id
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM profiles
+            WHERE profiles.user_id = auth.uid()
+            AND profiles.hotel_id = menu_categories.hotel_id
+        )
+    );
+
 DROP POLICY IF EXISTS "Staff can manage special offers" ON special_offers;
 CREATE POLICY "Staff can manage special offers" ON special_offers
     FOR ALL USING (
@@ -262,6 +297,7 @@ CREATE INDEX IF NOT EXISTS idx_guests_hotel_id ON guests(hotel_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_hotel_id ON profiles(hotel_id);
 CREATE INDEX IF NOT EXISTS idx_hotels_slug ON hotels(slug);
+CREATE INDEX IF NOT EXISTS idx_menu_categories_hotel_id ON menu_categories(hotel_id);
 CREATE INDEX IF NOT EXISTS idx_menu_items_hotel_id ON menu_items(hotel_id);
 CREATE INDEX IF NOT EXISTS idx_special_offers_hotel_id ON special_offers(hotel_id);
 CREATE INDEX IF NOT EXISTS idx_offers_hotel_id ON offers(hotel_id);
@@ -272,6 +308,7 @@ ALTER TABLE profiles REPLICA IDENTITY FULL;
 ALTER TABLE rooms REPLICA IDENTITY FULL;
 ALTER TABLE guests REPLICA IDENTITY FULL;
 ALTER TABLE requests REPLICA IDENTITY FULL;
+ALTER TABLE menu_categories REPLICA IDENTITY FULL;
 ALTER TABLE menu_items REPLICA IDENTITY FULL;
 ALTER TABLE special_offers REPLICA IDENTITY FULL;
 ALTER TABLE offers REPLICA IDENTITY FULL;
@@ -290,6 +327,9 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'menu_items') THEN
         ALTER PUBLICATION supabase_realtime ADD TABLE menu_items;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'menu_categories') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE menu_categories;
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'special_offers') THEN
         ALTER PUBLICATION supabase_realtime ADD TABLE special_offers;

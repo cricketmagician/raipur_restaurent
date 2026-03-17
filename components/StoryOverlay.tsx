@@ -47,7 +47,12 @@ export function StoryOverlay({ stories, initialIndex, isVisible, onClose, onOrde
         const timer = setInterval(() => {
             setProgress((prev) => {
                 if (prev >= 100) {
-                    handleNext();
+                    if (currentIndex < stories.length - 1) {
+                        setCurrentIndex(currentIndex + 1);
+                        setProgress(0);
+                    } else {
+                        onClose();
+                    }
                     return 0;
                 }
                 return prev + 1;
@@ -55,7 +60,7 @@ export function StoryOverlay({ stories, initialIndex, isVisible, onClose, onOrde
         }, 50); // 5 seconds total (100 * 50ms)
 
         return () => clearInterval(timer);
-    }, [currentIndex, isVisible]);
+    }, [currentIndex, isVisible, onClose, stories.length]);
 
     const handleNext = () => {
         if (currentIndex < stories.length - 1) {

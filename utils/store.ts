@@ -125,6 +125,19 @@ export interface MenuItem {
     created_at?: string;
 }
 
+export interface MenuCategory {
+    id: string;
+    hotel_id: string;
+    slug: string;
+    name: string;
+    description?: string;
+    image_url?: string;
+    icon_emoji?: string;
+    sort_order?: number;
+    is_active?: boolean;
+    created_at?: string;
+}
+
 const REQUEST_TYPE_KEYWORDS = {
     dining: ['dining order', 'restaurant order', 'restaurant', 'food order', 'room service', 'breakfast', 'lunch', 'dinner'],
     beverages: ['water', 'mineral water', 'tea', 'coffee', 'beverage'],
@@ -157,8 +170,72 @@ const sortRoomsByNumber = (left: Room, right: Room) =>
 const sortRequestsByTimestamp = (left: HotelRequest, right: HotelRequest) => right.timestamp - left.timestamp;
 
 const sortMenuItems = (left: MenuItem, right: MenuItem) =>
-    left.category.localeCompare(right.category, undefined, { sensitivity: 'base' }) ||
+    normalizeCategoryKey(left.category).localeCompare(normalizeCategoryKey(right.category), undefined, { sensitivity: 'base' }) ||
     left.title.localeCompare(right.title, undefined, { sensitivity: 'base' });
+
+const sortMenuCategories = (left: MenuCategory, right: MenuCategory) =>
+    (left.sort_order ?? Number.MAX_SAFE_INTEGER) - (right.sort_order ?? Number.MAX_SAFE_INTEGER) ||
+    left.name.localeCompare(right.name, undefined, { sensitivity: 'base' });
+
+const CATEGORY_ICON_FALLBACKS: Record<string, string> = {
+    all: '🍽️',
+    burgers: '🍔',
+    pizzas: '🍕',
+    fries: '🍟',
+    sides: '🥗',
+    drinks: '🥤',
+    desserts: '🍰',
+    coffee: '☕',
+    combos: '🎁',
+    breakfast: '🍳',
+    lunch: '🥪',
+    dinner: '🍲',
+};
+
+export function normalizeCategoryKey(value: string | undefined | null) {
+    return (value || 'uncategorized')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'uncategorized';
+}
+
+export function formatCategoryName(value: string | undefined | null) {
+    const normalized = normalizeCategoryKey(value);
+    if (normalized === 'all') return 'All';
+
+    return normalized
+        .split('-')
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+}
+
+export function deriveMenuCategories(menuItems: MenuItem[]): MenuCategory[] {
+    const seen = new Set<string>();
+
+    return menuItems.reduce<MenuCategory[]>((acc, item, index) => {
+        const slug = normalizeCategoryKey(item.category);
+        if (seen.has(slug)) {
+            return acc;
+        }
+
+        seen.add(slug);
+        acc.push({
+            id: `derived-${slug}`,
+            hotel_id: item.hotel_id,
+            slug,
+            name: formatCategoryName(item.category),
+            description: `${formatCategoryName(item.category)} favourites`,
+            icon_emoji: CATEGORY_ICON_FALLBACKS[slug] || '🍽️',
+            sort_order: index,
+            is_active: true,
+        });
+        return acc;
+    }, []);
+}
 
 const sortByCreatedAtDesc = <T extends { created_at?: string }>(left: T, right: T) =>
     new Date(right.created_at || 0).getTime() - new Date(left.created_at || 0).getTime();
@@ -952,6 +1029,56 @@ export function useSpecialOffers(hotelId?: string) {
     };
 }
 
+export function useMenuCategories(hotelId?: string) {
+    const state = useRealtimeCollection<MenuCategory>({
+        table: 'menu_categories',
+        consumer: 'menu-categories',
+        scopeKey: hotelId || 'no-hotel',
+        enabled: !!hotelId,
+        fetchFilters: hotelId ? [{ column: 'hotel_id', value: hotelId }] : [],
+        channelFilter: hotelId ? { column: 'hotel_id', value: hotelId } : undefined,
+        orderBy: { column: 'sort_order', ascending: true },
+        sort: sortMenuCategories,
+        enablePollingFallback: true,
+    });
+
+    return {
+        categories: state.data,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+        fetchError: state.fetchError,
+        lastSyncedAt: state.lastSyncedAt,
+    };
+}
+
+export async function saveMenuCategory(hotelId: string, category: Partial<MenuCategory>) {
+    const payload = {
+        slug: normalizeCategoryKey(category.slug || category.name),
+        name: category.name || formatCategoryName(category.slug),
+        description: category.description || null,
+        image_url: category.image_url || null,
+        icon_emoji: category.icon_emoji || null,
+        sort_order: category.sort_order ?? 0,
+        is_active: category.is_active ?? true,
+    };
+
+    if (category.id) {
+        return await supabase
+            .from('menu_categories')
+            .update(payload)
+            .eq('id', category.id);
+    }
+
+    return await supabase
+        .from('menu_categories')
+        .insert([{ ...payload, hotel_id: hotelId }]);
+}
+
+export async function deleteMenuCategory(id: string) {
+    return await supabase.from('menu_categories').delete().eq('id', id);
+}
+
 /**
  * Save or add a special offer
  */
@@ -1011,12 +1138,13 @@ export function useSupabaseMenuItems(hotelId?: string) {
  * Save or add a menu item
  */
 export async function saveSupabaseMenuItem(hotelId: string, item: Partial<MenuItem>) {
+    const normalizedCategory = normalizeCategoryKey(item.category);
 
     if (item.id) {
         const { data, error } = await supabase
             .from('menu_items')
             .update({
-                category: item.category,
+                category: normalizedCategory,
                 title: item.title,
                 description: item.description,
                 price: item.price,
@@ -1036,7 +1164,7 @@ export async function saveSupabaseMenuItem(hotelId: string, item: Partial<MenuIt
     } else {
         const { data, error } = await supabase
             .from('menu_items')
-            .insert([{ ...item, hotel_id: hotelId }]);
+            .insert([{ ...item, category: normalizedCategory, hotel_id: hotelId }]);
         if (error) {
             console.error("Error inserting menu item:", error.message, error);
             if (error.message.includes('not find')) {

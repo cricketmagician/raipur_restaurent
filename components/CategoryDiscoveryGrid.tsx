@@ -9,6 +9,8 @@ interface Category {
     id: string;
     name: string;
     icon: string;
+    imageUrl?: string;
+    tagline?: string;
 }
 
 interface CategoryDiscoveryGridProps {
@@ -47,7 +49,7 @@ export function CategoryDiscoveryGrid({ categories, onCategoryClick, activeCateg
                             }}
                         >
                             <img 
-                                src={categoryTheme.image} 
+                                src={category.imageUrl || categoryTheme.image} 
                                 alt={category.name} 
                                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                             />
@@ -66,7 +68,7 @@ export function CategoryDiscoveryGrid({ categories, onCategoryClick, activeCateg
                                     {category.name}
                                 </h3>
                                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 text-white">
-                                    {categoryTheme.tagline}
+                                    {category.tagline || categoryTheme.tagline}
                                 </p>
                             </div>
 

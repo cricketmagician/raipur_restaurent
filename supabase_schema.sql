@@ -87,6 +87,20 @@ CREATE TABLE IF NOT EXISTS requests (
 );
 
 -- 6. Menu Items
+CREATE TABLE IF NOT EXISTS menu_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    hotel_id UUID REFERENCES hotels(id) ON DELETE CASCADE,
+    slug TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    icon_emoji TEXT,
+    sort_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(hotel_id, slug)
+);
+
 CREATE TABLE IF NOT EXISTS menu_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     hotel_id UUID REFERENCES hotels(id) ON DELETE CASCADE,
@@ -135,6 +149,7 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE menu_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE menu_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE special_offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
@@ -154,6 +169,9 @@ CREATE POLICY "Allow public read requests" ON requests FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Allow public read menu_items" ON menu_items;
 CREATE POLICY "Allow public read menu_items" ON menu_items FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read menu_categories" ON menu_categories;
+CREATE POLICY "Allow public read menu_categories" ON menu_categories FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Allow public read special_offers" ON special_offers;
 CREATE POLICY "Allow public read special_offers" ON special_offers FOR SELECT USING (true);

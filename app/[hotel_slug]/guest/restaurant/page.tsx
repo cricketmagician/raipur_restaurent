@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MenuCard } from "@/components/MenuCard";
 import { CheckCircle, Search, Sparkles, TrendingUp, Gift } from "lucide-react";
-import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems } from "@/utils/store";
+import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
@@ -107,6 +107,7 @@ export default function RestaurantPage() {
     const searchParams = useSearchParams();
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
+    const { categories: menuCategories } = useMenuCategories(branding?.id);
     const { roomNumber } = useGuestRoom();
     const { cart, updateQuantity, clearCart } = useCart(branding?.id);
     const theme = useTheme(branding);
@@ -126,21 +127,23 @@ export default function RestaurantPage() {
     const [showUpsell, setShowUpsell] = useState(false);
     const [suggestedIds, setSuggestedIds] = useState<string[]>([]);
 
-    const categories = [
-        { id: "all", name: "All", icon: "🍱" },
-        { id: "pizzas", name: "Pizzas", icon: "🍕" },
-        { id: "burgers", name: "Burgers", icon: "🍔" },
-        { id: "coffee", name: "Coffee", icon: "☕" },
-        { id: "desserts", name: "Desserts", icon: "🍰" },
-        { id: "drinks", name: "Drinks", icon: "🥤" },
-        { id: "sides", name: "Sides", icon: "🍟" },
-        { id: "combos", name: "Combos", icon: "🎁" },
-    ];
-
     const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
 
     // Use mock data if no items in DB (for visual testing)
     const effectiveItems = menuItems.length > 0 ? menuItems : MOCK_FOOD_ITEMS;
+    const categoryRecords = menuCategories.filter((category) => category.is_active !== false).length > 0
+        ? menuCategories.filter((category) => category.is_active !== false)
+        : deriveMenuCategories(effectiveItems as any);
+    const categories = [
+        { id: "all", name: "All", icon: "🍱", tagline: "Explore the full menu" },
+        ...categoryRecords.map((category) => ({
+            id: normalizeCategoryKey(category.slug || category.name),
+            name: category.name,
+            icon: category.icon_emoji || "🍽️",
+            imageUrl: category.image_url,
+            tagline: category.description,
+        })),
+    ];
 
     // Handle initial navigation or deep linking
     useEffect(() => {
@@ -176,9 +179,12 @@ export default function RestaurantPage() {
     };
 
     const currentCategoryTheme = CATEGORY_THEMES[activeCategory] || CATEGORY_THEMES.all;
+    const activeCategoryRecord = categoryRecords.find((category) => normalizeCategoryKey(category.slug || category.name) === activeCategory);
     
     // Filtering Logic
-    const filteredItems = activeCategory === "all" ? effectiveItems : effectiveItems.filter(i => i.category.toLowerCase() === activeCategory);
+    const filteredItems = activeCategory === "all"
+        ? effectiveItems
+        : effectiveItems.filter(i => normalizeCategoryKey(i.category) === activeCategory);
     
     const recommendedItems = filteredItems.filter(i => i.is_recommended);
     const comboItems = filteredItems.filter(i => i.is_combo && !i.is_recommended);
@@ -337,8 +343,8 @@ export default function RestaurantPage() {
                             className="space-y-12"
                         >
                             <CategoryHeroHeader 
-                                name={activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)} 
-                                tagline={currentCategoryTheme.tagline}
+                                name={activeCategoryRecord?.name || formatCategoryName(activeCategory)} 
+                                tagline={activeCategoryRecord?.description || currentCategoryTheme.tagline}
                                 theme={theme}
                                 onBack={() => setView('discovery')}
                             />
@@ -386,7 +392,7 @@ export default function RestaurantPage() {
                                                 image={item.image_url}
                                                 isPopular={item.is_popular}
                                                 isRecommended={item.is_recommended}
-                                                theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
+                                                theme={CATEGORY_THEMES[normalizeCategoryKey(item.category)] || CATEGORY_THEMES.all}
                                                 onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
                                                 quantity={cart[item.id] || 0}
                                                 onAdd={() => addToCart(item)}
@@ -417,7 +423,7 @@ export default function RestaurantPage() {
                                                 image={item.image_url}
                                                 isPopular={item.is_popular}
                                                 isRecommended={item.is_recommended}
-                                                theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
+                                                theme={CATEGORY_THEMES[normalizeCategoryKey(item.category)] || CATEGORY_THEMES.all}
                                                 onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
                                                 quantity={cart[item.id] || 0}
                                                 onAdd={() => addToCart(item)}
@@ -431,7 +437,7 @@ export default function RestaurantPage() {
                             {/* Full List Section */}
                             <section className="space-y-8">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 px-1">
-                                    {activeCategory === 'all' ? 'Full Menu' : `Other ${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)}`}
+                                    {activeCategory === 'all' ? 'Full Menu' : `Other ${activeCategoryRecord?.name || formatCategoryName(activeCategory)}`}
                                 </h3>
                                 <div className="space-y-12">
                                     {normalItems.map((item) => (
@@ -444,7 +450,7 @@ export default function RestaurantPage() {
                                             image={item.image_url}
                                             isPopular={item.is_popular}
                                             isRecommended={item.is_recommended}
-                                            theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
+                                            theme={CATEGORY_THEMES[normalizeCategoryKey(item.category)] || CATEGORY_THEMES.all}
                                             onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
                                             quantity={cart[item.id] || 0}
                                             onAdd={() => addToCart(item)}

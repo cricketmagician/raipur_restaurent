@@ -9,7 +9,7 @@ import { getDirectImageUrl } from "@/utils/image";
 import { ImpulseBottomSheet } from "@/components/ImpulseBottomSheet";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequests, addSupabaseRequest, useSpecialOffers, useCart, useSupabaseMenuItems } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequests, addSupabaseRequest, useSpecialOffers, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { Toast } from "@/components/Toast";
 import { ComboCard } from "@/components/ComboCard";
@@ -21,7 +21,6 @@ import { CartOverlay } from "@/components/CartOverlay";
 import { SHARED_COMBOS } from "@/utils/constants";
 import { getTimeTheme, CATEGORY_THEMES, useTheme } from "@/utils/themes";
 import { StoryOverlay } from "@/components/StoryOverlay";
-import { GlobalHeader } from "@/components/GlobalHeader";
 import { TrendingNow } from "@/components/TrendingNow";
 import { PerfectPairs } from "@/components/PerfectPairs";
 import { MoodSection } from "@/components/MoodSection";
@@ -44,6 +43,7 @@ export default function GuestDashboard() {
 
     const { roomNumber: tableNumber, checkedInAt, numGuests } = useGuestRoom();
     const { branding, loading } = useHotelBranding(hotelSlug);
+    const { categories: menuCategories } = useMenuCategories(branding?.id);
     const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id);
     const requests = useSupabaseRequests(branding?.id, tableNumber, checkedInAt);
     const timeTheme = getTimeTheme();
@@ -106,16 +106,19 @@ export default function GuestDashboard() {
         };
     }, []);
 
-    const categories = [
-        { id: "all", name: "All", icon: "🍱" },
-        { id: "burgers", name: "Burgers", icon: "🍔" },
-        { id: "fries", name: "Fries", icon: "🍟" },
-        { id: "sides", name: "Sides", icon: "🥗" },
-        { id: "drinks", name: "Drinks", icon: "🥤" },
-        { id: "desserts", name: "Desserts", icon: "🍰" },
-    ];
-
     const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
+    const categoryRecords = useMemo(() => {
+        const activeCategories = menuCategories.filter((category) => category.is_active !== false);
+        return activeCategories.length > 0 ? activeCategories : deriveMenuCategories(menuItems);
+    }, [menuCategories, menuItems]);
+    const categories = useMemo(() => ([
+        { id: "all", name: "All", icon: "🍱" },
+        ...categoryRecords.map((category) => ({
+            id: normalizeCategoryKey(category.slug || category.name),
+            name: category.name,
+            icon: category.icon_emoji || "🍽️",
+        })),
+    ]), [categoryRecords]);
 
 
     const stories = [
@@ -213,7 +216,7 @@ export default function GuestDashboard() {
         return enriched as any[];
     }, [requests, menuItems]);
 
-    const filteredItems = (activeCategory === "all" ? menuItemsWithSales : menuItemsWithSales.filter(i => i.category === activeCategory))
+    const filteredItems = (activeCategory === "all" ? menuItemsWithSales : menuItemsWithSales.filter(i => normalizeCategoryKey(i.category) === activeCategory))
         .filter(item => {
             if (hungerLevel === 'light') return item.price < 300; // Prefer snacks/drinks
             if (hungerLevel === 'very-hungry') return item.price > 150; // Prefer filling meals

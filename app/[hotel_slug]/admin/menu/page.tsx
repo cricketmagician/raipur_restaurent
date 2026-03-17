@@ -3,7 +3,20 @@
 import React, { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Plus, Edit, Trash2, Utensils, Palette, X, RefreshCw, Check, Image as ImageIcon, Sparkles, LayoutGrid, List, Eye } from "lucide-react";
-import { useHotelBranding, useSupabaseMenuItems, saveSupabaseMenuItem, deleteSupabaseMenuItem, MenuItem } from "@/utils/store";
+import {
+    useHotelBranding,
+    useSupabaseMenuItems,
+    saveSupabaseMenuItem,
+    deleteSupabaseMenuItem,
+    MenuItem,
+    MenuCategory,
+    useMenuCategories,
+    saveMenuCategory,
+    deleteMenuCategory,
+    deriveMenuCategories,
+    normalizeCategoryKey,
+    formatCategoryName,
+} from "@/utils/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { MenuCard } from "@/components/MenuCard";
 import { CATEGORY_THEMES } from "@/utils/themes";
@@ -14,18 +27,39 @@ export default function MenuPage() {
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
     const { menuItems, loading } = useSupabaseMenuItems(branding?.id);
+    const { categories, loading: categoriesLoading } = useMenuCategories(branding?.id);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [editingItem, setEditingItem] = useState<Partial<MenuItem> | null>(null);
+    const [editingCategory, setEditingCategory] = useState<Partial<MenuCategory> | null>(null);
     const [viewMode, setViewMode] = useState<'sections' | 'list'>('sections');
 
-    const categories = ["Burgers", "Pizzas", "Fries", "Sides", "Drinks", "Desserts", "Combos"];
+    const categoryRecords = useMemo(() => {
+        const activeCategories = categories.filter((category) => category.is_active !== false);
+        return activeCategories.length > 0 ? activeCategories : deriveMenuCategories(menuItems);
+    }, [categories, menuItems]);
+
+    const categoryLookup = useMemo(() => {
+        return categoryRecords.reduce<Record<string, MenuCategory>>((acc, category) => {
+            acc[normalizeCategoryKey(category.slug || category.name)] = category;
+            return acc;
+        }, {});
+    }, [categoryRecords]);
+
+    const itemCountByCategory = useMemo(() => {
+        return menuItems.reduce<Record<string, number>>((acc, item) => {
+            const key = normalizeCategoryKey(item.category);
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {});
+    }, [menuItems]);
 
     const itemsByCategory = useMemo(() => {
         const groups: Record<string, MenuItem[]> = {};
         menuItems.forEach(item => {
-            const cat = (item.category || "Uncategorized").toLowerCase();
+            const cat = normalizeCategoryKey(item.category);
             if (!groups[cat]) groups[cat] = [];
             groups[cat].push(item);
         });
@@ -43,10 +77,39 @@ export default function MenuPage() {
         setEditingItem(null);
     };
 
+    const handleSaveCategory = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!branding?.id || !editingCategory?.name) return;
+
+        setIsSaving(true);
+        const { error } = await saveMenuCategory(branding.id, editingCategory);
+        setIsSaving(false);
+        if (error) {
+            alert(`Category save failed: ${error.message || "Please run the latest SQL schema update."}`);
+            return;
+        }
+        setIsCategoryModalOpen(false);
+        setEditingCategory(null);
+    };
+
     const handleDelete = async (id: string) => {
         if (!branding?.id) return;
         if (confirm("Delete this menu item?")) {
             await deleteSupabaseMenuItem(id, branding.id);
+        }
+    };
+
+    const handleDeleteCategory = async (category: MenuCategory) => {
+        const categoryKey = normalizeCategoryKey(category.slug || category.name);
+        const linkedItems = itemCountByCategory[categoryKey] || 0;
+
+        if (linkedItems > 0) {
+            alert(`This category still has ${linkedItems} menu items. Please move or delete those items first.`);
+            return;
+        }
+
+        if (confirm(`Delete category "${category.name}"?`)) {
+            await deleteMenuCategory(category.id);
         }
     };
 
@@ -84,7 +147,22 @@ export default function MenuPage() {
 
                     <button
                         onClick={() => {
-                            setEditingItem({ category: "Burgers", is_available: true, upsell_items: [] });
+                            setEditingCategory({
+                                name: "",
+                                icon_emoji: "🍽️",
+                                sort_order: categoryRecords.length,
+                                is_active: true,
+                            });
+                            setIsCategoryModalOpen(true);
+                        }}
+                        className="bg-white text-[#3E2723] px-6 py-4 rounded-[1.5rem] font-black text-sm border border-slate-100 shadow-sm hover:scale-[1.02] transition-all flex items-center active:scale-95"
+                    >
+                        <Palette className="w-4 h-4 mr-3 opacity-50" /> Manage Categories
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            setEditingItem({ category: categoryRecords[0]?.slug || "uncategorized", is_available: true, upsell_items: [] });
                             setIsModalOpen(true);
                         }}
                         className="bg-[#3E2723] text-[#FFF8F2] px-8 py-4 rounded-[1.5rem] font-serif italic text-lg shadow-2xl shadow-[#3E2723]/20 hover:scale-[1.02] transition-all flex items-center active:scale-95"
@@ -94,25 +172,119 @@ export default function MenuPage() {
                 </div>
             </div>
 
-            {loading ? (
+            {(loading || categoriesLoading) ? (
                 <div className="flex flex-col items-center justify-center h-[50vh] text-slate-300">
                     <RefreshCw className="w-12 h-12 animate-spin mb-4 opacity-20" />
                     <p className="font-black uppercase tracking-[0.3em] text-[10px]">Syncing with Kitchen...</p>
                 </div>
             ) : viewMode === 'sections' ? (
                 <div className="space-y-16">
-                    {categories.map(category => (
-                        <div key={category} className="space-y-8">
+                    <section className="space-y-6">
+                        <div className="flex items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-2xl font-serif italic text-[#3E2723]">Category Studio</h2>
+                                <p className="text-slate-500 font-medium">Create visual categories first, then attach dishes under them.</p>
+                            </div>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                {categoryRecords.length} Active Categories
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                            {categoryRecords.map((category) => {
+                                const categoryKey = normalizeCategoryKey(category.slug || category.name);
+                                const itemCount = itemCountByCategory[categoryKey] || 0;
+
+                                return (
+                                    <div
+                                        key={category.id}
+                                        className="bg-white rounded-[2.5rem] p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all group"
+                                    >
+                                        <div className="aspect-[4/3] bg-slate-50 rounded-[2rem] overflow-hidden mb-5 relative">
+                                            {category.image_url ? (
+                                                <img
+                                                    src={getDirectImageUrl(category.image_url)}
+                                                    alt={category.name}
+                                                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                                                    <span className="text-4xl mb-2">{category.icon_emoji || "🍽️"}</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.3em]">No Cover Yet</span>
+                                                </div>
+                                            )}
+                                            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-[#3E2723]">
+                                                {itemCount} items
+                                            </div>
+                                        </div>
+
+                                        <div className="mb-5">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <span className="text-2xl">{category.icon_emoji || "🍽️"}</span>
+                                                <h3 className="text-xl font-serif italic text-[#3E2723]">{category.name}</h3>
+                                            </div>
+                                            <p className="text-sm text-slate-500 line-clamp-2">
+                                                {category.description || `${category.name} section for your restaurant menu.`}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => {
+                                                    setEditingCategory(category.id.startsWith("derived-") ? {
+                                                        name: category.name,
+                                                        description: category.description,
+                                                        image_url: category.image_url,
+                                                        icon_emoji: category.icon_emoji,
+                                                        sort_order: category.sort_order,
+                                                        is_active: true,
+                                                    } : category);
+                                                    setIsCategoryModalOpen(true);
+                                                }}
+                                                className="flex-1 bg-slate-50 hover:bg-[#3E2723] hover:text-white py-3 rounded-xl transition-all flex items-center justify-center space-x-2"
+                                            >
+                                                <Edit className="w-3.5 h-3.5" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Edit</span>
+                                            </button>
+                                            {category.id.startsWith("derived-") ? null : (
+                                                <button
+                                                    onClick={() => handleDeleteCategory(category)}
+                                                    className="p-3 text-slate-300 hover:text-red-500 transition-colors"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </section>
+
+                    {categoryRecords.map((category) => {
+                        const categoryKey = normalizeCategoryKey(category.slug || category.name);
+                        return (
+                        <div key={category.id} className="space-y-8">
                             <div className="flex items-center space-x-4 px-2">
-                                <h2 className="text-2xl font-serif italic text-[#3E2723]">{category}</h2>
+                                <div className="w-12 h-12 rounded-2xl bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
+                                    {category.image_url ? (
+                                        <img src={getDirectImageUrl(category.image_url)} alt={category.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-xl">{category.icon_emoji || "🍽️"}</span>
+                                    )}
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-serif italic text-[#3E2723]">{category.name}</h2>
+                                    <p className="text-xs font-medium text-slate-400">{category.description || "Menu section"}</p>
+                                </div>
                                 <div className="h-[1px] flex-1 bg-slate-100" />
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                    {itemsByCategory[category.toLowerCase()]?.length || 0} Items
+                                    {itemsByCategory[categoryKey]?.length || 0} Items
                                 </span>
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                                {itemsByCategory[category.toLowerCase()]?.map(item => (
+                                {itemsByCategory[categoryKey]?.map(item => (
                                     <motion.div 
                                         key={item.id}
                                         layout
@@ -161,17 +333,17 @@ export default function MenuPage() {
                                 
                                 <button 
                                     onClick={() => {
-                                        setEditingItem({ category, is_available: true, upsell_items: [] });
+                                        setEditingItem({ category: categoryKey, is_available: true, upsell_items: [] });
                                         setIsModalOpen(true);
                                     }}
                                     className="rounded-[2.5rem] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center p-12 text-slate-300 hover:bg-slate-50 hover:border-slate-200 transition-all hover:text-[#3E2723] group"
                                 >
                                     <Plus className="w-8 h-8 mb-4 opacity-50 group-hover:scale-110 transition-transform" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">New {category}</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">New {category.name}</span>
                                 </button>
                             </div>
                         </div>
-                    ))}
+                    )})}
                 </div>
             ) : (
                 <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
@@ -190,13 +362,13 @@ export default function MenuPage() {
                             <tr key={item.id} className="border-b border-slate-50 last:border-none hover:bg-slate-50/20 transition-colors">
                                 <td className="p-8">
                                     <span className="bg-[#3E2723]/5 text-[#3E2723] px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">
-                                        {item.category}
+                                        {categoryLookup[normalizeCategoryKey(item.category)]?.name || formatCategoryName(item.category)}
                                     </span>
                                 </td>
                                 <td className="p-8">
                                     <div className="flex items-center">
                                         <div className="w-12 h-12 rounded-2xl bg-slate-50 overflow-hidden mr-4">
-                                            {item.image_url ? <img src={getDirectImageUrl(item.image_url)} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-200"><Utensils className="w-6 h-6" /></div>}
+                                            {item.image_url ? <img src={getDirectImageUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-200"><Utensils className="w-6 h-6" /></div>}
                                         </div>
                                         <div>
                                             <p className="font-serif italic text-lg text-[#3E2723]">{item.title}</p>
@@ -249,11 +421,15 @@ export default function MenuPage() {
                                         <div className="space-y-3">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Category & Theme</label>
                                             <select
-                                                value={editingItem?.category || "Burgers"}
+                                                value={editingItem?.category || categoryRecords[0]?.slug || "uncategorized"}
                                                 onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
                                                 className="w-full bg-[#3E2723]/5 border-none rounded-2xl py-5 px-6 font-serif italic text-lg text-[#3E2723] focus:ring-2 focus:ring-[#3E2723]/10 transition-all outline-none"
                                             >
-                                                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                                                {categoryRecords.map((category) => (
+                                                    <option key={category.id} value={category.slug}>
+                                                        {category.name}
+                                                    </option>
+                                                ))}
                                             </select>
                                         </div>
                                         <div className="space-y-3">
@@ -328,7 +504,7 @@ export default function MenuPage() {
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <div className="w-6 h-6 rounded-md bg-slate-100 overflow-hidden">
-                                                                {item.image_url && <img src={getDirectImageUrl(item.image_url)} className="w-full h-full object-cover" />}
+                                                                {item.image_url && <img src={getDirectImageUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover" />}
                                                             </div>
                                                             <span className="text-xs font-medium text-slate-600 group-hover/pair:text-[#3E2723]">{item.title}</span>
                                                             <span className="text-[9px] font-black text-[#F59E0B]">₹{item.price}</span>
@@ -409,7 +585,7 @@ export default function MenuPage() {
                                             image={editingItem?.image_url}
                                             isPopular={editingItem?.is_popular}
                                             isRecommended={editingItem?.is_recommended}
-                                            theme={CATEGORY_THEMES[(editingItem?.category || "burgers").toLowerCase()] || CATEGORY_THEMES.all}
+                                            theme={CATEGORY_THEMES[normalizeCategoryKey(editingItem?.category || "burgers")] || CATEGORY_THEMES.all}
                                         />
                                     </div>
                                     
@@ -418,12 +594,133 @@ export default function MenuPage() {
                                             <div className="w-10 h-10 rounded-xl bg-[#3E2723]/5 flex items-center justify-center"><Eye className="w-4 h-4 text-[#3E2723]" /></div>
                                             <div>
                                                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">Psychology Applied</p>
-                                                <p className="text-[10px] font-serif italic text-slate-600">The "{CATEGORY_THEMES[(editingItem?.category || "burgers").toLowerCase()]?.emotion}" trigger is active.</p>
+                                                <p className="text-[10px] font-serif italic text-slate-600">The "{CATEGORY_THEMES[normalizeCategoryKey(editingItem?.category || "burgers")]?.emotion}" trigger is active.</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {isCategoryModalOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-[#3E2723]/50 backdrop-blur-lg">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.94, y: 30 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.94, y: 30 }}
+                            className="w-full max-w-2xl bg-white rounded-[3rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] overflow-hidden"
+                        >
+                            <div className="p-10 border-b border-slate-100 flex items-start justify-between gap-6">
+                                <div>
+                                    <h3 className="text-3xl font-serif italic text-[#3E2723] mb-2">
+                                        {editingCategory?.id ? "Refine Category" : "Create Category"}
+                                    </h3>
+                                    <p className="text-slate-500 font-medium">Control the structure guests see before they browse dishes.</p>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setIsCategoryModalOpen(false);
+                                        setEditingCategory(null);
+                                    }}
+                                    className="p-3 hover:bg-slate-50 rounded-full transition-all"
+                                >
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleSaveCategory} className="p-10 space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Category Name</label>
+                                        <input
+                                            type="text"
+                                            value={editingCategory?.name || ""}
+                                            onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                                            className="w-full bg-[#3E2723]/5 border-none rounded-2xl py-4 px-5 font-serif italic text-xl text-[#3E2723] outline-none"
+                                            placeholder="Burgers"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Icon Emoji</label>
+                                        <input
+                                            type="text"
+                                            value={editingCategory?.icon_emoji || ""}
+                                            onChange={(e) => setEditingCategory({ ...editingCategory, icon_emoji: e.target.value })}
+                                            className="w-full bg-[#3E2723]/5 border-none rounded-2xl py-4 px-5 text-lg text-[#3E2723] outline-none"
+                                            placeholder="🍔"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Category Description</label>
+                                    <textarea
+                                        value={editingCategory?.description || ""}
+                                        onChange={(e) => setEditingCategory({ ...editingCategory, description: e.target.value })}
+                                        className="w-full bg-[#3E2723]/5 border-none rounded-2xl py-4 px-5 font-medium text-slate-600 outline-none h-28 resize-none"
+                                        placeholder="Crispy, juicy crowd-favourites with bold flavours."
+                                    />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Category Cover Image URL</label>
+                                    <input
+                                        type="text"
+                                        value={editingCategory?.image_url || ""}
+                                        onChange={(e) => setEditingCategory({ ...editingCategory, image_url: e.target.value })}
+                                        className="w-full bg-[#3E2723]/5 border-none rounded-2xl py-4 px-5 text-sm font-medium text-slate-600 outline-none"
+                                        placeholder="https://images.unsplash.com/..."
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Display Order</label>
+                                        <input
+                                            type="number"
+                                            value={editingCategory?.sort_order ?? 0}
+                                            onChange={(e) => setEditingCategory({ ...editingCategory, sort_order: parseInt(e.target.value || "0", 10) })}
+                                            className="w-full bg-[#3E2723]/5 border-none rounded-2xl py-4 px-5 text-sm font-medium text-slate-600 outline-none"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingCategory({ ...editingCategory, is_active: !(editingCategory?.is_active ?? true) })}
+                                        className={`mt-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all border-2 ${
+                                            (editingCategory?.is_active ?? true)
+                                                ? 'bg-green-50 text-green-600 border-green-200'
+                                                : 'bg-slate-50 text-slate-400 border-slate-100'
+                                        }`}
+                                    >
+                                        {(editingCategory?.is_active ?? true) ? "Active on Guest UI" : "Hidden from Guest UI"}
+                                    </button>
+                                </div>
+
+                                <div className="flex gap-4 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsCategoryModalOpen(false);
+                                            setEditingCategory(null);
+                                        }}
+                                        className="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black uppercase tracking-[0.2em] text-[10px]"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isSaving}
+                                        className="flex-[2] py-4 rounded-2xl bg-[#3E2723] text-[#FFF8F2] font-serif italic text-xl shadow-xl disabled:opacity-50"
+                                    >
+                                        {isSaving ? "Saving..." : (editingCategory?.id ? "Update Category" : "Create Category")}
+                                    </button>
+                                </div>
+                            </form>
                         </motion.div>
                     </div>
                 )}

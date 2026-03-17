@@ -18,14 +18,14 @@ export const GUEST_THEMES: Record<GuestTheme['id'], GuestTheme> = {
         id: 'CAFE',
         primary: "#3C2A21", // Dark Coffee Bean
         secondary: "#EADBC8", // Warm Cream/Beige
-        accent: "#8B4513", // Saddle Brown (Rich wood/coffee)
+        accent: "#D97706", // Amber 600 for premium pop
         background: "#FDFBF7", // Ultra-warm parchment
         surface: "#FFFFFF",
-        text: "#3C2A21",
+        text: "#1F1F1F", // Darker for readability
         textMuted: "#6B7280",
-        fontSans: "Inter, sans-serif",
+        fontSans: "Outfit, Inter, sans-serif",
         fontSerif: "Playfair Display, serif",
-        radius: "2.5rem",
+        radius: "1.5rem",
         animation: 'smooth'
     },
     FINE_DINE: {

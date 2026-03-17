@@ -38,24 +38,24 @@ export function GlobalHeader() {
         <motion.header 
             initial={{ y: -100 }}
             animate={{ y: 0 }}
-            className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[460px] z-[100] transition-all duration-500 py-4`}
+            className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[460px] z-[100] transition-all duration-500 py-3`}
             style={{ 
-                backgroundColor: scrolled ? `${theme.surface}f2` : "transparent", // f2 is ~95% opacity
-                backdropFilter: scrolled ? "blur(20px)" : "none",
-                boxShadow: scrolled ? "0 8px 30px rgba(0,0,0,0.04)" : "none",
-                borderBottom: scrolled ? `1px solid ${theme.primary}10` : "none"
+                backgroundColor: scrolled ? "rgba(255, 255, 255, 0.4)" : "transparent",
+                backdropFilter: scrolled ? "blur(30px) saturate(180%)" : "none",
+                boxShadow: scrolled ? "0 10px 40px rgba(0,0,0,0.06)" : "none",
+                borderBottom: scrolled ? "1px solid rgba(255,255,255,0.3)" : "none"
             }}
         >
             <div className="flex flex-col gap-4">
                 {/* Row 1: Menu (Left), Branding (Center), Cart (Right) */}
-                <div className="px-3.5 flex items-center justify-between gap-3">
+                <div className="px-4 flex items-center justify-between gap-3">
                     {/* Left: Menu & Utility Dropdown */}
                     <div className="flex-shrink-0 relative">
                         <button 
                             onClick={() => setShowUtility(!showUtility)}
-                            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-95 border border-slate-100 shadow-sm`}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 border border-white/40 shadow-sm backdrop-blur-md`}
                             style={{ 
-                                backgroundColor: showUtility ? theme.primary : "white",
+                                backgroundColor: showUtility ? theme.primary : "rgba(255,255,255,0.6)",
                                 color: showUtility ? "white" : theme.primary
                             }}
                         >
@@ -65,41 +65,33 @@ export function GlobalHeader() {
                         <AnimatePresence>
                             {showUtility && (
                                 <motion.div 
-                                    initial={{ opacity: 0, y: 10, scale: 0.95, x: 0 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1, x: 0 }}
-                                    exit={{ opacity: 0, y: 10, scale: 0.95, x: 0 }}
-                                    className="absolute top-13 left-0 w-52 bg-white rounded-[1.8rem] shadow-[0_20px_60px_-15px_rgba(0,33,30,0.15)] border border-[#00704A]/5 overflow-hidden py-2 z-[110]"
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    className="absolute top-12 left-0 w-52 bg-white/90 backdrop-blur-3xl rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/50 overflow-hidden py-2 z-[110]"
                                 >
-                                    <div className="px-5 py-3 border-b border-slate-50 mb-1.5">
-                                        <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: theme.primary }}>Guest Selection</p>
+                                    <div className="px-5 py-3 border-b border-black/5 mb-1.5">
+                                        <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">Guest Selection</p>
                                     </div>
                                     <button 
                                         onClick={() => openQuickActions("waiter")}
-                                        className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-black/5 transition-colors group"
+                                        className="w-full px-5 py-3 flex items-center justify-between hover:bg-black/5 transition-colors group"
                                     >
                                         <div className="flex items-center space-x-3">
-                                            <Bell className="w-4.5 h-4.5" style={{ color: theme.primary }} />
-                                            <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: theme.text }}>Call Host</span>
+                                            <Bell className="w-4 h-4" style={{ color: theme.primary }} />
+                                            <span className="text-[10px] font-bold uppercase tracking-widest">Call Host</span>
                                         </div>
-                                        <ChevronRight className="w-3 h-3 opacity-30" style={{ color: theme.primary }} />
+                                        <ChevronRight className="w-3 h-3 opacity-20" />
                                     </button>
                                     <button 
                                         onClick={() => openQuickActions("water")}
-                                        className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-black/5 transition-colors group"
+                                        className="w-full px-5 py-3 flex items-center justify-between hover:bg-black/5 transition-colors group"
                                     >
                                         <div className="flex items-center space-x-3">
-                                            <Droplets className="w-4.5 h-4.5" style={{ color: theme.primary }} />
-                                            <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: theme.text }}>Hydration</span>
+                                            <Droplets className="w-4 h-4" style={{ color: theme.primary }} />
+                                            <span className="text-[10px] font-bold uppercase tracking-widest">Hydration</span>
                                         </div>
-                                        <ChevronRight className="w-3 h-3 opacity-30" style={{ color: theme.primary }} />
-                                    </button>
-                                    <div className="h-px bg-slate-50 my-2" />
-                                    <button 
-                                        onClick={() => { router.push(`/${hotelSlug}/guest/profile`); setShowUtility(false); }}
-                                        className="w-full px-5 py-3.5 flex items-center space-x-3 hover:bg-black/5 transition-colors"
-                                    >
-                                        <User className="w-4.5 h-4.5" style={{ color: `${theme.text}66` }} />
-                                        <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: theme.text }}>My Identity</span>
+                                        <ChevronRight className="w-3 h-3 opacity-20" />
                                     </button>
                                 </motion.div>
                             )}
@@ -108,23 +100,23 @@ export function GlobalHeader() {
 
                     {/* Center: Compact Mode Toggle */}
                     <div className="flex-1 flex justify-center">
-                        <div className="flex bg-slate-100/50 p-1 rounded-full border border-slate-100 backdrop-blur-md">
+                        <div className="flex bg-white/40 p-1 rounded-full border border-white/60 backdrop-blur-xl shadow-sm">
                             <button 
                                 onClick={switchToDineIn}
-                                className={`px-3.5 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.18em] transition-all duration-300 ${
+                                className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
                                     orderMode === "dine-in"
-                                    ? 'bg-white text-slate-900 shadow-sm' 
-                                    : 'text-slate-400 hover:text-slate-600'
+                                    ? 'bg-white text-black shadow-sm' 
+                                    : 'text-black/40 hover:text-black/60'
                                 }`}
                             >
                                 Dine-In
                             </button>
                             <button 
                                 onClick={switchToTakeaway}
-                                className={`px-3.5 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.18em] transition-all duration-300 ${
+                                className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
                                     orderMode === "takeaway"
-                                    ? 'bg-white text-slate-900 shadow-sm' 
-                                    : 'text-slate-400 hover:text-slate-600'
+                                    ? 'bg-white text-black shadow-sm' 
+                                    : 'text-black/40 hover:text-black/60'
                                 }`}
                             >
                                 Takeaway

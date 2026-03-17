@@ -12,8 +12,8 @@ interface LoyaltySignInProps {
     onClose: () => void;
     onSignIn: (phone: string, name: string) => void;
     lastVisitAt?: string | null;
-    guestName?: string | null;
-    guestPhone?: string | null;
+    initialName?: string | null;
+    initialPhone?: string | null;
 }
 
 const formatLastVisit = (value?: string | null) => {
@@ -28,22 +28,22 @@ const formatLastVisit = (value?: string | null) => {
     });
 };
 
-export function LoyaltySignIn({ isOpen, onClose, onSignIn, lastVisitAt, guestName, guestPhone }: LoyaltySignInProps) {
+export function LoyaltySignIn({ isOpen, onClose, onSignIn, lastVisitAt, initialName, initialPhone }: LoyaltySignInProps) {
     const params = useParams();
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
     const theme = useTheme(branding);
 
-    const [phone, setPhone] = useState(guestPhone || "");
-    const [name, setName] = useState(guestName || "");
+    const [phone, setPhone] = useState(initialPhone || "");
+    const [name, setName] = useState(initialName || "");
     const [step, setStep] = useState(1);
 
     React.useEffect(() => {
         if (!isOpen) return;
-        setPhone(guestPhone || "");
-        setName(guestName || "");
-        setStep(guestPhone ? 2 : 1);
-    }, [isOpen, guestPhone, guestName]);
+        setPhone(initialPhone || "");
+        setName(initialName || "");
+        setStep(initialPhone ? 2 : 1);
+    }, [isOpen, initialPhone, initialName]);
 
     const handleContinue = () => {
         if (step === 1 && phone.length >= 10) {

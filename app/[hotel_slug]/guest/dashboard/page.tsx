@@ -432,28 +432,34 @@ export default function GuestDashboard() {
                 }}
             />
             {/* 1. Premium Hero Section */}
-            <div className="absolute top-0 left-0 right-0 h-[45vh] overflow-hidden -z-10 bg-black">
+            <div className="absolute top-0 left-0 right-0 h-[38vh] overflow-hidden -z-10 bg-black">
                 <img 
                     src={getDirectImageUrl(branding?.heroImage) || "/images/branding/hero.png"} 
                     alt="Hotel Interior" 
-                    className="w-full h-full object-cover opacity-80 scale-105" // Increased opacity
+                    className="w-full h-full object-cover opacity-70 scale-100" // Reduced opacity and scale for stability
                 />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-background" />
             </div>
 
-            {/* 2. Floating Hotel Information Card (Thin Glass Bar) */}
+            {/* 2. Floating Hotel Information Card (Ultra-Thin Glass Bar) */}
             <motion.div 
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="mt-[32vh] mb-12 bg-white/20 backdrop-blur-3xl p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] relative overflow-hidden group"
+                className="mt-[28vh] mb-10 bg-white/10 backdrop-blur-2xl px-6 py-4 shadow-sm relative overflow-hidden group border border-white/20"
                 style={{ 
-                    borderRadius: "2rem",
-                    border: "1px solid rgba(255,255,255,0.2)"
+                    borderRadius: "1rem"
                 }}
             >
-                <div className="relative z-10 flex items-center justify-center">
-                    <h1 className="text-2xl font-black text-white tracking-[0.2em] uppercase leading-none drop-shadow-md">
-                        {branding?.name || "HOTEL TEEKLOVE"}
-                    </h1>
+                <div className="relative z-10 flex items-center justify-between">
+                    <div>
+                        <h1 className="text-lg font-black text-white tracking-[0.25em] uppercase leading-none">
+                            {branding?.name || "HOTEL TEEKLOVE"}
+                        </h1>
+                        <div className="flex items-center gap-2 mt-1.5 opacity-60">
+                            <Utensils className="w-2.5 h-2.5 text-white" />
+                            <span className="text-[8px] font-bold text-white uppercase tracking-widest">{branding?.guestTheme === 'FINE_DINE' ? 'Fine Dining' : 'Urban Cafe'}</span>
+                        </div>
+                    </div>
                 </div>
             </motion.div>
 
@@ -468,31 +474,29 @@ export default function GuestDashboard() {
                         </h3>
                         <span className="text-[8px] font-black uppercase tracking-[0.3em] opacity-30">Swipe to Explore</span>
                     </div>
-                    <div className="flex space-x-5 overflow-x-auto no-scrollbar pb-6 -mx-6 px-6">
+                    <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-8 -mx-6 px-6">
                         {stories.map((story, index) => (
                             <motion.div 
                                 key={story.id}
                                 whileTap={{ scale: 0.96, rotate: -1 }}
                                 onClick={() => setStoryConfig({ isVisible: true, initialIndex: index })}
-                                className="flex-none w-40 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-2 cursor-pointer group relative active:shadow-sm transition-all duration-300"
+                                className="flex-none w-[120px] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.2)] cursor-pointer group relative active:shadow-sm transition-all duration-300 border border-white/10"
                                 style={{ 
                                     backgroundColor: theme.surface,
-                                    borderColor: `${theme.primary}08`,
-                                    borderRadius: "2.5rem"
+                                    borderRadius: "1rem"
                                 }}
                             >
-                                <div className="aspect-[3/4] overflow-hidden relative">
+                                <div className="aspect-[9/16] overflow-hidden relative">
                                     <img src={getDirectImageUrl(story.image_url)} alt={story.label} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/20" />
                                     
-                                    <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600 px-2.5 py-1 rounded-full border border-white/20 shadow-lg scale-90 origin-left">
-                                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                                        <span className="text-[8px] font-black text-white uppercase tracking-widest">{story.type || 'LIVE'}</span>
+                                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/20 scale-90 origin-left">
+                                        <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse" />
+                                        <span className="text-[7px] font-black text-white uppercase tracking-widest">{story.type || 'LIVE'}</span>
                                     </div>
 
-                                    <div className="absolute bottom-5 left-5 right-5">
-                                        <p className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] mb-1">Seasonal Highlight</p>
-                                        <h4 className="text-sm font-black text-white leading-tight uppercase tracking-widest">{story.label}</h4>
+                                    <div className="absolute bottom-4 left-4 right-4">
+                                        <h4 className="text-[10px] font-black text-white leading-tight uppercase tracking-widest">{story.label}</h4>
                                     </div>
                                 </div>
                             </motion.div>
@@ -685,9 +689,9 @@ export default function GuestDashboard() {
                 isOpen={isLoyaltyOpen}
                 onClose={() => setIsLoyaltyOpen(false)}
                 onSignIn={handleLoyaltySignIn}
-                guestName={loyaltyProfile?.name || ""}
-                guestPhone={loyaltyProfile?.phone || ""}
-                lastVisitAt={loyaltyProfile?.lastVisitAt || realLoyalty?.last_visit_at || null}
+                initialName={loyaltyProfile?.name}
+                initialPhone={loyaltyProfile?.phone}
+                lastVisitAt={loyaltyProfile?.lastVisitAt || realLoyalty?.last_visit_at}
             />
 
             <BottomNav />

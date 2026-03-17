@@ -43,7 +43,7 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                 </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex space-x-6 overflow-x-auto no-scrollbar pb-10 -mx-6 px-6 items-end">
                 {items.map((item, idx) => (
                     <motion.div
                         key={item.id}
@@ -52,74 +52,71 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                         transition={{ delay: idx * 0.08 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onItemClick(item.id)}
-                        className="overflow-hidden cursor-pointer relative group border shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-500"
+                        className="flex-none w-[82%] sm:w-[75%] overflow-hidden cursor-pointer relative group shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-white/10"
                         style={{ 
-                            borderRadius: theme.radius,
-                            backgroundColor: theme.surface,
-                            borderColor: `${theme.primary}05`
+                            borderRadius: "1.5rem",
+                            backgroundColor: "#000"
                         }}
                     >
-                        <div className="overflow-hidden relative aspect-[4/5]">
+                        <div className={`overflow-hidden relative ${idx === 0 ? 'aspect-[4/5]' : 'aspect-square'}`}>
                             <img 
                                 src={item.image} 
                                 alt={item.title} 
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 opacity-90" 
                             />
                             {/* Dark gradient overlay for text readability */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                             
                             {/* Social Proof Overlays */}
-                            <div className="absolute top-6 left-6 flex flex-col space-y-2">
-                                <span className="px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest shadow-xl border bg-white text-black border-white/20">
+                            <div className="absolute top-5 left-5">
+                                <span className="px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/10 backdrop-blur-md text-white border border-white/20">
                                     {item.tag}
-                                </span>
+                                </span >
                             </div>
 
-                            <div className="absolute bottom-8 left-8 right-8">
-                                <h4 className="text-[2rem] font-black tracking-tighter leading-[0.95] text-white mb-2 drop-shadow-lg line-clamp-3">
+                            <div className="absolute bottom-6 left-6 right-6">
+                                <h4 className="text-2xl font-black tracking-tight leading-none text-white mb-2">
                                     {item.title}
                                 </h4>
-                                <div className="flex items-center space-x-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                                        Most ordered this evening
+                                <div className="flex items-center space-x-2 opacity-60">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                    <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-400">
+                                        Elite Choice
                                     </span>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="p-5 sm:p-6">
-                            <div className="flex items-center justify-between">
-                                <span className="text-xl sm:text-2xl font-black" style={{ color: theme.text }}>₹{item.price}</span>
+                            {/* Floating Glass Control */}
+                            <div className="absolute top-5 right-5 flex flex-col items-center gap-2">
+                                <div className="bg-black/40 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/10">
+                                    <span className="text-sm font-black text-white">₹{item.price}</span>
+                                </div>
                                 
                                 {cart[item.menuItemId] > 0 ? (
                                     <div 
-                                        className="flex items-center justify-between rounded-full p-1 border min-w-[122px]"
-                                        style={{ backgroundColor: `${theme.primary}0a`, borderColor: `${theme.primary}1a` }}
+                                        className="flex flex-col items-center rounded-2xl bg-white/10 backdrop-blur-2xl border border-white/20 p-1"
                                         onClick={(e) => e.stopPropagation()}
                                     >
                                         <button 
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                onUpdateQuantity(item.menuItemId, cart[item.menuItemId] - 1);
+                                                onUpdateQuantity(item.menuItemId, cart[item.menuItemId] + 1);
                                             }}
-                                            className="w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm"
-                                            style={{ color: theme.primary, backgroundColor: theme.surface }}
+                                            className="w-10 h-10 rounded-xl flex items-center justify-center text-white bg-white/20"
                                         >
-                                            -
+                                            <Plus className="w-4 h-4" />
                                         </button>
-                                        <div className="flex-1 flex justify-center">
-                                            <span className="min-w-[34px] text-center text-xs font-black" style={{ color: theme.text }}>{cart[item.menuItemId]}</span>
+                                        <div className="py-2">
+                                            <span className="text-xs font-black text-white">{cart[item.menuItemId]}</span>
                                         </div>
                                         <button 
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                onUpdateQuantity(item.menuItemId, cart[item.menuItemId] + 1);
+                                                onUpdateQuantity(item.menuItemId, cart[item.menuItemId] - 1);
                                             }}
-                                            className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md"
-                                            style={{ backgroundColor: theme.primary }}
+                                            className="w-10 h-10 rounded-xl flex items-center justify-center text-white/40"
                                         >
-                                            +
+                                            -
                                         </button>
                                     </div>
                                 ) : (
@@ -129,10 +126,9 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                                             triggerFly(item.menuItemId, item.image, e);
                                             onUpdateQuantity(item.menuItemId, 1);
                                         }}
-                                        className="h-12 px-8 text-white rounded-full flex items-center justify-center shadow-xl active:scale-95 transition-all font-black text-xs uppercase tracking-widest"
-                                        style={{ backgroundColor: theme.primary }}
+                                        className="w-11 h-11 bg-white text-black rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition-all"
                                     >
-                                        Add to Bag
+                                        <Plus className="w-5 h-5" />
                                     </button>
                                 )}
                             </div>

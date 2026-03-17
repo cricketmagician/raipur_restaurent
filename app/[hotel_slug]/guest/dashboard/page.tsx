@@ -357,37 +357,22 @@ export default function GuestDashboard() {
                     alt="Hotel Interior" 
                     className="w-full h-full object-cover opacity-80 scale-105" // Increased opacity
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
             </div>
 
-            {/* 2. Floating Hotel Information Card (Glassmorphism) */}
+            {/* 2. Floating Hotel Information Card (Thin Glass Bar) */}
             <motion.div 
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="mt-[25vh] mb-10 bg-white/80 backdrop-blur-3xl p-10 shadow-2xl relative overflow-hidden group"
+                className="mt-[32vh] mb-12 bg-white/20 backdrop-blur-3xl p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] relative overflow-hidden group"
                 style={{ 
-                    borderRadius: "3rem",
-                    border: "1px solid rgba(255,255,255,0.4)"
+                    borderRadius: "2rem",
+                    border: "1px solid rgba(255,255,255,0.2)"
                 }}
             >
-                <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/5 rounded-full -mr-20 -mt-20 blur-3xl opacity-50" />
-                
-                <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">
-                            {branding?.name || "HOTEL TEEKLOVE"}
-                        </h1>
-                    </div>
-
-                    <div className="flex items-center space-x-1 mb-4 text-amber-500">
-                        {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-amber-500" />)}
-                    </div>
-
-                    <div className="flex items-center text-slate-400 text-sm font-bold opacity-80 mb-10">
-                        <MapPin className="w-4 h-4 mr-2 text-slate-400" />
-                        Raipur, India
-                    </div>
-
+                <div className="relative z-10 flex items-center justify-center">
+                    <h1 className="text-2xl font-black text-white tracking-[0.2em] uppercase leading-none drop-shadow-md">
+                        {branding?.name || "HOTEL TEEKLOVE"}
+                    </h1>
                 </div>
             </motion.div>
 

@@ -336,40 +336,6 @@ export default function GuestDashboard() {
                 </section>
             </main>
 
-            {/* 6. STICKY CART (Starbucks Style) */}
-            <AnimatePresence>
-                {cartCount > 0 && (
-                    <motion.div 
-                        initial={{ y: 100 }}
-                        animate={{ y: 0 }}
-                        exit={{ y: 100 }}
-                        className="fixed bottom-6 left-6 right-6 z-[60]"
-                    >
-                        <button 
-                            onClick={() => setShowCart(true)}
-                            className="w-full bg-accent p-6 rounded-[2rem] flex items-center justify-between shadow-2xl shadow-accent/40 group overflow-hidden relative"
-                        >
-                            <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                            
-                            <div className="flex items-center gap-4 relative z-10">
-                                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white">
-                                    <ShoppingBag className="w-6 h-6" />
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Your Bag</p>
-                                    <p className="text-lg font-black text-primary leading-tight">{cartCount} items • ₹{cartTotal}</p>
-                                </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-2 relative z-10">
-                                <span className="text-xs font-black uppercase tracking-widest text-primary">View Cart</span>
-                                <ChevronRight className="w-5 h-5 text-primary" />
-                            </div>
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
             <CartOverlay 
                 isOpen={showCart}
                 onClose={() => setShowCart(false)}

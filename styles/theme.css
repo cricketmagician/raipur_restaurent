@@ -1,15 +1,15 @@
 :root {
-  --primary: #0f172a;
-  /* Deep Navy/Charcoal */
-  --primary-accent: #b45309;
-  /* Warm Amber/Gold */
+  --primary: #3C2A21;
+  /* Dark Coffee Bean */
+  --primary-accent: #8B4513;
+  /* Rich Wood/Coffee */
   --primary-color: var(--primary);
-  --secondary-color: #94a3b8;
+  --secondary-color: #EADBC8;
   --accent-color: var(--primary-accent);
-  --background: #fdfbf7;
-  /* White Sand Luxury */
-  --foreground: #1a1c20;
-  /* Deep Charcoal */
+  --background: #FDFBF7;
+  /* Ultra Warm Cream */
+  --foreground: #2D1F18;
+  /* Deep Roast Brown */
   --bg-pattern: radial-gradient(at top left, #f5f2e8 0%, transparent 50%),
     radial-gradient(at bottom right, #fcfaf2 0%, transparent 50%);
 }

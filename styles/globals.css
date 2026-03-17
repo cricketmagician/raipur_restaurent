@@ -4,9 +4,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: #00704A; /* Starbucks Green */
-  --color-secondary: #006241; /* Dark Starbucks Green */
-  --color-accent: #D4E9E2; /* Skeptic Soft Green */
+  --color-primary: #3C2A21; /* Coffee Brown */
+  --color-secondary: #2D1F18; /* Darker Coffee */
+  --color-accent: #EADBC8; /* Warm Cream */
   
   --font-serif: var(--font-playfair), serif;
   --font-sans: var(--font-inter), sans-serif;
@@ -24,7 +24,7 @@
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 112, 74, 0.05);
+  border: 1px solid rgba(60, 42, 33, 0.05);
 }
 
 @utility glass-dark {

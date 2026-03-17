@@ -15,8 +15,8 @@ export default function BrandingSettingsPage() {
         name: "",
         logo: "",
         logoImage: "",
-        primaryColor: "#2563eb",
-        accentColor: "#4f46e5",
+        primaryColor: "#3C2A21", // Coffee Brown default
+        accentColor: "#8B4513", // Warm Wood default
         bgPattern: "",
         guestTheme: "CAFE" as "CAFE" | "FINE_DINE"
     });
@@ -149,7 +149,7 @@ export default function BrandingSettingsPage() {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {[
-                                { id: 'CAFE', name: 'Modern Café', desc: 'Starbucks vibes, Cozy entry', colors: ['#00704A', '#F2F0EB'] },
+                                { id: 'CAFE', name: 'Modern Café', desc: 'Cozy, Coffee-driven vibe', colors: ['#3C2A21', '#EADBC8'] },
                                 { id: 'FINE_DINE', name: 'Fine Dining', desc: 'Minimalist, Luxury, Elite', colors: ['#1A1A1A', '#C5A059'] }
                             ].map((theme) => (
                                 <button

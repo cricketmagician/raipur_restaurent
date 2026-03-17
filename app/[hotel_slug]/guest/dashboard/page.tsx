@@ -377,10 +377,6 @@ export default function GuestDashboard() {
                         <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">
                             {branding?.name || "HOTEL TEEKLOVE"}
                         </h1>
-                        <div className="flex items-center px-4 py-1.5 rounded-full bg-black text-white text-[8px] font-black uppercase tracking-widest shadow-lg">
-                            <Star className="w-3 h-3 text-amber-400 mr-2 fill-amber-400" />
-                            Verified Guest
-                        </div>
                     </div>
 
                     <div className="flex items-center space-x-1 mb-4 text-amber-500">
@@ -392,26 +388,6 @@ export default function GuestDashboard() {
                         Raipur, India
                     </div>
 
-                    <div className="pt-8 border-t border-slate-900/5 grid grid-cols-2 gap-8">
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">ROOM</p>
-                            <div className="flex items-center text-lg font-black text-slate-900">
-                                <span className={`w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center mr-3 text-orange-600 border border-orange-100`}>
-                                   <Home className="w-4 h-4" />
-                                </span>
-                                {tableNumber || "101"}
-                            </div>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">STAYING</p>
-                            <div className="flex items-center text-lg font-black text-slate-900">
-                                <span className={`w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center mr-3 text-indigo-600 border border-indigo-100`}>
-                                   <User className="w-4 h-4" />
-                                </span>
-                                {numGuests ? `${numGuests} Guest${numGuests > 1 ? 's' : ''}` : "Active Stay"}
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </motion.div>
 

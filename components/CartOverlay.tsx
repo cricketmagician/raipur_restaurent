@@ -126,16 +126,13 @@ export function CartOverlay({
                                                 <div className="min-w-0">
                                                     <p className="font-black italic text-base line-clamp-1" style={{ color: theme.text }}>{item.title}</p>
                                                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                                        <p className="text-[10px] font-black tracking-[0.22em] uppercase text-slate-400">
-                                                            Qty {item.quantity}
-                                                        </p>
                                                         <p className="text-xs font-bold tracking-widest uppercase" style={{ color: theme.accent }}>
                                                             Rs {((item.price || 0) * item.quantity).toFixed(0)}
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center space-x-2 shrink-0">
+                                            <div className="flex items-center space-x-3 shrink-0">
                                                 <button 
                                                     onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
                                                     className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
@@ -143,6 +140,7 @@ export function CartOverlay({
                                                 >
                                                     <Minus className="w-4 h-4" />
                                                 </button>
+                                                <span className="text-sm font-black w-4 text-center" style={{ color: theme.text }}>{item.quantity}</span>
                                                 <button 
                                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                                     className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-all border"

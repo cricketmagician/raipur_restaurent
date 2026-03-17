@@ -278,13 +278,13 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
 
     if (!isVerified) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-from),_transparent_50%)] from-blue-50/50 to-transparent"></div>
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100"
+                    className="w-full max-w-md md:max-w-md bg-white p-8 md:rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 min-h-screen md:min-h-0 flex flex-col justify-center"
                 >
                     <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-blue-600" style={{ backgroundColor: branding?.primaryColor ? `${branding.primaryColor}20` : undefined, color: branding?.primaryColor }}>
                         <Key className="w-8 h-8" />

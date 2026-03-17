@@ -25,8 +25,6 @@ import { TrendingNow } from "@/components/TrendingNow";
 import { PerfectPairs } from "@/components/PerfectPairs";
 import { MoodSection } from "@/components/MoodSection";
 import { useAddEffectTrigger } from "@/components/AddEffect";
-import { LoyaltySignIn } from "@/components/LoyaltySignIn";
-import { useGuestLoyalty, addLoyaltyPoints, saveGuestLoyaltySession } from "@/utils/store";
 
 
 // Helper to safely render icons with className
@@ -57,28 +55,6 @@ export default function GuestDashboard() {
     const [showCart, setShowCart] = useState(false);
     const [isOrdering, setIsOrdering] = useState(false);
     const [orderComplete, setOrderComplete] = React.useState(false);
-    // Loyalty State
-    const [loyaltyProfile, setLoyaltyProfile] = useState<{ phone: string; name: string; lastVisitAt?: string | null } | null>(() => {
-        if (typeof window === 'undefined') return null;
-        const stored = localStorage.getItem(`guest_loyalty_${hotelSlug}`);
-        return stored ? JSON.parse(stored) : null;
-    });
-    const { loyalty: realLoyalty } = useGuestLoyalty(branding?.id, loyaltyProfile?.phone || null);
-    const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
-
-    const handleLoyaltySignIn = async (phone: string, name: string) => {
-        const profile = { phone, name, lastVisitAt: new Date().toISOString() };
-        localStorage.setItem(`guest_loyalty_${hotelSlug}`, JSON.stringify(profile));
-        setLoyaltyProfile(profile);
-        if (branding?.id) {
-            await saveGuestLoyaltySession(branding.id, phone, name, { lastVisitAt: profile.lastVisitAt });
-        }
-        // Points will auto-fetch via useGuestLoyalty
-    };
-
-    const currentPoints = realLoyalty?.points || 0;
-    const pointsToNextTreat = Math.max(0, 150 - (currentPoints % 150));
-    const progressPercent = ((currentPoints % 150) / 150) * 100;
 
     const [toast, setToast] = React.useState<{ message: string; type: "success" | "error"; isVisible: boolean }>({
         message: "",
@@ -258,15 +234,6 @@ export default function GuestDashboard() {
             }
         }
 
-        if (loyaltyProfile?.phone) {
-            const now = new Date().toISOString();
-            await saveGuestLoyaltySession(branding.id, loyaltyProfile.phone, loyaltyProfile.name, {
-                lastVisitAt: loyaltyProfile.lastVisitAt || now,
-                lastOrderAt: now,
-                lastOrderMode: orderMode,
-            });
-        }
-
         setIsOrdering(true);
         await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -315,17 +282,7 @@ export default function GuestDashboard() {
         if (error) {
             setToast({ message: `Order Failed: ${error.message}`, type: "error", isVisible: true });
         } else {
-            if (loyaltyProfile?.phone) {
-                const earnedPoints = Math.floor(cartTotal / 10);
-                if (earnedPoints > 0) {
-                    await addLoyaltyPoints(branding.id, loyaltyProfile.phone, earnedPoints);
-                    setToast({ message: `Order Placed! Earned ${earnedPoints} vibe points ✨`, type: "success", isVisible: true });
-                } else {
-                    setToast({ message: "Order Placed Successfully!", type: "success", isVisible: true });
-                }
-            } else {
-                setToast({ message: "Order Placed Successfully!", type: "success", isVisible: true });
-            }
+            setToast({ message: "Order Placed Successfully!", type: "success", isVisible: true });
             setOrderComplete(true);
             clearCart();
             setShowCart(false);
@@ -375,7 +332,7 @@ export default function GuestDashboard() {
 
     return (
         <div 
-            className="pb-40 pt-10 px-6 min-h-screen w-full overflow-x-hidden transition-colors duration-500 relative bg-[#F1F8F5]"
+            className="pb-40 pt-10 min-h-screen w-full overflow-x-hidden transition-colors duration-500 relative bg-[#F1F8F5]"
             style={{ 
                 fontFamily: theme.fontSans,
                 color: theme.text
@@ -404,16 +361,16 @@ export default function GuestDashboard() {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#F1F8F5] via-transparent to-black/40" />
                 
                 {/* Hero Content Overlay (Fix #1) */}
-                <div className="absolute inset-0 flex flex-col justify-end px-6 pb-20">
+                <div className="absolute inset-0 flex flex-col justify-end pb-20 px-6">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
                     >
-                        <h1 className="text-[2.8rem] font-black text-white leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">
-                            {branding?.hero_headline || "Your Favorite Café. Now One Tap Away."}
+                        <h1 className="text-[clamp(1.75rem,8vw,3rem)] font-black text-white leading-[0.9] tracking-tighter mb-4">
+                            {branding?.hero_headline || "Your Favorite Café.\nNow One Tap Away."}
                         </h1>
-                        <p className="text-white/80 text-base font-medium mb-8 italic drop-shadow-md">
+                        <p className="text-sm font-medium text-white/60 leading-relaxed mb-8 italic">
                             {branding?.hero_subtext || "Order instantly. Skip the wait."}
                         </p>
                         
@@ -444,7 +401,7 @@ export default function GuestDashboard() {
             <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="mb-10 bg-white/40 backdrop-blur-xl px-6 py-5 shadow-xl border border-white/20"
+                className="mb-10 bg-white/40 backdrop-blur-xl px-6 py-5 shadow-xl border border-white/20 mx-6"
                 style={{ borderRadius: "1.5rem" }}
             >
                 <div className="flex items-center justify-between">
@@ -461,10 +418,10 @@ export default function GuestDashboard() {
                 </div>
             </motion.div>
 
-            <div className="space-y-14">
+            <div className="space-y-14 px-6">
                 {/* [Fix #4] Quick Order Section (Dynamic) */}
                 <section>
-                    <div className="flex items-center justify-between mb-6 px-1">
+                    <div className="flex items-center justify-between mb-6">
                         <h3 className="text-2xl font-black tracking-tighter" style={{ color: "#1E3932" }}>
                             ⚡ Quick Order
                         </h3>
@@ -498,7 +455,7 @@ export default function GuestDashboard() {
 
                 {/* [Fix #3] Seasonal Stories (Conversion Optimized) */}
                 <section>
-                    <div className="flex items-center justify-between mb-6 px-1">
+                    <div className="flex items-center justify-between mb-6">
                         <h3 className="text-2xl font-black tracking-tighter" style={{ color: "#1E3932" }}>
                             ✨ Seasonal Stories
                         </h3>
@@ -556,7 +513,7 @@ export default function GuestDashboard() {
                 />
 
                 {/* 3. Immersive Promo Strip */}
-                <section className="space-y-4">
+                <section className="mt-8 space-y-6">
                     <div className="relative overflow-hidden rounded-[2.5rem] border shadow-[0_24px_80px_rgba(0,0,0,0.12)]">
                         <img
                             src={getDirectImageUrl(branding?.heroImage) || stories[0]?.image_url || "/images/branding/hero.png"}
@@ -600,16 +557,16 @@ export default function GuestDashboard() {
                         </button>
 
                         <button
-                            onClick={() => loyaltyProfile ? router.push(`/${hotelSlug}/guest/profile`) : setIsLoyaltyOpen(true)}
+                            onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
                             className="rounded-[2.25rem] border bg-white/60 backdrop-blur-xl p-6 text-left shadow-xl active:scale-[0.98] transition-all"
                             style={{ borderColor: `${theme.primary}10` }}
                         >
                             <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 bg-amber-100 text-[#00704A]">
                                 <Sparkles className="w-6 h-6 text-amber-600" />
                             </div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-40 mb-2">Member</p>
-                            <h4 className="text-xl font-black tracking-tight mb-1 text-[#1E3932]">{loyaltyProfile ? `${currentPoints} Pts` : "Join Vibe"}</h4>
-                            <p className="text-[10px] font-medium leading-relaxed opacity-60">Earn points on every elite order.</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-40 mb-2">Ready to order</p>
+                            <h4 className="text-xl font-black tracking-tight mb-1 text-[#1E3932]">Express Checkout</h4>
+                            <p className="text-[10px] font-medium leading-relaxed opacity-60">Order instantly. Skip the wait.</p>
                         </button>
                     </div>
                 </section>
@@ -639,7 +596,7 @@ export default function GuestDashboard() {
                 </section>
 
                 {/* [Fix #7] Trust Injection Bar */}
-                <section className="py-8 border-y border-[#1E3932]/10">
+                <section className="mt-4 border-y border-[#1E3932]/10">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
                             <div className="flex -space-x-2.5">
@@ -670,7 +627,6 @@ export default function GuestDashboard() {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    onClick={() => !loyaltyProfile && setIsLoyaltyOpen(true)}
                     className="rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group transition-all duration-500 border border-[#00704A]/10"
                     style={{ backgroundColor: "#00704A" }}
                 >
@@ -684,42 +640,19 @@ export default function GuestDashboard() {
                             <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white">ELITE STATUS</span>
                         </div>
                         
-                        {loyaltyProfile ? (
-                            <>
-                                <h3 className="text-3xl font-black text-white italic tracking-tighter mb-1">Welcome, {loyaltyProfile.name.split(' ')[0]}</h3>
-                                <p className="text-white/60 text-xs font-medium mb-6">You have {currentPoints} points ready</p>
-                                <div className="w-full max-w-[200px] h-2 bg-white/20 rounded-full overflow-hidden mb-2">
-                                    <motion.div 
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${progressPercent}%` }}
-                                        className="h-full bg-amber-400" 
-                                    />
-                                </div>
-                                <p className="text-[9px] font-black text-white/40 tracking-[0.2em] uppercase">{pointsToNextTreat} TO NEXT REWARD</p>
-                            </>
-                        ) : (
-                            <>
-                                <h3 className="text-4xl font-black text-white italic tracking-tighter mb-2 leading-none">Vibe with Us.</h3>
-                                <p className="text-white/70 text-sm font-medium italic mb-8">Join the elite circle and earn rewards on every order.</p>
-                                <button className="px-10 py-5 bg-white text-[#00704A] rounded-full font-black text-xs uppercase tracking-[0.3em] shadow-2xl active:scale-95 transition-all">
-                                    Join The Lounge
-                                </button>
-                            </>
-                        )}
+                        <>
+                            <h3 className="text-4xl font-black text-white italic tracking-tighter mb-2 leading-none">Vibe with Us.</h3>
+                            <p className="text-white/70 text-sm font-medium italic mb-8">Join the elite circle and earn rewards on every order.</p>
+                            <button className="px-10 py-5 bg-white text-[#00704A] rounded-full font-black text-xs uppercase tracking-[0.3em] shadow-2xl active:scale-95 transition-all">
+                                Join The Lounge
+                            </button>
+                        </>
                     </div>
                 </motion.div>
             </div>
 
             {/* Modals & Overlays */}
-            <LoyaltySignIn
-                isOpen={isLoyaltyOpen}
-                onClose={() => setIsLoyaltyOpen(false)}
-                onSignIn={handleLoyaltySignIn}
-                initialName={loyaltyProfile?.name}
-                initialPhone={loyaltyProfile?.phone}
-                lastVisitAt={loyaltyProfile?.lastVisitAt || realLoyalty?.last_visit_at}
-            />
-
+            {/* Loyalty removed */}
             <BottomNav />
             
             <ImpulseBottomSheet 

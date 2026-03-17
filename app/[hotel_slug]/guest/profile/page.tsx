@@ -4,10 +4,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, BadgeCheck, Clock3, LogOut, PencilLine, Sparkles, User, Utensils, Truck, CircleDollarSign, RefreshCw } from "lucide-react";
-import { useHotelBranding, useGuestLoyalty, useCart, saveGuestLoyaltySession } from "@/utils/store";
+import { useHotelBranding, useCart } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { useTheme } from "@/utils/themes";
-import { LoyaltySignIn } from "@/components/LoyaltySignIn";
 import { getDirectImageUrl } from "@/utils/image";
 
 type GuestProfile = {
@@ -44,7 +43,7 @@ export default function GuestProfilePage() {
         return stored ? JSON.parse(stored) : null;
     });
 
-    const { loyalty } = useGuestLoyalty(branding?.id, profile?.phone || null);
+    // const { loyalty } = useGuestLoyalty(branding?.id, profile?.phone || null);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -52,10 +51,10 @@ export default function GuestProfilePage() {
         setProfile(stored ? JSON.parse(stored) : null);
     }, [hotelSlug]);
 
-    const points = loyalty?.points || 0;
-    const visits = loyalty?.last_visit_at || profile?.lastVisitAt || null;
-    const lastOrder = loyalty?.last_order_at || null;
-    const lastMode = loyalty?.last_order_mode || null;
+    const points = 0; // loyalty?.points || 0;
+    const visits = profile?.lastVisitAt || null; // loyalty?.last_visit_at || profile?.lastVisitAt || null;
+    const lastOrder = null; // loyalty?.last_order_at || null;
+    const lastMode = null; // loyalty?.last_order_mode || null;
 
     const loginHint = useMemo(() => {
         if (!profile?.phone) return "Sync once for takeaway and repeat visits.";
@@ -66,10 +65,8 @@ export default function GuestProfilePage() {
         const nextProfile = { phone, name, lastVisitAt: new Date().toISOString() };
         localStorage.setItem(`guest_loyalty_${hotelSlug}`, JSON.stringify(nextProfile));
         setProfile(nextProfile);
-
-        if (branding?.id) {
-            await saveGuestLoyaltySession(branding.id, phone, name, { lastVisitAt: nextProfile.lastVisitAt });
-        }
+        
+        // Supabase loyalty storage disabled
     };
 
     const handleLogout = () => {
@@ -90,7 +87,7 @@ export default function GuestProfilePage() {
 
     return (
         <div
-            className="min-h-screen pb-28 pt-5 w-full max-w-[460px] mx-auto overflow-x-hidden px-3.5 relative"
+            className="min-h-screen pb-32 w-full overflow-x-hidden px-3.5 relative"
             style={{ backgroundColor: theme.background, color: theme.text, fontFamily: theme.fontSans }}
         >
             <div className="absolute inset-0 -z-20 pointer-events-none">
@@ -157,17 +154,20 @@ export default function GuestProfilePage() {
                                         {profile?.name || "Guest"}
                                     </h2>
                                     <p className="mt-1.5 text-sm font-semibold opacity-65 truncate">
-                                        {profile?.phone || "Phone not linked yet"}
+                                        {profile?.phone || (orderMode === "takeaway" ? "Takeaway Order" : `Room ${roomNumber}`)}
                                     </p>
                                 </div>
                             </div>
 
+                            {/* Loyalty rewards hidden for now */}
+                            {/* 
                             <div className="rounded-[1.35rem] px-4 py-3 border backdrop-blur-md self-start sm:self-auto" style={{ backgroundColor: "rgba(255,255,255,0.34)", borderColor: "rgba(255,255,255,0.38)" }}>
                                 <p className="text-[8px] font-black uppercase tracking-[0.28em] opacity-35 mb-1">Rewards</p>
                                 <p className="text-2xl font-black tracking-tight" style={{ color: theme.primary }}>
                                     {points}
                                 </p>
                             </div>
+                            */}
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
@@ -267,14 +267,8 @@ export default function GuestProfilePage() {
                 </motion.div>
             </div>
 
-            <LoyaltySignIn
-                isOpen={isEditOpen}
-                onClose={() => setIsEditOpen(false)}
-                onSignIn={handleSignIn}
-                guestName={profile?.name || ""}
-                guestPhone={profile?.phone || ""}
-                lastVisitAt={loyalty?.last_visit_at || profile?.lastVisitAt || null}
-            />
+
+            {/* Loyalty removed */}
         </div>
     );
 }

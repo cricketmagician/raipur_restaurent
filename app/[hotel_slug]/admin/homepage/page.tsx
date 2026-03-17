@@ -19,6 +19,7 @@ export default function AdminHomepage() {
         hero_subtext: "",
         hero_cta: "Start Ordering",
         trust_signal: "1,000+ happy customers in Raipur",
+        bg_pattern: "",
         quick_order_ids: [] as string[]
     });
 
@@ -32,6 +33,7 @@ export default function AdminHomepage() {
                 hero_subtext: branding.hero_subtext || "Order instantly. Skip the wait.",
                 hero_cta: branding.hero_cta || "Start Ordering",
                 trust_signal: branding.trust_signal || "1,000+ happy customers in Raipur",
+                bg_pattern: branding.bgPattern || "",
                 quick_order_ids: branding.quick_order_ids || []
             });
         }
@@ -42,12 +44,13 @@ export default function AdminHomepage() {
         setIsSaving(true);
         try {
             const { error } = await supabase
-                .from('hotel_branding')
+                .from('hotels')
                 .update({
                     hero_headline: form.hero_headline,
                     hero_subtext: form.hero_subtext,
                     hero_cta: form.hero_cta,
                     trust_signal: form.trust_signal,
+                    bg_pattern: form.bg_pattern,
                     quick_order_ids: form.quick_order_ids
                 })
                 .eq('id', branding.id);
@@ -97,6 +100,7 @@ export default function AdminHomepage() {
                     <div className="aspect-[9/16] w-full max-w-[320px] mx-auto bg-[#F1F8F5] rounded-[3rem] shadow-2xl border-[8px] border-slate-900 relative overflow-hidden flex flex-col scale-[0.85] origin-top">
                         {/* Mock Hero */}
                         <div className="h-[45%] bg-[#002B1B] relative overflow-hidden flex flex-col justify-end p-6 pb-12">
+                            <img src={getDirectImageUrl(form.bg_pattern)} className="absolute inset-0 w-full h-full object-cover opacity-50" alt="" />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#F1F8F5] via-transparent to-transparent" />
                             <h2 className="text-2xl font-black text-white leading-tight mb-2 tracking-tighter">{form.hero_headline}</h2>
                             <p className="text-white/60 text-[10px] font-medium italic mb-6">{form.hero_subtext}</p>
@@ -183,6 +187,21 @@ export default function AdminHomepage() {
                                     className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                                     placeholder="e.g. 1000+ happy customers"
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Hero Section Image URL</label>
+                                <div className="flex gap-3">
+                                    <input 
+                                        value={form.bg_pattern}
+                                        onChange={e => setForm({...form, bg_pattern: e.target.value})}
+                                        className="flex-1 px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                        placeholder="Image URL or Path"
+                                    />
+                                    <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
+                                        <img src={getDirectImageUrl(form.bg_pattern)} className="w-full h-full object-cover" alt="Preview" />
+                                    </div>
+                                </div>
+                                <p className="text-[10px] text-slate-400 mt-2">Recommended: 1600x900px high-quality luxury shot.</p>
                             </div>
                         </div>
                     </div>

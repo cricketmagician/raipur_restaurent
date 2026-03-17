@@ -90,7 +90,7 @@ export default function BillPage() {
 
     return (
         <div
-            className="pb-36 pt-6 max-w-[460px] mx-auto min-h-screen px-4"
+            className="pb-36 pt-6 min-h-screen px-4"
             style={{ backgroundColor: theme.background, color: theme.primary, fontFamily: theme.fontSans }}
         >
             <div className="flex items-center justify-between mb-6 no-print">

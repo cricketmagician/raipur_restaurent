@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MenuCard } from "@/components/MenuCard";
 import { CheckCircle, Sparkles, TrendingUp, Gift } from "lucide-react";
-import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, useGuestLoyalty, saveGuestLoyaltySession, addLoyaltyPoints, getRoomAccessState, type MenuItem } from "@/utils/store";
+import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, getRoomAccessState, type MenuItem } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
@@ -13,7 +13,7 @@ import { CATEGORY_THEMES, useTheme } from "@/utils/themes";
 import { CategoryDiscoveryGrid } from "@/components/CategoryDiscoveryGrid";
 import { CategoryHeroHeader } from "@/components/CategoryHeroHeader";
 import { ChefRecommendCard } from "@/components/ChefRecommendCard";
-import { LoyaltySignIn } from "@/components/LoyaltySignIn";
+// import { LoyaltySignIn } from "@/components/LoyaltySignIn";
 import { InlineUpsellRail } from "@/components/InlineUpsellRail";
 import { getDirectImageUrl } from "@/utils/image";
 
@@ -192,13 +192,25 @@ export default function RestaurantPage() {
 
     // Upsell State
     const [inlineUpsellAnchorId, setInlineUpsellAnchorId] = useState<string | null>(null);
+    /*
     const [loyaltyProfile, setLoyaltyProfile] = useState<{ phone: string; name: string; lastVisitAt?: string | null } | null>(() => {
         if (typeof window === "undefined") return null;
         const stored = localStorage.getItem(`guest_loyalty_${hotelSlug}`);
         return stored ? JSON.parse(stored) : null;
     });
     const { loyalty: realLoyalty } = useGuestLoyalty(branding?.id, loyaltyProfile?.phone || null);
+    const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
 
+    const handleLoyaltySignIn = async (phone: string, name: string) => {
+        const profile = { phone, name, lastVisitAt: new Date().toISOString() };
+        localStorage.setItem(`guest_loyalty_${hotelSlug}`, JSON.stringify(profile));
+        setLoyaltyProfile(profile);
+
+        if (branding?.id) {
+            await saveGuestLoyaltySession(branding.id, phone, name, { lastVisitAt: profile.lastVisitAt });
+        }
+    };
+    */
     const { menuItems } = useSupabaseMenuItems(branding?.id);
 
     // Use mock data if no items in DB (for visual testing)
@@ -234,10 +246,10 @@ export default function RestaurantPage() {
 
                 return {
                     ...category,
-                    imageUrl: category.imageUrl || getDirectImageUrl(heroItem?.image_url) || CATEGORY_THEMES[category.id]?.image || CATEGORY_THEMES.all.image,
-                    tagline: category.tagline || heroItem?.description || CATEGORY_THEMES[category.id]?.tagline || "Freshly curated favourites",
+                    imageUrl: (category as any).imageUrl || getDirectImageUrl(heroItem?.image_url) || CATEGORY_THEMES[category.id]?.image || CATEGORY_THEMES.all.image,
+                    tagline: (category as any).tagline || heroItem?.description || CATEGORY_THEMES[category.id]?.tagline || "Freshly curated favourites",
                     itemCount: categoryItems.length,
-                    popularity: categoryItems.filter((item) => item.is_popular || item.is_recommended).length,
+                    popularity: categoryItems.filter((item: any) => item && (item.is_popular || item.is_recommended)).length,
                     searchIndex,
                 };
             });
@@ -384,16 +396,6 @@ export default function RestaurantPage() {
         soldOutIds.forEach((id) => updateQuantity(id, 0));
     }, [menuItems, cart, updateQuantity]);
 
-    const handleLoyaltySignIn = async (phone: string, name: string) => {
-        const profile = { phone, name, lastVisitAt: new Date().toISOString() };
-        localStorage.setItem(`guest_loyalty_${hotelSlug}`, JSON.stringify(profile));
-        setLoyaltyProfile(profile);
-
-        if (branding?.id) {
-            await saveGuestLoyaltySession(branding.id, phone, name, { lastVisitAt: profile.lastVisitAt });
-        }
-    };
-
     const handleOrder = async () => {
         if (!branding?.id) return;
         const soldOutIds = Object.keys(cart).filter((id) =>
@@ -406,10 +408,10 @@ export default function RestaurantPage() {
             return;
         }
 
-        if (!loyaltyProfile) {
-            setIsLoyaltyOpen(true);
-            return;
-        }
+        // if (!loyaltyProfile) {
+        //     setIsLoyaltyOpen(true);
+        //     return;
+        // }
 
         if (orderMode !== "takeaway") {
             const accessState = await getRoomAccessState(branding.id, roomNumber);
@@ -419,17 +421,17 @@ export default function RestaurantPage() {
             }
         }
 
-        if (loyaltyProfile?.phone) {
-            const now = new Date().toISOString();
-            await saveGuestLoyaltySession(branding.id, loyaltyProfile.phone, loyaltyProfile.name, {
-                lastVisitAt: loyaltyProfile.lastVisitAt || now,
-                lastOrderAt: now,
-                lastOrderMode: orderMode,
-            });
-            if (cartTotal > 0) {
-                await addLoyaltyPoints(branding.id, loyaltyProfile.phone, Math.floor(cartTotal / 10));
-            }
-        }
+        // if (loyaltyProfile?.phone) {
+        //     const now = new Date().toISOString();
+        //     await saveGuestLoyaltySession(branding.id, loyaltyProfile.phone, loyaltyProfile.name, {
+        //         lastVisitAt: loyaltyProfile.lastVisitAt || now,
+        //         lastOrderAt: now,
+        //         lastOrderMode: orderMode,
+        //     });
+        //     if (cartTotal > 0) {
+        //         await addLoyaltyPoints(branding.id, loyaltyProfile.phone, Math.floor(cartTotal / 10));
+        //     }
+        // }
 
         setIsOrdering(true);
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -498,7 +500,7 @@ export default function RestaurantPage() {
 
     return (
         <div 
-            className="pb-40 pt-10 px-6 min-h-screen w-full max-w-[500px] mx-auto overflow-x-hidden transition-colors duration-500"
+            className="pb-40 pt-10 px-6 min-h-screen w-full overflow-x-hidden transition-colors duration-500"
             style={{ backgroundColor: theme.background, fontFamily: theme.fontSans, color: theme.text }}
         >
             <div className="relative z-10">
@@ -669,14 +671,7 @@ export default function RestaurantPage() {
                     hotelId={branding?.id}
                     menuItems={menuItems}
                 />
-                <LoyaltySignIn
-                    isOpen={isLoyaltyOpen}
-                    onClose={() => setIsLoyaltyOpen(false)}
-                    onSignIn={handleLoyaltySignIn}
-                    guestName={loyaltyProfile?.name || ""}
-                    guestPhone={loyaltyProfile?.phone || ""}
-                    lastVisitAt={loyaltyProfile?.lastVisitAt || realLoyalty?.last_visit_at || null}
-                />
+                {/* Loyalty removed */}
                 <BottomNav />
             </div>
         </div>

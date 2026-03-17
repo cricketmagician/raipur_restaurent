@@ -115,7 +115,7 @@ export default function ItemPage() {
 
     return (
         <div
-            className="min-h-screen pb-32 w-full max-w-[560px] mx-auto overflow-x-hidden"
+            className="min-h-screen pb-32 w-full overflow-x-hidden"
             style={{
                 backgroundColor: globalTheme.background,
                 fontFamily: globalTheme.fontSans,

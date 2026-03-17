@@ -53,7 +53,7 @@ export function ImpulseBottomSheet({ item, isVisible, onAdd, onClose }: ImpulseB
                         animate={{ y: 0 }}
                         exit={{ y: "100%", opacity: 0.9 }}
                         transition={{ type: "spring", damping: 28, stiffness: 260 }}
-                        className="fixed bottom-3 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] max-w-[480px] max-h-[calc(100dvh-5.5rem)] overflow-hidden bg-white z-[190] shadow-[0_30px_120px_-30px_rgba(0,0,0,0.55)] border"
+                        className="fixed bottom-3 left-0 right-0 mx-2 max-h-[calc(100dvh-5.5rem)] overflow-hidden bg-white z-[190] shadow-[0_30px_120px_-30px_rgba(0,0,0,0.55)] border"
                         style={{ 
                             borderRadius: `calc(${theme.radius} * 1.1)`,
                             borderColor: `${theme.primary}18`

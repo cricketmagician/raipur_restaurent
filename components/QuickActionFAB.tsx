@@ -101,7 +101,7 @@ export function QuickActionFAB() {
 
     return (
         <>
-            <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[110] w-[calc(100%-1.5rem)] max-w-[360px] pointer-events-none">
+            <div className="fixed bottom-28 left-4 right-4 z-[110] pointer-events-none">
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div

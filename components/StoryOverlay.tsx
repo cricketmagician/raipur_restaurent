@@ -109,7 +109,7 @@ export function StoryOverlay({ stories, initialIndex, isVisible, onClose, onOrde
                     </button>
 
                     {/* Story Content */}
-                    <div className="relative w-full h-full max-w-[500px] mx-auto">
+                    <div className="relative w-full h-full mx-auto">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={currentIndex}

@@ -85,6 +85,13 @@ export interface HotelRequest {
     items?: any;
 }
 
+export interface RequestLineItem {
+    title: string;
+    quantity: number;
+    price?: number;
+    total?: number;
+}
+
 export interface Room {
     id: string;
     hotel_id: string;
@@ -192,6 +199,80 @@ export function isServiceRequest(requestType: string) {
 
 export function isBillRequest(requestType: string) {
     return requestTypeMatches(requestType, [...BILL_REQUEST_KEYWORDS]);
+}
+
+const parseRequestNoteLine = (segment: string): RequestLineItem | null => {
+    const trimmed = segment.trim();
+    if (!trimmed) return null;
+
+    const quantityFirst = trimmed.match(/^(\d+)\s*x\s+(.+)$/i);
+    if (quantityFirst) {
+        return {
+            quantity: Number(quantityFirst[1]) || 1,
+            title: quantityFirst[2].trim(),
+        };
+    }
+
+    const quantityLast = trimmed.match(/^(.+?)\s*x\s*(\d+)$/i);
+    if (quantityLast) {
+        return {
+            quantity: Number(quantityLast[2]) || 1,
+            title: quantityLast[1].trim(),
+        };
+    }
+
+    return {
+        quantity: 1,
+        title: trimmed,
+    };
+};
+
+export function extractRequestLineItems(request: Pick<HotelRequest, 'items' | 'notes' | 'total'>): RequestLineItem[] {
+    if (Array.isArray(request.items) && request.items.length > 0) {
+        return request.items
+            .map((item: any) => {
+                const title = item?.title?.toString().trim();
+                if (!title) return null;
+
+                const quantity = Number(item?.quantity) || 1;
+                const price = Number(item?.price);
+                const total = Number(item?.total);
+
+                return {
+                    title,
+                    quantity,
+                    price: Number.isFinite(price) ? price : undefined,
+                    total: Number.isFinite(total) ? total : (Number.isFinite(price) ? price * quantity : undefined),
+                };
+            })
+            .filter(Boolean) as RequestLineItem[];
+    }
+
+    const parsedItems = (request.notes || '')
+        .split(',')
+        .map(parseRequestNoteLine)
+        .filter(Boolean) as RequestLineItem[];
+
+    if (parsedItems.length === 1 && (request.total || 0) > 0) {
+        parsedItems[0].total = request.total || 0;
+    }
+
+    return parsedItems;
+}
+
+export function summarizeRequestItems(request: Pick<HotelRequest, 'type' | 'items' | 'notes' | 'total'>) {
+    const items = extractRequestLineItems(request);
+
+    if (items.length === 0) {
+        return request.type;
+    }
+
+    if (items.length === 1) {
+        const item = items[0];
+        return item.quantity > 1 ? `${item.quantity}x ${item.title}` : item.title;
+    }
+
+    return `${items[0].title} +${items.length - 1} more`;
 }
 
 export type SyncStatus = RealtimeSyncStatus;

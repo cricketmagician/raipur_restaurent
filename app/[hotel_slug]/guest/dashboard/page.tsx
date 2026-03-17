@@ -291,6 +291,13 @@ export default function GuestDashboard() {
             if (!item) return null;
             return { ...item, quantity: q };
         }).filter(item => item !== null);
+        const cartItemsData = cartItems.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            quantity: item.quantity,
+            price: item.price || 0,
+            total: (item.price || 0) * item.quantity,
+        }));
 
         const { error } = await addSupabaseRequest(branding.id, {
             room: tableNumber,
@@ -298,7 +305,8 @@ export default function GuestDashboard() {
             notes: cartItems.map((item: any) => `${item.quantity}x ${item.title}`).join(", "),
             status: "Pending",
             price: cartTotal,
-            total: cartTotal
+            total: cartTotal,
+            items: cartItemsData,
         });
 
         setIsOrdering(false);

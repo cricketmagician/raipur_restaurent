@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, MapPin, Clock, Info, Utensils, Bell, ShoppingBag, CreditCard, CheckCircle } from "lucide-react";
 import { StatusBadge, RequestStatus } from "./StatusBadge";
-import { HotelRequest, useSupabaseRequests, settleTableRequests, isDiningRequest, isBillRequest } from "@/utils/store";
+import { HotelRequest, useSupabaseRequests, settleTableRequests, isDiningRequest, isBillRequest, extractRequestLineItems, summarizeRequestItems } from "@/utils/store";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface RequestDetailModalProps {
@@ -31,6 +31,10 @@ export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: Re
     const isRestaurant = request ? isDiningRequest(request.type) : false;
     const isTakeaway = targetRoom.toLowerCase() === "takeaway";
     const isBillingDesk = request ? isBillRequest(request.type) : false;
+    const requestLineItems = request ? extractRequestLineItems(request) : [];
+    const requestHeadline = request
+        ? (isRestaurant && !isBillingDesk ? summarizeRequestItems(request) : (isTakeaway ? "Takeaway Order" : (isBillingDesk ? "Live Bill Request" : request.type)))
+        : "Table Detail";
 
     const handleSettle = async () => {
         if (!window.confirm(`Mark all items for Table ${targetRoom} as PAID and complete the session?`)) return;
@@ -69,9 +73,12 @@ export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: Re
                             </div>
                             <div>
                                 <h2 className="text-2xl font-black text-gray-900 tracking-tight">
-                                    {request ? (isTakeaway ? "Takeaway Order" : (isBillingDesk ? "Live Bill Request" : (isRestaurant ? "Dining Order" : "Service Request"))) : "Table Detail"}
+                                    {requestHeadline}
                                 </h2>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 opacity-70">Table {targetRoom} • {request?.time || 'Current Session'}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 opacity-70">
+                                    {isBillingDesk ? "Live Bill" : (isRestaurant ? "Order Summary" : (isTakeaway ? "Takeaway Summary" : "Request Detail"))}
+                                    {" • "}Table {targetRoom} • {request?.time || 'Current Session'}
+                                </p>
                             </div>
                         </div>
                         <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors text-gray-500">
@@ -99,25 +106,37 @@ export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: Re
                                 <div className="bg-slate-50/50 rounded-3xl border border-slate-100 overflow-hidden">
                                     <div className="p-5 space-y-3">
                                         {tableRequests.map((r) => (
-                                            <div key={r.id} className="space-y-2">
-                                                {r.items && Array.isArray(r.items) ? (
-                                                    r.items.map((item: any, idx: number) => (
-                                                        <div key={idx} className="flex justify-between items-center pl-4 py-1 border-l border-slate-200">
-                                                            <div className="flex items-center">
-                                                                <span className="text-xs font-bold text-slate-600">{item.quantity}x {item.title}</span>
-                                                            </div>
-                                                            <span className="text-xs font-black text-slate-900">₹{item.total?.toLocaleString()}</span>
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <div className="flex justify-between items-center">
-                                                        <div className="flex items-center">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-3" />
-                                                            <span className="text-sm font-bold text-slate-700">{r.type}</span>
-                                                        </div>
-                                                        <span className="text-sm font-black text-slate-900">₹{r.total?.toLocaleString()}</span>
+                                            <div key={r.id} className="rounded-[1.4rem] border border-slate-100 bg-white/80 p-4 space-y-3">
+                                                <div className="flex justify-between items-center gap-3">
+                                                    <div className="min-w-0">
+                                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">{r.time}</p>
+                                                        <p className="text-sm font-black text-slate-900 truncate">
+                                                            {summarizeRequestItems(r)}
+                                                        </p>
                                                     </div>
-                                                )}
+                                                    <span className="text-sm font-black text-slate-900 shrink-0">₹{r.total?.toLocaleString()}</span>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    {extractRequestLineItems(r).length > 0 ? (
+                                                        extractRequestLineItems(r).map((item, idx) => (
+                                                            <div key={idx} className="flex justify-between items-center pl-4 py-1 border-l border-slate-200">
+                                                                <div className="flex items-center min-w-0">
+                                                                    <span className="text-xs font-bold text-slate-600 truncate">{item.quantity}x {item.title}</span>
+                                                                </div>
+                                                                {typeof item.total === "number" ? (
+                                                                    <span className="text-xs font-black text-slate-900 shrink-0">₹{item.total.toLocaleString()}</span>
+                                                                ) : (
+                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 shrink-0">Included</span>
+                                                                )}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="flex justify-between items-center pl-4 py-1 border-l border-slate-200">
+                                                            <span className="text-xs font-bold text-slate-600">{r.notes || "Order details unavailable"}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -135,7 +154,20 @@ export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: Re
                                 {isBillingDesk ? "Billing Notes" : (isRestaurant ? "Order Notes" : "Request Details")}
                             </div>
                             <div className="text-gray-700 leading-relaxed font-bold text-[15px]">
-                                {request?.notes || <span className="text-gray-400 italic font-medium">No special instructions provided.</span>}
+                                {requestLineItems.length > 0 && isRestaurant ? (
+                                    <div className="space-y-2">
+                                        {requestLineItems.map((item, index) => (
+                                            <div key={`${item.title}-${index}`} className="flex items-center justify-between gap-3">
+                                                <span>{item.quantity}x {item.title}</span>
+                                                {typeof item.total === "number" && (
+                                                    <span className="text-slate-900">₹{item.total.toLocaleString()}</span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    request?.notes || <span className="text-gray-400 italic font-medium">No special instructions provided.</span>
+                                )}
                             </div>
                         </div>
                     </div>

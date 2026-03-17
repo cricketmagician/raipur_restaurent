@@ -7,7 +7,7 @@ import { useRouter, useParams } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
 import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, ShieldAlert, BarChart3, Sparkles, Palette, CreditCard, Phone, UserRound, Gem, Clock3 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequestsState, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms, useHotelGuests, useHotelGuestLoyalty, isDiningRequest, isHousekeepingRequest, isServiceRequest, isBillRequest, requestTypeMatches, type SyncStatus } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequestsState, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms, useHotelGuests, useHotelGuestLoyalty, isDiningRequest, isHousekeepingRequest, isServiceRequest, isBillRequest, requestTypeMatches, summarizeRequestItems, type SyncStatus } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
 import { RequestDetailModal } from "@/components/RequestDetailModal";
 
@@ -610,7 +610,9 @@ export default function AdminHub() {
                                                 </div>
                                                 <div className="min-w-0 rounded-[1.35rem] border border-white bg-white/75 px-4 py-3 shadow-sm">
                                                     <div className="flex items-center justify-between gap-3 mb-1">
-                                                        <span className="text-sm font-black text-slate-900 truncate">{req.type}</span>
+                                                        <span className="text-sm font-black text-slate-900 truncate">
+                                                            {isDiningRequest(req.type) ? summarizeRequestItems(req) : req.type}
+                                                        </span>
                                                         <StatusBadge status={req.status} />
                                                     </div>
                                                     <p className="text-xs font-medium text-slate-500 leading-5 line-clamp-2">

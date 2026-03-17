@@ -3,11 +3,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, BadgeCheck, Clock3, LogOut, PencilLine, Phone, Sparkles, User, Utensils, Truck, CircleDollarSign, RefreshCw } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Clock3, LogOut, PencilLine, Sparkles, User, Utensils, Truck, CircleDollarSign, RefreshCw } from "lucide-react";
 import { useHotelBranding, useGuestLoyalty, useCart, saveGuestLoyaltySession } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { useTheme } from "@/utils/themes";
 import { LoyaltySignIn } from "@/components/LoyaltySignIn";
+import { getDirectImageUrl } from "@/utils/image";
 
 type GuestProfile = {
     phone: string;
@@ -20,7 +21,8 @@ const formatDateTime = (value?: string | null) => {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "Not yet";
     return date.toLocaleString(undefined, {
-        dateStyle: "medium",
+        day: "numeric",
+        month: "short",
         timeStyle: "short",
     });
 };
@@ -55,8 +57,8 @@ export default function GuestProfilePage() {
     const lastMode = loyalty?.last_order_mode || null;
 
     const loginHint = useMemo(() => {
-        if (!profile?.phone) return "Sign in with your phone to sync identity across visits.";
-        return `Synced for ${profile.name}`;
+        if (!profile?.phone) return "Sync once for takeaway and repeat visits.";
+        return `Saved for ${profile.name}`;
     }, [profile]);
 
     const handleSignIn = async (phone: string, name: string) => {
@@ -87,125 +89,181 @@ export default function GuestProfilePage() {
 
     return (
         <div
-            className="min-h-screen pb-32 pt-10 w-full max-w-[560px] mx-auto overflow-x-hidden"
+            className="min-h-screen pb-32 pt-6 w-full max-w-[560px] mx-auto overflow-x-hidden px-4 relative"
             style={{ backgroundColor: theme.background, color: theme.text, fontFamily: theme.fontSans }}
         >
-            <div className="flex items-center justify-between mb-8 px-4">
+            <div className="absolute inset-0 -z-20 pointer-events-none">
+                <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${theme.background} 0%, ${theme.surface} 100%)` }} />
+                {branding.heroImage ? (
+                    <img
+                        src={getDirectImageUrl(branding.heroImage)}
+                        alt={branding.name}
+                        className="absolute inset-x-0 top-0 h-[320px] w-full object-cover opacity-20 blur-[2px] scale-105"
+                    />
+                ) : null}
+                <div className="absolute -top-10 right-0 h-56 w-56 rounded-full blur-[100px]" style={{ backgroundColor: `${theme.secondary}88` }} />
+                <div className="absolute top-40 -left-10 h-44 w-44 rounded-full blur-[100px]" style={{ backgroundColor: `${theme.primary}22` }} />
+            </div>
+
+            <div className="flex items-center justify-between mb-6">
                 <button
                     onClick={() => router.back()}
-                    className="w-12 h-12 rounded-full flex items-center justify-center bg-white border border-black/5 shadow-sm active:scale-95 transition-all"
-                    style={{ color: theme.primary }}
+                    className="w-12 h-12 rounded-full flex items-center justify-center border shadow-[0_10px_30px_-16px_rgba(0,0,0,0.28)] active:scale-95 transition-all backdrop-blur-xl"
+                    style={{ color: theme.primary, backgroundColor: "rgba(255,255,255,0.64)", borderColor: "rgba(255,255,255,0.58)" }}
                 >
                     <ArrowLeft className="w-6 h-6" />
                 </button>
                 <div className="text-center">
-                    <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">My Identity</p>
-                    <h1 className="text-2xl font-black tracking-tight" style={{ color: theme.primary }}>
-                        Guest Profile
+                    <p className="text-[9px] font-black uppercase tracking-[0.34em] opacity-40">My Identity</p>
+                    <h1 className="text-xl font-black tracking-tight mt-1" style={{ color: theme.primary }}>
+                        Guest Card
                     </h1>
                 </div>
                 <button
                     onClick={() => setIsEditOpen(true)}
-                    className="w-12 h-12 rounded-full flex items-center justify-center bg-white border border-black/5 shadow-sm active:scale-95 transition-all"
-                    style={{ color: theme.primary }}
+                    className="w-12 h-12 rounded-full flex items-center justify-center border shadow-[0_10px_30px_-16px_rgba(0,0,0,0.28)] active:scale-95 transition-all backdrop-blur-xl"
+                    style={{ color: theme.primary, backgroundColor: "rgba(255,255,255,0.64)", borderColor: "rgba(255,255,255,0.58)" }}
                 >
                     <PencilLine className="w-5 h-5" />
                 </button>
             </div>
 
-            <div className="px-4 space-y-5">
+            <div className="space-y-4">
                 <motion.div
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-[2.5rem] p-6 shadow-[0_20px_70px_-24px_rgba(0,0,0,0.22)] border overflow-hidden relative"
-                    style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}12` }}
+                    className="rounded-[2.8rem] p-6 border overflow-hidden relative shadow-[0_30px_90px_-34px_rgba(0,0,0,0.34)] backdrop-blur-2xl"
+                    style={{
+                        background: "linear-gradient(135deg, rgba(255,255,255,0.46) 0%, rgba(255,255,255,0.18) 100%)",
+                        borderColor: "rgba(255,255,255,0.42)",
+                    }}
                 >
-                    <div className="absolute inset-0 opacity-40 pointer-events-none" style={{ background: `radial-gradient(circle at top right, ${theme.secondary}55, transparent 55%)` }} />
-                    <div className="relative z-10 flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-4">
-                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg" style={{ backgroundColor: `${theme.primary}12`, color: theme.primary }}>
-                                <User className="w-7 h-7" />
+                    <div className="absolute inset-0 pointer-events-none opacity-70" style={{ background: `radial-gradient(circle at top right, ${theme.secondary}66, transparent 48%)` }} />
+                    <div className="relative z-10">
+                        <div className="flex items-start justify-between gap-4 mb-6">
+                            <div className="flex items-start gap-4">
+                                <div className="w-14 h-14 rounded-[1.4rem] flex items-center justify-center shadow-lg" style={{ backgroundColor: `${theme.primary}16`, color: theme.primary }}>
+                                    <User className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full border mb-3 backdrop-blur-md" style={{ backgroundColor: "rgba(255,255,255,0.42)", borderColor: "rgba(255,255,255,0.42)" }}>
+                                        <BadgeCheck className="w-3.5 h-3.5" style={{ color: theme.primary }} />
+                                        <span className="text-[9px] font-black uppercase tracking-[0.24em]" style={{ color: theme.primary }}>
+                                            {profile ? "Synced" : "Guest mode"}
+                                        </span>
+                                    </div>
+                                    <h2 className="text-[clamp(1.8rem,5vw,2.6rem)] font-black tracking-tight leading-none" style={{ color: theme.primary }}>
+                                        {profile?.name || "Guest"}
+                                    </h2>
+                                    <p className="mt-2 text-sm font-semibold opacity-65">
+                                        {profile?.phone || "Phone not linked yet"}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">Logged In Guest</p>
-                                <h2 className="text-2xl font-black tracking-tight mt-1" style={{ color: theme.primary }}>
-                                    {profile?.name || "Guest Guest"}
-                                </h2>
-                                <p className="text-sm font-medium opacity-60 mt-1">{profile?.phone || "No phone linked yet"}</p>
+
+                            <div className="text-right">
+                                <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-35 mb-2">Rewards</p>
+                                <p className="text-3xl font-black tracking-tight" style={{ color: theme.primary }}>
+                                    {points}
+                                </p>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-black/[0.03] border border-black/[0.04] mb-3">
-                                <BadgeCheck className="w-3.5 h-3.5" style={{ color: theme.primary }} />
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em]">
-                                    {profile ? "Synced" : "Not linked"}
-                                </span>
-                            </div>
-                            <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">{loginHint}</p>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <MiniStat
+                                label="Mode"
+                                value={orderMode === "takeaway" ? "Takeaway" : (roomNumber || "Dine-In")}
+                                theme={theme}
+                                icon={<Utensils className="w-4 h-4" />}
+                            />
+                            <MiniStat
+                                label="Bag"
+                                value={`${cartCount} items`}
+                                theme={theme}
+                                icon={<CircleDollarSign className="w-4 h-4" />}
+                            />
+                            <MiniStat
+                                label="Last Visit"
+                                value={formatDateTime(visits)}
+                                theme={theme}
+                                icon={<Clock3 className="w-4 h-4" />}
+                            />
+                            <MiniStat
+                                label="Last Order"
+                                value={lastOrder ? `${formatDateTime(lastOrder)}${lastMode ? ` • ${lastMode}` : ""}` : "Not yet"}
+                                theme={theme}
+                                icon={<Truck className="w-4 h-4" />}
+                            />
                         </div>
                     </div>
                 </motion.div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <StatCard title="Room" value={roomNumber || "Takeaway"} subtitle={orderMode === "takeaway" ? "Takeaway mode" : "Dine-in mode"} theme={theme} icon={<Utensils className="w-5 h-5" />} />
-                    <StatCard title="Cart" value={`${cartCount}`} subtitle="Items in bag" theme={theme} icon={<CircleDollarSign className="w-5 h-5" />} />
-                    <StatCard title="Last Visit" value={formatDateTime(visits)} subtitle="Last time we saw you" theme={theme} icon={<Clock3 className="w-5 h-5" />} />
-                    <StatCard title="Last Order" value={formatDateTime(lastOrder)} subtitle={lastMode ? `Last order: ${lastMode}` : "No order yet"} theme={theme} icon={<Truck className="w-5 h-5" />} />
-                </div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.08 }}
-                    className="rounded-[2.5rem] p-6 border shadow-[0_20px_70px_-24px_rgba(0,0,0,0.18)]"
-                    style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}12` }}
+                    transition={{ delay: 0.06 }}
+                    className="rounded-[2.4rem] p-5 border shadow-[0_24px_70px_-28px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
+                    style={{
+                        background: "linear-gradient(135deg, rgba(255,255,255,0.52) 0%, rgba(255,255,255,0.22) 100%)",
+                        borderColor: "rgba(255,255,255,0.42)",
+                    }}
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">Guest Mode</p>
-                            <h3 className="text-xl font-black mt-1" style={{ color: theme.primary }}>
-                                Switch seating mode
+                            <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-35">Order Mode</p>
+                            <h3 className="text-lg font-black mt-1" style={{ color: theme.primary }}>
+                                {loginHint}
                             </h3>
                         </div>
                         <Sparkles className="w-5 h-5" style={{ color: theme.primary }} />
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                         <button
                             onClick={switchToDineIn}
-                            className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.25em] border transition-all ${orderMode === "dine-in" ? "bg-white text-slate-900 border-slate-200 shadow-sm" : "bg-transparent text-slate-400 border-slate-200"}`}
+                            className={`py-4 rounded-[1.4rem] font-black text-[10px] uppercase tracking-[0.28em] border transition-all ${orderMode === "dine-in" ? "text-slate-900 shadow-sm" : "text-slate-400"}`}
+                            style={{
+                                backgroundColor: orderMode === "dine-in" ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.18)",
+                                borderColor: orderMode === "dine-in" ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.36)",
+                            }}
                         >
                             Dine-In
                         </button>
                         <button
                             onClick={switchToTakeaway}
-                            className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.25em] border transition-all ${orderMode === "takeaway" ? "bg-white text-slate-900 border-slate-200 shadow-sm" : "bg-transparent text-slate-400 border-slate-200"}`}
+                            className={`py-4 rounded-[1.4rem] font-black text-[10px] uppercase tracking-[0.28em] border transition-all ${orderMode === "takeaway" ? "text-slate-900 shadow-sm" : "text-slate-400"}`}
+                            style={{
+                                backgroundColor: orderMode === "takeaway" ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.18)",
+                                borderColor: orderMode === "takeaway" ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.36)",
+                            }}
                         >
                             Takeaway
                         </button>
                     </div>
-
-                    <p className="text-[10px] font-medium opacity-50 mt-4 leading-relaxed">
-                        Takeaway orders will ask you to sign in if your guest identity is not saved yet.
-                    </p>
                 </motion.div>
 
-                <div className="flex gap-3">
+                <motion.div
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12 }}
+                    className="grid grid-cols-2 gap-3"
+                >
                     <button
                         onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                        className="flex-1 py-4 rounded-2xl bg-white border border-black/5 shadow-sm font-black text-[10px] uppercase tracking-[0.25em] active:scale-95 transition-all"
-                        style={{ color: theme.primary }}
+                        className="py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.28em] active:scale-95 transition-all border shadow-[0_18px_50px_-24px_rgba(0,0,0,0.22)] backdrop-blur-xl"
+                        style={{ color: theme.primary, backgroundColor: "rgba(255,255,255,0.56)", borderColor: "rgba(255,255,255,0.48)" }}
                     >
                         Open Menu
                     </button>
                     <button
                         onClick={handleLogout}
-                        className="flex-1 py-4 rounded-2xl bg-rose-50 border border-rose-100 shadow-sm font-black text-[10px] uppercase tracking-[0.25em] active:scale-95 transition-all text-rose-600 flex items-center justify-center gap-2"
+                        className="py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.28em] active:scale-95 transition-all border shadow-[0_18px_50px_-24px_rgba(0,0,0,0.18)] backdrop-blur-xl text-rose-600 flex items-center justify-center gap-2"
+                        style={{ backgroundColor: "rgba(255,255,255,0.5)", borderColor: "rgba(255,255,255,0.48)" }}
                     >
                         <LogOut className="w-4 h-4" />
-                        Clear Identity
+                        Clear
                     </button>
-                </div>
+                </motion.div>
             </div>
 
             <LoyaltySignIn
@@ -220,33 +278,34 @@ export default function GuestProfilePage() {
     );
 }
 
-function StatCard({
-    title,
+function MiniStat({
+    label,
     value,
-    subtitle,
     icon,
     theme,
 }: {
-    title: string;
+    label: string;
     value: string;
-    subtitle: string;
     icon: React.ReactNode;
     theme: any;
 }) {
     return (
-        <div className="rounded-[2rem] p-4 border shadow-sm bg-white/80 backdrop-blur-sm" style={{ borderColor: `${theme.primary}10` }}>
-            <div className="flex items-center justify-between mb-4">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${theme.primary}12`, color: theme.primary }}>
+        <div
+            className="rounded-[1.6rem] p-4 border backdrop-blur-xl"
+            style={{
+                backgroundColor: "rgba(255,255,255,0.34)",
+                borderColor: "rgba(255,255,255,0.4)",
+            }}
+        >
+            <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-[1rem] flex items-center justify-center" style={{ backgroundColor: `${theme.primary}14`, color: theme.primary }}>
                     {icon}
                 </div>
-                <span className="text-[8px] font-black uppercase tracking-[0.25em] opacity-30">{title}</span>
+                <span className="text-[8px] font-black uppercase tracking-[0.25em] opacity-30">{label}</span>
             </div>
-            <div>
-                <p className="text-lg font-black tracking-tight leading-tight" style={{ color: theme.primary }}>
-                    {value}
-                </p>
-                <p className="text-[10px] font-medium opacity-50 mt-1">{subtitle}</p>
-            </div>
+            <p className="text-sm font-black tracking-tight leading-snug" style={{ color: theme.primary }}>
+                {value}
+            </p>
         </div>
     );
 }

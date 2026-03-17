@@ -243,6 +243,13 @@ export default function RestaurantPage() {
         }
     }, [view, activeCategory]);
 
+    useEffect(() => {
+        const handleOpenCart = () => setShowCart(true);
+        window.addEventListener("open_cart", handleOpenCart);
+
+        return () => window.removeEventListener("open_cart", handleOpenCart);
+    }, []);
+
     const handleCategoryClick = (id: string) => {
         if (id === 'all') {
             setActiveCategory('all');
@@ -617,32 +624,6 @@ export default function RestaurantPage() {
                                     ))}
                                 </div>
                             </section>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Floating Bag Preview */}
-                <AnimatePresence>
-                    {cartCount > 0 && !showCart && (
-                        <motion.div
-                            initial={{ y: 100, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 100, opacity: 0 }}
-                            className="fixed bottom-32 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[452px] z-[100]"
-                        >
-                            <button
-                                onClick={() => setShowCart(true)}
-                                className="w-full text-white p-6 flex items-center justify-between shadow-2xl border border-white/10 active:scale-95 transition-all"
-                                style={{ backgroundColor: theme.primary, borderRadius: theme.radius }}
-                            >
-                                <div className="flex items-center space-x-6">
-                                    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center font-black text-xs">
-                                        {cartCount}
-                                    </div>
-                                    <span className="text-sm font-black uppercase tracking-widest">In your bag</span>
-                                </div>
-                                <span className="text-xl font-black">₹{cartTotal.toFixed(0)}</span>
-                            </button>
                         </motion.div>
                     )}
                 </AnimatePresence>

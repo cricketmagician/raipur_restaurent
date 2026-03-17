@@ -3,12 +3,10 @@
 import React from "react";
 import { Trash2, Plus, Minus, X, RefreshCw, ShoppingBag, Sparkles, ArrowUpRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CartProgressBar } from "./CartProgressBar";
-import { UpsellSection } from "./UpsellSection";
-import { SHARED_MENU_ITEMS, SHARED_COMBOS } from "@/utils/constants";
 import { useTheme } from "@/utils/themes";
 import { useHotelBranding } from "@/utils/store";
 import { useParams } from "next/navigation";
+import { getDirectImageUrl } from "@/utils/image";
 
 interface CartOverlayProps {
     isOpen: boolean;
@@ -82,8 +80,11 @@ export function CartOverlay({
                         <div className="p-8 pt-6 overflow-y-auto no-scrollbar pb-safe">
                             <div className="flex items-center justify-between mb-10">
                                 <div>
-                                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Your Bag</h2>
-                                    <h2 className="text-4xl font-black italic tracking-tighter leading-none" style={{ color: theme.primary }}>Cravings</h2>
+                                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Cart Summary</h2>
+                                    <h2 className="text-4xl font-black italic tracking-tighter leading-none" style={{ color: theme.primary }}>Premium Bag</h2>
+                                    <p className="mt-2 text-xs font-bold uppercase tracking-[0.24em] text-slate-400">
+                                        {cartItems.length} item{cartItems.length === 1 ? "" : "s"} ready
+                                    </p>
                                 </div>
                                 <motion.button
                                     whileTap={{ scale: 0.9 }}
@@ -103,25 +104,38 @@ export function CartOverlay({
                             <div className="space-y-4 mb-12">
                                 {cartItems.length > 0 ? (
                                     cartItems.map((item) => (
-                                        <div 
+                                        <div
                                             key={item.id} 
-                                            className="flex items-center justify-between p-6 shadow-xl border group transition-all" 
+                                            className="flex items-center justify-between p-5 shadow-xl border group transition-all gap-4"
                                             style={{ 
                                                 borderRadius: theme.radius,
                                                 backgroundColor: theme.surface,
                                                 borderColor: `${theme.primary}10`
                                             }}
                                         >
-                                            <div className="flex items-center space-x-4">
-                                                <div className="w-12 h-12 rounded-xl flex items-center justify-center font-bold" style={{ backgroundColor: `${theme.primary}10`, color: theme.primary }}>
-                                                    {item.quantity}×
+                                            <div className="flex items-center space-x-4 min-w-0">
+                                                <div className="w-14 h-14 rounded-[1.1rem] overflow-hidden border border-black/5 bg-slate-100 shrink-0">
+                                                    {item.image_url ? (
+                                                        <img src={getDirectImageUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center font-bold" style={{ backgroundColor: `${theme.primary}10`, color: theme.primary }}>
+                                                            {item.quantity}x
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div>
-                                                    <p className="font-black italic text-lg" style={{ color: theme.text }}>{item.title}</p>
-                                                    <p className="text-xs font-bold tracking-widest uppercase" style={{ color: theme.accent }}>₹{((item.price || 0) * item.quantity).toFixed(0)}</p>
+                                                <div className="min-w-0">
+                                                    <p className="font-black italic text-lg line-clamp-1" style={{ color: theme.text }}>{item.title}</p>
+                                                    <div className="flex items-center gap-3 mt-1">
+                                                        <p className="text-[10px] font-black tracking-[0.22em] uppercase text-slate-400">
+                                                            Qty {item.quantity}
+                                                        </p>
+                                                        <p className="text-xs font-bold tracking-widest uppercase" style={{ color: theme.accent }}>
+                                                            Rs {((item.price || 0) * item.quantity).toFixed(0)}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center space-x-2">
+                                            <div className="flex items-center space-x-2 shrink-0">
                                                 <button 
                                                     onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
                                                     className="w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
@@ -210,7 +224,7 @@ export function CartOverlay({
                                 <button
                                     onClick={onOrder}
                                     disabled={isOrdering || cartItems.length === 0}
-                                    className="w-full py-8 font-black text-2xl italic shadow-2xl disabled:opacity-40 active:scale-95 transition-all flex items-center justify-center text-white"
+                                    className="w-full py-7 font-black text-xl uppercase tracking-[0.18em] shadow-2xl disabled:opacity-40 active:scale-95 transition-all flex items-center justify-center text-white"
                                     style={{ 
                                         backgroundColor: theme.primary,
                                         borderRadius: `calc(${theme.radius} * 0.75)`
@@ -220,7 +234,7 @@ export function CartOverlay({
                                         <RefreshCw className="w-8 h-8 animate-spin" />
                                     ) : (
                                         <span className="flex items-center space-x-3">
-                                            <span>Place Order</span>
+                                            <span>Checkout</span>
                                             <ArrowUpRight className="w-6 h-6 mt-1" />
                                         </span>
                                     )}

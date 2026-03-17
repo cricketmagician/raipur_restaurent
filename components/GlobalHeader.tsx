@@ -137,23 +137,39 @@ export function GlobalHeader() {
                         <button 
                             id="header-cart-button"
                             onClick={() => window.dispatchEvent(new CustomEvent('open_cart'))}
-                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 active:scale-95 transition-all relative"
-                            style={{ color: theme.primary }}
+                            className={`relative overflow-hidden flex items-center justify-center shadow-[0_18px_40px_-18px_rgba(0,0,0,0.28)] border border-white/80 active:scale-95 transition-all backdrop-blur-xl ${
+                                cartCount > 0 ? "h-12 min-w-[72px] px-3 rounded-[1.45rem] gap-2" : "w-12 h-12 rounded-full"
+                            }`}
+                            style={{
+                                color: theme.primary,
+                                background: cartCount > 0
+                                    ? `linear-gradient(135deg, ${theme.surface} 0%, ${theme.secondary} 100%)`
+                                    : "white"
+                            }}
                         >
+                            {cartCount > 0 && (
+                                <div
+                                    className="absolute inset-0 opacity-60"
+                                    style={{ background: `radial-gradient(circle at top right, ${theme.accent}22, transparent 55%)` }}
+                                />
+                            )}
                             <ShoppingBag className="w-6 h-6" />
-                            <AnimatePresence>
-                                {cartCount > 0 && (
-                                    <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        exit={{ scale: 0 }}
-                                        className="absolute -top-1 -right-1 w-6 h-6 text-white rounded-full text-[10px] font-black flex items-center justify-center shadow-lg border-2 border-white"
-                                        style={{ backgroundColor: theme.accent }}
-                                    >
-                                        {cartCount}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                            {cartCount > 0 && (
+                                <>
+                                    <div className="w-px h-5 bg-black/10" />
+                                    <AnimatePresence>
+                                        <motion.div
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            exit={{ scale: 0.8, opacity: 0 }}
+                                            className="relative z-10 min-w-7 h-7 px-2 text-white rounded-full text-[10px] font-black flex items-center justify-center shadow-lg border border-white/50"
+                                            style={{ backgroundColor: theme.accent }}
+                                        >
+                                            {cartCount}
+                                        </motion.div>
+                                    </AnimatePresence>
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

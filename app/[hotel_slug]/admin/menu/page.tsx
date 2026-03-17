@@ -33,6 +33,7 @@ export default function MenuPage() {
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
+    const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
     const [editingItem, setEditingItem] = useState<Partial<MenuItem> | null>(null);
     const [editingCategory, setEditingCategory] = useState<Partial<MenuCategory> | null>(null);
     const [viewMode, setViewMode] = useState<'sections' | 'list'>('sections');
@@ -116,7 +117,12 @@ export default function MenuPage() {
     const handleDelete = async (id: string) => {
         if (!branding?.id) return;
         if (confirm("Delete this menu item?")) {
-            await deleteSupabaseMenuItem(id, branding.id);
+            setDeletingItemId(id);
+            try {
+                await deleteSupabaseMenuItem(id, branding.id);
+            } finally {
+                setDeletingItemId(null);
+            }
         }
     };
 
@@ -403,9 +409,11 @@ export default function MenuPage() {
                                             </button>
                                             <button 
                                                 onClick={() => handleDelete(item.id)}
-                                                className="p-3 text-slate-300 hover:text-red-500 transition-colors"
+                                                disabled={deletingItemId === item.id}
+                                                className={`px-4 py-3 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] border transition-all flex items-center gap-2 ${deletingItemId === item.id ? 'opacity-60' : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'}`}
                                             >
-                                                <Trash2 className="w-4 h-4" />
+                                                {deletingItemId === item.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                                <span>Delete</span>
                                             </button>
                                         </div>
                                     </motion.div>
@@ -488,6 +496,14 @@ export default function MenuPage() {
                                         >
                                             {statusUpdatingId === item.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                                             Save
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(item.id)}
+                                            disabled={deletingItemId === item.id}
+                                            className={`px-4 py-3 rounded-2xl border font-black text-[9px] uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${deletingItemId === item.id ? 'opacity-60' : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'}`}
+                                        >
+                                            {deletingItemId === item.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                            Delete
                                         </button>
                                         <button 
                                             onClick={() => { setEditingItem(item); setIsModalOpen(true); }}

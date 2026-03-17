@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Sparkles, ShoppingBag, ChevronRight } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Trash2, Sparkles, ShoppingBag, ChevronRight } from "lucide-react";
 import { useHotelBranding, useSupabaseMenuItems, useCart } from "@/utils/store";
 import { CATEGORY_THEMES } from "@/utils/themes";
 import { BottomNav } from "@/components/BottomNav";
@@ -121,36 +121,67 @@ export default function ItemPage() {
                         </div>
                     </div>
 
-                    <button
-                        onClick={(e) => handleAdd(e)}
-                        className={`w-full py-8 rounded-full flex items-center justify-center space-x-4 transition-all active:scale-95 shadow-xl relative overflow-hidden group ${
-                            isAdded ? 'bg-emerald-500 text-white' : 'bg-[#00704A] text-white'
-                        }`}
-                    >
+                    <div className="flex items-center space-x-4">
                         <AnimatePresence mode="wait">
-                            {isAdded ? (
-                                <motion.span 
-                                    key="added"
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    exit={{ y: -20, opacity: 0 }}
-                                    className="text-lg font-black uppercase tracking-widest flex items-center"
+                            {(cart[item.id] || 0) > 0 ? (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="w-full h-20 bg-[#F2F0EB] rounded-full flex items-center justify-between px-2 border border-[#00704A]/10 shadow-inner"
                                 >
-                                    Added to Bag ✨
-                                </motion.span>
+                                    <button
+                                        onClick={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
+                                        className="w-16 h-16 rounded-full flex items-center justify-center text-[#00704A] hover:bg-white transition-all active:scale-90"
+                                    >
+                                        {(cart[item.id] || 0) === 1 ? <Trash2 className="w-6 h-6 text-red-500" /> : <Minus className="w-6 h-6" />}
+                                    </button>
+                                    
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-2xl font-black text-[#1E3932]">{cart[item.id]}</span>
+                                        <span className="text-[8px] font-black text-[#00704A] uppercase tracking-widest">In Bag</span>
+                                    </div>
+                                    
+                                    <button
+                                        onClick={(e) => handleAdd(e)}
+                                        className="w-16 h-16 rounded-full flex items-center justify-center bg-[#00704A] text-white shadow-lg active:scale-90 transition-all font-black text-2xl"
+                                    >
+                                        <Plus className="w-6 h-6" />
+                                    </button>
+                                </motion.div>
                             ) : (
-                                <motion.span 
-                                    key="add"
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    exit={{ y: -20, opacity: 0 }}
-                                    className="text-lg font-black uppercase tracking-widest flex items-center"
+                                <button
+                                    onClick={(e) => handleAdd(e)}
+                                    className={`w-full py-8 rounded-full flex items-center justify-center space-x-4 transition-all active:scale-95 shadow-xl relative overflow-hidden group ${
+                                        isAdded ? 'bg-emerald-500 text-white' : 'bg-[#00704A] text-white'
+                                    }`}
                                 >
-                                    Add to Order
-                                </motion.span>
+                                    <AnimatePresence mode="wait">
+                                        {isAdded ? (
+                                            <motion.span 
+                                                key="added"
+                                                initial={{ y: 20, opacity: 0 }}
+                                                animate={{ y: 0, opacity: 1 }}
+                                                exit={{ y: -20, opacity: 0 }}
+                                                className="text-lg font-black uppercase tracking-widest flex items-center"
+                                            >
+                                                Added to Bag ✨
+                                            </motion.span>
+                                        ) : (
+                                            <motion.span 
+                                                key="add"
+                                                initial={{ y: 20, opacity: 0 }}
+                                                animate={{ y: 0, opacity: 1 }}
+                                                exit={{ y: -20, opacity: 0 }}
+                                                className="text-lg font-black uppercase tracking-widest flex items-center"
+                                            >
+                                                Add to Order
+                                            </motion.span>
+                                        )}
+                                    </AnimatePresence>
+                                </button>
                             )}
                         </AnimatePresence>
-                    </button>
+                    </div>
                 </motion.div>
 
                 {/* --- 🤤 Perfect Pairing (Smart Suggestion) --- */}
@@ -165,23 +196,42 @@ export default function ItemPage() {
                             <h3 className="text-[10px] font-black text-[#1E3932] uppercase tracking-[0.3em]">Perfect Addition</h3>
                         </div>
 
-                        <button 
-                            onClick={(e) => handleAddPairing(e)}
-                            className="w-full bg-white p-6 rounded-[2.5rem] border border-[#00704A]/5 shadow-xl shadow-[#00704A]/5 flex items-center justify-between group active:scale-[0.98] transition-all text-left"
-                        >
+                        <div className="w-full bg-white p-6 rounded-[2.5rem] border border-[#00704A]/5 shadow-xl shadow-[#00704A]/5 flex items-center justify-between group transition-all text-left">
                             <div className="flex items-center flex-1 min-w-0">
                                 <div className="w-16 h-16 rounded-full overflow-hidden mr-5 shrink-0 shadow-lg">
                                     <img src={getDirectImageUrl(pairing.image_url)} alt={pairing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                 </div>
                                 <div className="min-w-0 mr-4">
                                     <h4 className="text-lg font-black text-[#1E3932] truncate">{pairing.title}</h4>
-                                    <p className="text-[10px] text-[#00704A] font-black uppercase tracking-widest mt-1">₹{pairing.price} ADD EXTRA</p>
+                                    <p className="text-[10px] text-[#00704A] font-black uppercase tracking-widest mt-1">₹{pairing.price} EACH</p>
                                 </div>
                             </div>
-                            <div className="w-12 h-12 bg-[#00704A] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-all">
-                                <Plus className="w-6 h-6" />
-                            </div>
-                        </button>
+                            
+                            {(cart[pairing.id] || 0) > 0 ? (
+                                <div className="flex items-center bg-[#F2F0EB] rounded-full p-1 border border-[#00704A]/10">
+                                    <button 
+                                        onClick={() => updateQuantity(pairing.id, (cart[pairing.id] || 0) - 1)}
+                                        className="w-10 h-10 rounded-full flex items-center justify-center text-[#00704A] hover:bg-white transition-all shadow-sm"
+                                    >
+                                        {(cart[pairing.id] || 0) === 1 ? <Trash2 className="w-4 h-4 text-red-500" /> : <Minus className="w-4 h-4" />}
+                                    </button>
+                                    <span className="w-8 text-center text-xs font-black text-[#1E3932]">{cart[pairing.id]}</span>
+                                    <button 
+                                        onClick={(e) => handleAddPairing(e)}
+                                        className="w-10 h-10 rounded-full flex items-center justify-center bg-[#00704A] text-white shadow-md"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <button 
+                                    onClick={(e) => handleAddPairing(e)}
+                                    className="w-12 h-12 bg-[#00704A] rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-all font-black"
+                                >
+                                    <Plus className="w-6 h-6" />
+                                </button>
+                            )}
+                        </div>
                     </motion.div>
                 )}
             </div>

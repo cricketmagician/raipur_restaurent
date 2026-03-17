@@ -16,10 +16,11 @@ interface PairItem {
 
 interface PerfectPairsProps {
     pairs: PairItem[];
-    onAdd: (id: string) => void;
+    cart: Record<string, number>;
+    onUpdateQuantity: (id: string, q: number) => void;
 }
 
-export function PerfectPairs({ pairs, onAdd }: PerfectPairsProps) {
+export function PerfectPairs({ pairs, cart, onUpdateQuantity }: PerfectPairsProps) {
     const triggerFly = useAddEffectTrigger();
     
     return (
@@ -52,15 +53,39 @@ export function PerfectPairs({ pairs, onAdd }: PerfectPairsProps) {
                             <span className="text-xl font-black text-[#1E3932]">₹{pair.price}</span>
                         </div>
 
-                        <button
-                            onClick={(e) => {
-                                triggerFly(pair.originalId, pair.image, e);
-                                onAdd(pair.originalId);
-                            }}
-                            className="bg-[#00704A] text-white p-4 rounded-2xl shadow-lg shadow-[#00704A]/20 active:scale-90 transition-all relative z-10"
-                        >
-                            <Plus className="w-6 h-6" />
-                        </button>
+                        {cart[pair.originalId] > 0 ? (
+                            <div className="flex items-center bg-[#F2F0EB] rounded-full p-1 border border-[#00704A]/10 relative z-10" onClick={(e) => e.stopPropagation()}>
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onUpdateQuantity(pair.originalId, cart[pair.originalId] - 1);
+                                    }}
+                                    className="w-10 h-10 rounded-full flex items-center justify-center text-[#00704A] hover:bg-white transition-all shadow-sm"
+                                >
+                                    -
+                                </button>
+                                <span className="w-8 text-center text-xs font-black text-[#1E3932]">{cart[pair.originalId]}</span>
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onUpdateQuantity(pair.originalId, cart[pair.originalId] + 1);
+                                    }}
+                                    className="w-10 h-10 rounded-full flex items-center justify-center bg-[#00704A] text-white shadow-md"
+                                >
+                                    +
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={(e) => {
+                                    triggerFly(pair.originalId, pair.image, e);
+                                    onUpdateQuantity(pair.originalId, 1);
+                                }}
+                                className="bg-[#00704A] text-white p-4 rounded-2xl shadow-lg shadow-[#00704A]/20 active:scale-90 transition-all relative z-10"
+                            >
+                                <Plus className="w-6 h-6" />
+                            </button>
+                        )}
                     </motion.div>
                 ))}
             </div>

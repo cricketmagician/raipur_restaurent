@@ -11,14 +11,17 @@ interface TrendingItem {
     image: string;
     price: number;
     tag: string;
+    menuItemId: string; // Ensure we have the real ID
 }
 
 interface TrendingNowProps {
     items: TrendingItem[];
+    cart: Record<string, number>;
+    onUpdateQuantity: (id: string, q: number) => void;
     onItemClick: (id: string) => void;
 }
 
-export function TrendingNow({ items, onItemClick }: TrendingNowProps) {
+export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: TrendingNowProps) {
     return (
         <section className="space-y-6">
             <div className="flex items-center justify-between px-2">
@@ -67,7 +70,32 @@ export function TrendingNow({ items, onItemClick }: TrendingNowProps) {
                             </p>
                             <div className="flex items-center justify-between">
                                 <span className="text-xl font-black text-[#1E3932]">₹{item.price}</span>
-                                <span className="text-[10px] font-bold text-[#00704A] italic">Order like everyone else</span>
+                                
+                                {cart[item.menuItemId] > 0 ? (
+                                    <div className="flex items-center bg-[#F2F0EB] rounded-full p-1 border border-[#00704A]/10" onClick={(e) => e.stopPropagation()}>
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onUpdateQuantity(item.menuItemId, cart[item.menuItemId] - 1);
+                                            }}
+                                            className="w-8 h-8 rounded-full flex items-center justify-center text-[#00704A] hover:bg-white transition-all shadow-sm"
+                                        >
+                                            -
+                                        </button>
+                                        <span className="w-8 text-center text-[10px] font-black text-[#1E3932]">{cart[item.menuItemId]}</span>
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onUpdateQuantity(item.menuItemId, cart[item.menuItemId] + 1);
+                                            }}
+                                            className="w-8 h-8 rounded-full flex items-center justify-center bg-[#00704A] text-white shadow-md"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <span className="text-[10px] font-bold text-[#00704A] italic">Order like everyone else</span>
+                                )}
                             </div>
                         </div>
                     </motion.div>

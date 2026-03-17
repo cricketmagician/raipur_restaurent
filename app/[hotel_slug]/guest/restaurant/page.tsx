@@ -247,7 +247,9 @@ export default function RestaurantPage() {
                                     isRecommended={item.is_recommended}
                                     theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
                                     onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
+                                    quantity={cart[item.id] || 0}
                                     onAdd={() => addToCart(item)}
+                                    onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
                                 />
                             ))}
                         </div>
@@ -281,7 +283,9 @@ export default function RestaurantPage() {
                                         isRecommended={item.is_recommended}
                                         theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
                                         onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
+                                        quantity={cart[item.id] || 0}
                                         onAdd={() => addToCart(item)}
+                                        onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
                                     />
                                 ))}
                         </AnimatePresence>

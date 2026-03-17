@@ -181,8 +181,10 @@ export function GlobalHeader() {
                             onClick={() => {
                                 if (tableNumber?.toLowerCase() === 'takeaway') {
                                     localStorage.removeItem(`hotel_room_${hotelSlug}`);
-                                    router.push(`/${hotelSlug}/guest/dashboard`);
-                                    setTimeout(() => window.location.reload(), 100);
+                                    // Also remove the TAKEAWAY in the URL if present
+                                    const newUrl = window.location.pathname;
+                                    router.push(newUrl);
+                                    setTimeout(() => window.location.reload(), 50);
                                 }
                             }}
                             className={`relative z-10 flex-1 py-1.5 flex items-center justify-center transition-all duration-500 ${
@@ -196,8 +198,9 @@ export function GlobalHeader() {
                                 if (tableNumber?.toLowerCase() !== 'takeaway') {
                                     localStorage.setItem(`hotel_room_${hotelSlug}`, 'Takeaway');
                                     localStorage.removeItem(`hotel_pin_${hotelSlug}`);
-                                    router.push(`/${hotelSlug}/guest/dashboard?room=Takeaway`);
-                                    setTimeout(() => window.location.reload(), 100);
+                                    const newUrl = window.location.pathname + '?room=Takeaway';
+                                    router.push(newUrl);
+                                    setTimeout(() => window.location.reload(), 50);
                                 }
                             }}
                             className={`relative z-10 flex-1 py-1.5 flex items-center justify-center transition-all duration-500 ${

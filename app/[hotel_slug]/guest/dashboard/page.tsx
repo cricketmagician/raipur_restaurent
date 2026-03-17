@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { ServiceCard } from "@/components/ServiceCard";
 import { ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles, Search, ArrowUpRight, Receipt, ChevronRight, User } from "lucide-react";
 import { ImpulseBottomSheet } from "@/components/ImpulseBottomSheet";
@@ -101,31 +101,56 @@ export default function GuestDashboard() {
         { id: "s4", image: "/images/menu_demo/pizza.png", label: "Garden Special", type: "New", menuItemId: "a1137704-58a3-48b4-8395-8120387e7f6e", price: 349 },
     ];
 
-    const trendingItems = [
-        { 
-            id: "t1", 
-            title: "The OG Combo", 
-            description: "Classic Cold Coffee + Choco Lava Cake", 
-            image: "/images/menu_demo/coffee.png", // Using coffee as primary image
-            price: 359, 
-            tag: "Bestseller",
-            menuItemId: "c1137704-58a3-48b4-8395-8120387e7f6e"
-        },
-        { 
-            id: "t2", 
-            title: "Weekend Vibe", 
-            description: "Premium Burger + Peri Peri Fries", 
-            image: "/images/menu_demo/burger.png", 
-            price: 399, 
-            tag: "Trending",
-            menuItemId: "b1137704-58a3-48b4-8395-8120387e7f6e"
-        }
-    ];
+    const trendingItems = useMemo(() => {
+        const popular = menuItems.filter(i => i.is_popular).slice(0, 2);
+        return popular.map((item, index) => ({
+            id: `t${index}`,
+            title: item.title,
+            description: item.description || "The community favorite choice.",
+            image: item.image_url || "/images/menu_demo/coffee.png",
+            price: item.price,
+            tag: index === 0 ? "Bestseller" : "Trending",
+            menuItemId: item.id
+        }));
+    }, [menuItems]);
 
-    const perfectPairs = [
-        { id: "p1", title: "Espresso + Cookie", subtitle: "Handcrafted Pairing", image: "/images/menu_demo/coffee.png", price: 199, originalId: "537a0ee4-7b8a-42b9-8a34-3ebdd0b47c47" },
-        { id: "p2", title: "Mojito + Fries", subtitle: "Summer Favorite", image: "/images/menu_demo/mojito.png", price: 279, originalId: "e1137704-58a3-48b4-8395-8120387e7f6e" }
-    ];
+    const perfectPairs = useMemo(() => {
+        // Try to find items with pairings, or just pick two interesting ones
+        const itemsWithPairings = menuItems.filter(i => i.is_recommended && i.upsell_items && i.upsell_items.length > 0);
+        const pairs: any[] = [];
+        
+        if (itemsWithPairings.length >= 1) {
+            const main = itemsWithPairings[0];
+            const companionId = main.upsell_items![0];
+            const companion = menuItems.find(m => m.id === companionId);
+            if (companion) {
+                pairs.push({
+                    id: "p1",
+                    title: `${main.title} + ${companion.title}`,
+                    subtitle: "Handcrafted Pairing",
+                    image: main.image_url || "/images/menu_demo/coffee.png",
+                    price: main.price + companion.price,
+                    originalId: main.id // We'll just add the main one for simplicity or handle both
+                });
+            }
+        }
+        
+        // Fallback or second pair
+        if (pairs.length < 2) {
+             const others = menuItems.filter(i => !pairs.some(p => p.originalId === i.id)).slice(0, 2 - pairs.length);
+             others.forEach((item, i) => {
+                 pairs.push({
+                     id: `p${pairs.length + 1}`,
+                     title: item.title,
+                     subtitle: "Perfect with anything",
+                     image: item.image_url || "/images/menu_demo/coffee.png",
+                     price: item.price,
+                     originalId: item.id
+                 });
+             });
+        }
+        return pairs;
+    }, [menuItems]);
 
         // No change needed to updateQuantity itself as it's now from useCart
 
@@ -309,8 +334,10 @@ export default function GuestDashboard() {
                 {/* 2. 🔥 Trending Now (Combo-focused) */}
                 <TrendingNow 
                     items={trendingItems} 
+                    cart={cart}
+                    onUpdateQuantity={updateQuantity}
                     onItemClick={(id) => {
-                        const trend = trendingItems.find(t => t.id === id);
+                        const trend = trendingItems.find((t: any) => t.id === id);
                         if (trend) router.push(`/${hotelSlug}/guest/item/${trend.menuItemId}`);
                     }} 
                 />
@@ -318,10 +345,15 @@ export default function GuestDashboard() {
                 {/* 3. 🤤 Perfect Pairs (AOV Booster) */}
                 <PerfectPairs 
                     pairs={perfectPairs}
-                    onAdd={(id) => {
+                    cart={cart}
+                    onUpdateQuantity={(id, q) => {
                         const item = menuItems.find(m => m.id === id);
-                        if (item) addToCart(item);
-                        setToast({ message: "Excellent Choice! Added to Bag ✨", type: "success", isVisible: true });
+                        if (item) {
+                            updateQuantity(id, q);
+                            if (q > (cart[id] || 0)) {
+                                setToast({ message: "Excellent Choice! Added to Bag ✨", type: "success", isVisible: true });
+                            }
+                        }
                     }}
                 />
 

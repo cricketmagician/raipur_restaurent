@@ -1,7 +1,7 @@
 import React from "react";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus, Minus, Trash2, Sparkles } from "lucide-react";
 import { CategoryTheme } from "@/utils/themes";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { getDirectImageUrl } from "@/utils/image";
 import { useAddEffectTrigger } from "./AddEffect";
@@ -18,9 +18,11 @@ interface MenuCardProps {
     badgeText?: string;
     theme?: CategoryTheme;
     onClick?: () => void;
+    quantity?: number;
+    onRemove?: () => void;
 }
 
-export function MenuCard({ id, title, description, price, image, onAdd, isPopular, isRecommended, badgeText, theme, onClick }: MenuCardProps) {
+export function MenuCard({ id, title, description, price, image, onAdd, isPopular, isRecommended, badgeText, theme, onClick, quantity = 0, onRemove }: MenuCardProps) {
     const accentColor = theme?.accent || "#D4AF37";
     const textColor = theme?.textColor || "#3E2723";
     const popularEffect = isPopular ? `shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border-${accentColor}/20 scale-[1.02]` : 'shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border-slate-100/50';
@@ -81,16 +83,57 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                 </p>
                 <div className="mt-auto flex items-center justify-between">
                     <span className="text-xl font-black text-[#1E3932]">₹{price}</span>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (image) triggerFly(id, image, e);
-                            onAdd?.();
-                        }}
-                        className="w-12 h-12 rounded-full bg-[#00704A] text-white flex items-center justify-center transition-all hover:bg-[#1E3932] hover:shadow-xl active:scale-95 shadow-lg"
-                    >
-                        <Plus className="w-6 h-6" />
-                    </button>
+                    
+                    <AnimatePresence mode="wait">
+                        {quantity > 0 ? (
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.8, x: 20 }}
+                                animate={{ opacity: 1, scale: 1, x: 0 }}
+                                exit={{ opacity: 0, scale: 0.8, x: 20 }}
+                                className="flex items-center bg-[#F2F0EB] rounded-full p-1 border border-[#00704A]/10 shadow-sm"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onRemove?.();
+                                    }}
+                                    className="w-10 h-10 rounded-full flex items-center justify-center text-[#00704A] hover:bg-white transition-all active:scale-90"
+                                >
+                                    {quantity === 1 ? <Trash2 className="w-4 h-4 text-red-500" /> : <Minus className="w-4 h-4" />}
+                                </button>
+                                
+                                <span className="w-8 text-center text-sm font-black text-[#1E3932] font-sans">
+                                    {quantity}
+                                </span>
+                                
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (image) triggerFly(id, image, e);
+                                        onAdd?.();
+                                    }}
+                                    className="w-10 h-10 rounded-full flex items-center justify-center bg-[#00704A] text-white shadow-md active:scale-90 transition-all"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                </button>
+                            </motion.div>
+                        ) : (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (image) triggerFly(id, image, e);
+                                    onAdd?.();
+                                }}
+                                className="w-12 h-12 rounded-full bg-[#00704A] text-white flex items-center justify-center transition-all hover:bg-[#1E3932] hover:shadow-xl active:scale-95 shadow-lg"
+                            >
+                                <Plus className="w-6 h-6" />
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </motion.div>

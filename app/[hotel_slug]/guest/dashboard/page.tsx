@@ -164,28 +164,21 @@ export default function GuestDashboard() {
     return (
         <div className="min-h-screen bg-[#0F0A08] text-[#F5F5DC] selection:bg-accent selection:text-primary pb-32">
             
-            {/* 1. TOP BAR */}
+            {/* 1. TOP BAR (Simplified Utility Bar) */}
             <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? 'bg-[#0F0A08]/95 backdrop-blur-md border-b border-accent/10 py-3' : 'bg-transparent py-5'}`}>
-                <div className="max-w-md mx-auto px-6 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 shrink-0">
-                        {branding?.logo && (
-                            <img src={getDirectImageUrl(branding.logo)} className="w-8 h-8 rounded-lg object-contain" alt="Logo" />
-                        )}
-                        <h1 className="text-xl font-black tracking-tighter italic text-white leading-none">{branding?.name || "Hutgood"}</h1>
-                    </div>
-                    
+                <div className="max-w-md mx-auto px-6 flex items-center justify-end gap-4">
                     <div className="flex items-center gap-2">
-                        <div className="flex bg-white/10 rounded-full p-1 border border-white/20 text-[9px] font-black uppercase tracking-widest backdrop-blur-md">
+                        <div className="flex bg-white/5 rounded-full p-1 border border-white/10 text-[9px] font-black uppercase tracking-widest backdrop-blur-md">
                             <button onClick={switchToDineIn} className={`px-3 py-1.5 rounded-full transition-all ${orderMode === 'dine-in' ? 'bg-accent text-primary shadow-lg' : 'text-white/40'}`}>Dine-in</button>
                             <button onClick={switchToTakeaway} className={`px-3 py-1.5 rounded-full transition-all ${orderMode === 'takeaway' ? 'bg-accent text-primary shadow-lg' : 'text-white/40'}`}>Takeaway</button>
                         </div>
-                        <button onClick={() => setShowCart(true)} className="relative w-10 h-10 rounded-full bg-accent flex items-center justify-center text-primary shadow-lg shadow-accent/20 shrink-0">
+                        <button onClick={() => setShowCart(true)} className="relative w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-accent shadow-lg shrink-0 backdrop-blur-md">
                             <ShoppingBag className="w-5 h-5" />
                             {cartCount > 0 && (
                                 <motion.span 
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    className="absolute -top-1 -right-1 w-5 h-5 bg-white text-primary text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg"
+                                    className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-primary text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg"
                                 >
                                     {cartCount}
                                 </motion.span>
@@ -195,7 +188,37 @@ export default function GuestDashboard() {
                 </div>
             </header>
 
-            <main className="max-w-md mx-auto px-6 pt-32 space-y-10">
+            <main className="max-w-md mx-auto px-6 pt-24 space-y-12">
+                
+                {/* 0. BRANDING RELOCATION */}
+                <section className="flex flex-col items-center gap-6 pt-4">
+                    {branding?.logo && (
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="w-24 h-24 rounded-[2.5rem] bg-[#1A1512] p-5 border border-accent/10 shadow-2xl overflow-hidden flex items-center justify-center"
+                        >
+                            <img src={getDirectImageUrl(branding.logo)} className="w-full h-full object-contain" alt="Hotel Logo" />
+                        </motion.div>
+                    )}
+                    <div className="space-y-2 text-center">
+                        <motion.h1 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            className="text-4xl font-black tracking-tighter italic text-white leading-none"
+                        >
+                            {branding?.name || "Hutgood"}
+                        </motion.h1>
+                        <motion.p 
+                            initial={{ y: 10, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.1 }}
+                            className="text-[10px] font-black uppercase tracking-[0.4em] text-accent/60"
+                        >
+                            Premium Experience
+                        </motion.p>
+                    </div>
+                </section>
                 
                 {/* 0. ADVERTISEMENT SLIDER */}
                 {offers && offers.length > 0 && (

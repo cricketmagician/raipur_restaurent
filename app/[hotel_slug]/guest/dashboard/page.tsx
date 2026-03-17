@@ -270,7 +270,13 @@ export default function GuestDashboard() {
     };
 
     const triggerUpsell = (item: any) => {
-        // --- Smart Pairing Logic (Blueprint Phase) ---
+        // --- Smart Pairing Logic (Revenue Engine V3) ---
+        // If it's a burger, auto-trigger the Perfect Pairs section
+        if (item.name?.toLowerCase().includes('burger') || item.category === 'burgers') {
+            setUpsellItem({ id: item.id, title: item.name });
+            return;
+        }
+
         if (item.upsell_items && item.upsell_items.length > 0) {
             const potentialUpsell = menuItems.find(m => 
                 item.upsell_items.includes(m.id) && 
@@ -278,7 +284,7 @@ export default function GuestDashboard() {
             );
 
             if (potentialUpsell) {
-                // 0.5s delay as per blueprint
+                // 0.5s delay for natural feel
                 setTimeout(() => {
                     setUpsellItem(potentialUpsell);
                 }, 500);
@@ -391,29 +397,53 @@ export default function GuestDashboard() {
                 />
 
                 {/* 3. 🤤 Perfect Pairs (AOV Booster - Contextual Appearance) */}
-                <AnimatePresence>
+                <div className="space-y-6">
                     {(cartCount > 0 || isHungry) && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                        >
-                            <PerfectPairs 
-                                pairs={perfectPairs}
-                                cart={cart}
-                                onUpdateQuantity={(id, q) => {
-                                    const item = menuItems.find(m => m.id === id);
-                                    if (item) {
-                                        updateQuantity(id, q);
-                                        if (q > (cart[id] || 0)) {
-                                            setToast({ message: "Excellent Choice! Added to Bag ✨", type: "success", isVisible: true });
-                                        }
-                                    }
-                                }} 
-                            />
-                        </motion.div>
+                        <div className="flex flex-wrap items-center justify-center gap-3 px-2 mb-2 animate-in fade-in slide-in-from-top-4 duration-700">
+                            {[
+                                { label: "Pizza", icon: "🍕" },
+                                { label: "Coffee", icon: "☕" },
+                                { label: "Burger", icon: "🍔" },
+                                { label: "Dessert", icon: "🍰" }
+                            ].map((tag) => (
+                                <button 
+                                    key={tag.label}
+                                    onClick={() => router.push(`/${hotelSlug}/guest/restaurant?tag=${tag.label.toLowerCase()}`)}
+                                    className="px-5 py-2.5 rounded-full bg-white shadow-sm border border-black/5 text-xs font-black flex items-center gap-2 active:scale-90 transition-all hover:bg-slate-50"
+                                    style={{ color: theme.primary }}
+                                >
+                                    <span>{tag.icon}</span>
+                                    <span className="uppercase tracking-widest">{tag.label}</span>
+                                </button>
+                            ))}
+                        </div>
                     )}
-                </AnimatePresence>
+                    
+                    <AnimatePresence>
+                        {(cartCount > 0 || isHungry || upsellItem) && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                animate={{ opacity: 1, height: 'auto', marginTop: 24 }}
+                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                className="overflow-hidden"
+                            >
+                                <PerfectPairs 
+                                    pairs={perfectPairs}
+                                    cart={cart}
+                                    onUpdateQuantity={(id, q) => {
+                                        const item = menuItems.find(m => m.id === id);
+                                        if (item) {
+                                            updateQuantity(id, q);
+                                            if (q > (cart[id] || 0)) {
+                                                setToast({ message: "Excellent Choice! Added to Bag ✨", type: "success", isVisible: true });
+                                            }
+                                        }
+                                    }} 
+                                />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
 
                 {/* 4. 🌈 Mood Section (Decision Shortcut) */}
                 <MoodSection onMoodClick={(id) => router.push(`/${hotelSlug}/guest/restaurant?mood=${id}`)} />

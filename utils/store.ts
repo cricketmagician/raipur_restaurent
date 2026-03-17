@@ -119,6 +119,7 @@ export interface MenuItem {
     is_available: boolean;
     is_popular?: boolean;
     is_recommended?: boolean;
+    is_combo?: boolean;
     upsell_items?: string[];
     created_at?: string;
 }
@@ -1025,6 +1026,7 @@ export async function saveSupabaseMenuItem(hotelId: string, item: Partial<MenuIt
                 is_available: item.is_available,
                 is_popular: item.is_popular,
                 is_recommended: item.is_recommended,
+                is_combo: item.is_combo,
                 upsell_items: item.upsell_items
             })
             .eq('id', item.id);

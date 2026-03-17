@@ -39,7 +39,16 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
     const popularEffect = isPopular ? `shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] scale-[1.02]` : 'shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border-slate-100/50';
     
     const triggerFly = useAddEffectTrigger();
-    const displayTag = badgeText || (isRecommended ? "Chef's Choice" : null);
+    const displayTag = badgeText || 
+        (isRecommended ? "Chef Recommend" : 
+         isPopular ? "Best Seller" : 
+         (id.includes('mock') && id.includes('combo')) || (id.startsWith('mock_')) ? null : null); // Fallback logic
+
+    // Final tag logic
+    const finalTag = badgeText || 
+        (isRecommended ? "Chef Recommend" : 
+         isPopular ? "Best Seller" : 
+         null);
 
     return (
         <motion.div 
@@ -70,12 +79,12 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                         <span className="text-sm font-black" style={{ color: primaryColor }}>₹{price.toFixed(0)}</span>
                     </div>
  
-                    {displayTag && (
+                    {finalTag && (
                         <div 
                             className="absolute top-4 left-4 text-white px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] z-10 border border-white/10 shadow-lg"
-                            style={{ backgroundColor: primaryColor }}
+                            style={{ backgroundColor: isRecommended ? primaryColor : "#F59E0B" }}
                         >
-                            {displayTag}
+                            {finalTag}
                         </div>
                     )}
                     
@@ -85,7 +94,7 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                             style={{ backgroundColor: globalTheme.secondary, color: primaryColor }}
                         >
                             <Sparkles className="w-3 h-3 mr-2" />
-                            Most Loved
+                            Best Seller
                         </div>
                     )}
                 </div>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { MenuCard } from "@/components/MenuCard";
-import { CheckCircle, Search } from "lucide-react";
+import { CheckCircle, Search, Sparkles, TrendingUp, Gift } from "lucide-react";
 import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
@@ -87,6 +87,17 @@ const MOCK_FOOD_ITEMS = [
         image_url: "/images/food/chocolate_cake.png",
         is_recommended: true,
         is_popular: true
+    },
+    {
+        id: "mock_combo1",
+        title: "Luxury Pizza Deal",
+        description: "Any classic pizza + 1 Fries + 1 Coke. Perfect for couples.",
+        price: 599,
+        category: "combos",
+        image_url: "/images/food/margherita_pizza.png",
+        is_recommended: false,
+        is_popular: false,
+        is_combo: true
     }
 ];
 
@@ -123,6 +134,7 @@ export default function RestaurantPage() {
         { id: "desserts", name: "Desserts", icon: "🍰" },
         { id: "drinks", name: "Drinks", icon: "🥤" },
         { id: "sides", name: "Sides", icon: "🍟" },
+        { id: "combos", name: "Combos", icon: "🎁" },
     ];
 
     const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
@@ -164,9 +176,14 @@ export default function RestaurantPage() {
     };
 
     const currentCategoryTheme = CATEGORY_THEMES[activeCategory] || CATEGORY_THEMES.all;
+    
+    // Filtering Logic
     const filteredItems = activeCategory === "all" ? effectiveItems : effectiveItems.filter(i => i.category.toLowerCase() === activeCategory);
+    
     const recommendedItems = filteredItems.filter(i => i.is_recommended);
-    const normalItems = filteredItems.filter(i => !i.is_recommended);
+    const comboItems = filteredItems.filter(i => i.is_combo && !i.is_recommended);
+    const popularItems = filteredItems.filter(i => i.is_popular && !i.is_recommended && !i.is_combo);
+    const normalItems = filteredItems.filter(i => !i.is_recommended && !i.is_popular && !i.is_combo);
 
     const addToCart = (item: any, isUpsell = false) => {
         const currentQty = cart[item.id] || 0;
@@ -329,9 +346,12 @@ export default function RestaurantPage() {
                             {/* Chef Recommends Section */}
                             {recommendedItems.length > 0 && (
                                 <section ref={recommendSectionRef} className="space-y-6">
-                                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 px-1">
-                                        Chef Recommends
-                                    </h3>
+                                    <div className="flex items-center space-x-3 px-1">
+                                        <Sparkles className="w-4 h-4 text-[#F59E0B]" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
+                                            Chef Recommends
+                                        </h3>
+                                    </div>
                                     <div className="flex space-x-6 overflow-x-auto no-scrollbar -mx-6 px-6 pb-6">
                                         {recommendedItems.map(item => (
                                             <ChefRecommendCard 
@@ -346,10 +366,72 @@ export default function RestaurantPage() {
                                 </section>
                             )}
 
+                            {/* Combo Deals Section */}
+                            {comboItems.length > 0 && (
+                                <section className="space-y-8">
+                                    <div className="flex items-center space-x-3 px-1">
+                                        <Gift className="w-4 h-4 text-purple-500" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
+                                            Combo Deals
+                                        </h3>
+                                    </div>
+                                    <div className="space-y-12">
+                                        {comboItems.map((item) => (
+                                            <MenuCard
+                                                key={item.id}
+                                                id={item.id}
+                                                title={item.title}
+                                                description={item.description || ""}
+                                                price={item.price}
+                                                image={item.image_url}
+                                                isPopular={item.is_popular}
+                                                isRecommended={item.is_recommended}
+                                                theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
+                                                onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
+                                                quantity={cart[item.id] || 0}
+                                                onAdd={() => addToCart(item)}
+                                                onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
+                                            />
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* Best Sellers Section */}
+                            {popularItems.length > 0 && (
+                                <section className="space-y-8">
+                                    <div className="flex items-center space-x-3 px-1">
+                                        <TrendingUp className="w-4 h-4 text-orange-500" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
+                                            Best Sellers
+                                        </h3>
+                                    </div>
+                                    <div className="space-y-12">
+                                        {popularItems.map((item) => (
+                                            <MenuCard
+                                                key={item.id}
+                                                id={item.id}
+                                                title={item.title}
+                                                description={item.description || ""}
+                                                price={item.price}
+                                                image={item.image_url}
+                                                isPopular={item.is_popular}
+                                                isRecommended={item.is_recommended}
+                                                theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
+                                                onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
+                                                quantity={cart[item.id] || 0}
+                                                onAdd={() => addToCart(item)}
+                                                onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
+                                            />
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
                             {/* Full List Section */}
                             <section className="space-y-8">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 px-1">
-                                    All {activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)}
+                                    {activeCategory === 'all' ? 'Full Menu' : `Other ${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)}`}
                                 </h3>
                                 <div className="space-y-12">
                                     {normalItems.map((item) => (

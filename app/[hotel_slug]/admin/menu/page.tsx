@@ -20,12 +20,12 @@ export default function MenuPage() {
     const [editingItem, setEditingItem] = useState<Partial<MenuItem> | null>(null);
     const [viewMode, setViewMode] = useState<'sections' | 'list'>('sections');
 
-    const categories = ["Burgers", "Pizzas", "Fries", "Sides", "Drinks", "Desserts"];
+    const categories = ["Burgers", "Pizzas", "Fries", "Sides", "Drinks", "Desserts", "Combos"];
 
     const itemsByCategory = useMemo(() => {
         const groups: Record<string, MenuItem[]> = {};
         menuItems.forEach(item => {
-            const cat = item.category || "Uncategorized";
+            const cat = (item.category || "Uncategorized").toLowerCase();
             if (!groups[cat]) groups[cat] = [];
             groups[cat].push(item);
         });
@@ -107,12 +107,12 @@ export default function MenuPage() {
                                 <h2 className="text-2xl font-serif italic text-[#3E2723]">{category}</h2>
                                 <div className="h-[1px] flex-1 bg-slate-100" />
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                    {itemsByCategory[category]?.length || 0} Items
+                                    {itemsByCategory[category.toLowerCase()]?.length || 0} Items
                                 </span>
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                                {itemsByCategory[category]?.map(item => (
+                                {itemsByCategory[category.toLowerCase()]?.map(item => (
                                     <motion.div 
                                         key={item.id}
                                         layout
@@ -207,8 +207,9 @@ export default function MenuPage() {
                                 <td className="p-8 font-serif text-[#F59E0B] text-lg">₹{item.price}</td>
                                 <td className="p-8">
                                     <div className="flex space-x-2">
-                                        {item.is_popular && <span className="bg-[#F59E0B]/10 text-[#F59E0B] px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">Most Loved</span>}
-                                        {item.is_recommended && <span className="bg-[#3E2723]/5 text-[#3E2723] px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">Chef Choice</span>}
+                                        {item.is_popular && <span className="bg-[#F59E0B]/10 text-[#F59E0B] px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">Best Seller</span>}
+                                        {item.is_recommended && <span className="bg-[#3E2723]/5 text-[#3E2723] px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">Chef Recommend</span>}
+                                        {item.is_combo && <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">Combo Meal</span>}
                                     </div>
                                 </td>
                                 <td className="p-8 text-right">
@@ -339,7 +340,7 @@ export default function MenuPage() {
                                         <p className="text-[9px] text-slate-400 italic">These items will appear in the "Make it better?" toast when this item is selected.</p>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                         <button
                                             type="button"
                                             onClick={() => setEditingItem({ ...editingItem, is_available: !editingItem?.is_available })}
@@ -352,14 +353,21 @@ export default function MenuPage() {
                                             onClick={() => setEditingItem({ ...editingItem, is_popular: !editingItem?.is_popular })}
                                             className={`py-5 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] transition-all flex items-center justify-center border-2 ${editingItem?.is_popular ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20' : 'bg-slate-50 text-slate-400 border-slate-100'}`}
                                         >
-                                            <Sparkles className="w-3 h-3 mr-2" /> Most Loved
+                                            <Sparkles className="w-3 h-3 mr-2" /> Best Seller
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setEditingItem({ ...editingItem, is_recommended: !editingItem?.is_recommended })}
                                             className={`py-5 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] transition-all flex items-center justify-center border-2 ${editingItem?.is_recommended ? 'bg-[#3E2723]/10 text-[#3E2723] border-[#3E2723]/20' : 'bg-slate-50 text-slate-400 border-slate-100'}`}
                                         >
-                                            Chef's Choice
+                                            Chef Recommend
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditingItem({ ...editingItem, is_combo: !editingItem?.is_combo })}
+                                            className={`py-5 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] transition-all flex items-center justify-center border-2 ${editingItem?.is_combo ? 'bg-purple-50 text-purple-600 border-purple-200' : 'bg-slate-50 text-slate-400 border-slate-100'}`}
+                                        >
+                                            Combo Meal
                                         </button>
                                     </div>
 

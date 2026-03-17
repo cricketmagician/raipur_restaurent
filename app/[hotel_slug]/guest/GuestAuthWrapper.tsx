@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense, createContext, useContext } from "react";
-import { useSearchParams, useParams } from "next/navigation";
+import { useSearchParams, useParams, usePathname } from "next/navigation";
 import { useHotelBranding, supabase } from "@/utils/store";
 import { Key, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +13,7 @@ interface GuestContextType {
     numGuests?: number;
     checkedInAt?: number | null;
     orderMode: "dine-in" | "takeaway";
+    sessionEnded: boolean;
     switchToDineIn: () => void;
     switchToTakeaway: () => void;
 }
@@ -20,6 +21,7 @@ interface GuestContextType {
 const GuestContext = createContext<GuestContextType>({
     roomNumber: "",
     orderMode: "dine-in",
+    sessionEnded: false,
     switchToDineIn: () => {},
     switchToTakeaway: () => {},
 });
@@ -35,6 +37,7 @@ const isTakeawayRoom = (value?: string | null) => {
 function AuthLogic({ children }: { children: React.ReactNode }) {
     const searchParams = useSearchParams();
     const params = useParams();
+    const pathname = usePathname();
     const hotelSlug = params?.hotel_slug as string;
     const { branding, loading: brandingLoading } = useHotelBranding(hotelSlug);
 
@@ -46,6 +49,9 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
     const [checkedInAt, setCheckedInAt] = useState<number | null>(null);
     const [error, setError] = useState<string>("");
     const [isVerifying, setIsVerifying] = useState(false);
+    const [sessionEnded, setSessionEnded] = useState(false);
+
+    const isBillPage = pathname === `/${hotelSlug}/guest/bill`;
 
     const setRoomInUrl = (nextRoom: string | null) => {
         const currentUrl = new URL(window.location.href);
@@ -70,6 +76,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
         localStorage.removeItem(`hotel_pin_${hotelSlug}`);
         setRoomNumber("Takeaway");
         setIsVerified(true);
+        setSessionEnded(false);
         setRoomInUrl("Takeaway");
     };
 
@@ -82,6 +89,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
             localStorage.removeItem(`hotel_pin_${hotelSlug}`);
             setRoomNumber(savedDineInRoom);
             setIsVerified(true);
+            setSessionEnded(false);
             setRoomInUrl(null);
             return;
         }
@@ -90,6 +98,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
         localStorage.removeItem(`hotel_pin_${hotelSlug}`);
         setRoomNumber("");
         setIsVerified(false);
+        setSessionEnded(false);
         setRoomInUrl(null);
     };
 
@@ -124,6 +133,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
 
         if (effectiveRoom) {
             setRoomNumber(effectiveRoom);
+            setSessionEnded(false);
             if (!isTakeawayRoom(effectiveRoom)) {
                 localStorage.setItem(`hotel_dinein_room_${hotelSlug}`, effectiveRoom);
             }
@@ -174,10 +184,15 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
                         localStorage.removeItem(`hotel_checkout_time_${hotelSlug}`);
                         localStorage.removeItem(`hotel_num_guests_${hotelSlug}`);
                         
-                        // Reset state
-                        setIsVerified(false);
-                        setCheckedInAt(null);
-                        setRoomNumber("");
+                        setSessionEnded(true);
+
+                        // Keep the bill page alive so the guest can see final settlement,
+                        // but lock everything else back down immediately.
+                        if (!isBillPage) {
+                            setIsVerified(false);
+                            setCheckedInAt(null);
+                            setRoomNumber("");
+                        }
                     }
                 }
             })
@@ -186,7 +201,17 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [branding?.id, roomNumber, isVerified, checkedInAt, hotelSlug]);
+    }, [branding?.id, roomNumber, isVerified, checkedInAt, hotelSlug, isBillPage]);
+
+    useEffect(() => {
+        if (!sessionEnded || isBillPage) {
+            return;
+        }
+
+        setIsVerified(false);
+        setCheckedInAt(null);
+        setRoomNumber("");
+    }, [sessionEnded, isBillPage]);
 
     const handleVerify = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -210,6 +235,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
         }
         
         localStorage.removeItem(`hotel_pin_${hotelSlug}`);
+        setSessionEnded(false);
         setIsVerified(true);
         setIsVerifying(false);
     };
@@ -314,6 +340,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
                 numGuests,
                 checkedInAt,
                 orderMode: isTakeawayRoom(roomNumber) ? "takeaway" : "dine-in",
+                sessionEnded,
                 switchToDineIn,
                 switchToTakeaway,
             }}

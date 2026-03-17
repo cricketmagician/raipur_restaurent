@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
 import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, Clock, Shirt, Brush, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequests, updateSupabaseRequestStatus, HotelRequest, signOut, isDiningRequest, isHousekeepingRequest, isServiceRequest, requestTypeMatches } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequests, updateSupabaseRequestStatus, HotelRequest, signOut, isDiningRequest, isHousekeepingRequest, isServiceRequest, isBillRequest, requestTypeMatches } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
 import { RequestDetailModal } from "@/components/RequestDetailModal";
 
@@ -113,6 +113,7 @@ export function StaffDashboard({ hotelSlug, department, allowedTypes, title, ico
 
     const getRowStyle = (type: string) => {
         const lowerType = type.toLowerCase();
+        if (isBillRequest(type)) return "bg-emerald-50/60 hover:bg-emerald-100/40 border-l-8 border-l-emerald-500";
         if (lowerType === "water") return "bg-blue-50/50 hover:bg-blue-100/50 border-l-8 border-l-blue-600 animate-pulse";
         if (lowerType.includes("restaurant") || lowerType.includes("room service")) return "bg-amber-50/20 hover:bg-amber-50 border-l-4 border-l-amber-400";
         if (lowerType.includes("housekeeping") || lowerType.includes("cleaning") || lowerType.includes("laundry")) return "bg-purple-50/20 hover:bg-purple-50 border-l-4 border-l-purple-400";
@@ -281,17 +282,23 @@ export function StaffDashboard({ hotelSlug, department, allowedTypes, title, ico
                                                 <button onClick={() => setSelectedRequest(req)} className="p-3 bg-slate-50 rounded-xl hover:bg-white border border-transparent hover:border-slate-200 transition-all">
                                                     <Eye className="w-4 h-4 text-slate-400" />
                                                 </button>
-                                                {req.status === "Pending" && (
-                                                    <button onClick={() => updateStatus(req.id, "Assigned")} className="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-slate-200">Accept</button>
-                                                )}
-                                                {req.status === "Assigned" && (
-                                                    <button onClick={() => updateStatus(req.id, "In Progress")} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-blue-100">Start</button>
-                                                )}
-                                                {req.status === "In Progress" && (
-                                                    <button onClick={() => updateStatus(req.id, "Completed")} className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-emerald-100">Finish</button>
-                                                )}
-                                                {req.status === "Completed" && (
-                                                    <CheckCircle className="w-5 h-5 text-emerald-500 mr-2" />
+                                                {isBillRequest(req.type) ? (
+                                                    <button onClick={() => setSelectedRequest(req)} className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-emerald-100">Settle Bill</button>
+                                                ) : (
+                                                    <>
+                                                        {req.status === "Pending" && (
+                                                            <button onClick={() => updateStatus(req.id, "Assigned")} className="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-slate-200">Accept</button>
+                                                        )}
+                                                        {req.status === "Assigned" && (
+                                                            <button onClick={() => updateStatus(req.id, "In Progress")} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-blue-100">Start</button>
+                                                        )}
+                                                        {req.status === "In Progress" && (
+                                                            <button onClick={() => updateStatus(req.id, "Completed")} className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-emerald-100">Finish</button>
+                                                        )}
+                                                        {req.status === "Completed" && (
+                                                            <CheckCircle className="w-5 h-5 text-emerald-500 mr-2" />
+                                                        )}
+                                                    </>
                                                 )}
                                             </div>
                                         </td>

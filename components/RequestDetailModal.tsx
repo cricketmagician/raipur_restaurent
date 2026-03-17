@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, MapPin, Clock, Info, Utensils, Bell, ShoppingBag, CreditCard, CheckCircle } from "lucide-react";
 import { StatusBadge, RequestStatus } from "./StatusBadge";
-import { HotelRequest, useSupabaseRequests, settleTableRequests, isDiningRequest } from "@/utils/store";
+import { HotelRequest, useSupabaseRequests, settleTableRequests, isDiningRequest, isBillRequest } from "@/utils/store";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface RequestDetailModalProps {
@@ -23,13 +23,14 @@ export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: Re
         r.room === targetRoom && 
         (r.status !== 'Completed' || !r.is_paid) &&
         (r.price || 0) > 0 &&
-        r.type !== 'Checkout Requested' // Don't sum the checkout signals themselves
+        !isBillRequest(r.type) // Don't sum the bill signals themselves
     );
 
     const totalBill = tableRequests.reduce((sum, r) => sum + (r.total || 0), 0);
 
     const isRestaurant = request ? isDiningRequest(request.type) : false;
     const isTakeaway = targetRoom.toLowerCase() === "takeaway";
+    const isBillingDesk = request ? isBillRequest(request.type) : false;
 
     const handleSettle = async () => {
         if (!window.confirm(`Mark all items for Table ${targetRoom} as PAID and complete the session?`)) return;
@@ -44,6 +45,9 @@ export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: Re
     if (isTakeaway) {
         headerBgClass = "bg-purple-100";
         iconBgClass = "bg-purple-200 text-purple-700";
+    } else if (isBillingDesk) {
+        headerBgClass = "bg-emerald-50";
+        iconBgClass = "bg-emerald-100 text-emerald-700";
     } else if (isRestaurant) {
         headerBgClass = "bg-amber-50";
         iconBgClass = "bg-amber-100 text-amber-700";
@@ -61,11 +65,11 @@ export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: Re
                     <div className={`p-8 flex justify-between items-center ${headerBgClass}`}>
                         <div className="flex items-center">
                             <div className={`p-4 rounded-2xl mr-4 ${iconBgClass} shadow-sm`}>
-                                {isTakeaway ? <ShoppingBag className="w-6 h-6" /> : (isRestaurant ? <Utensils className="w-6 h-6" /> : <Bell className="w-6 h-6" />)}
+                                {isTakeaway ? <ShoppingBag className="w-6 h-6" /> : (isBillingDesk ? <CreditCard className="w-6 h-6" /> : (isRestaurant ? <Utensils className="w-6 h-6" /> : <Bell className="w-6 h-6" />))}
                             </div>
                             <div>
                                 <h2 className="text-2xl font-black text-gray-900 tracking-tight">
-                                    {request ? (isTakeaway ? "Takeaway Order" : (isRestaurant ? "Dining Order" : "Service Request")) : "Table Detail"}
+                                    {request ? (isTakeaway ? "Takeaway Order" : (isBillingDesk ? "Live Bill Request" : (isRestaurant ? "Dining Order" : "Service Request"))) : "Table Detail"}
                                 </h2>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 opacity-70">Table {targetRoom} • {request?.time || 'Current Session'}</p>
                             </div>
@@ -128,7 +132,7 @@ export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: Re
                         <div className={`p-6 rounded-[2rem] border ${isTakeaway ? 'bg-purple-50/30 border-purple-100' : isRestaurant ? 'bg-amber-50/30 border-amber-100' : 'bg-gray-50 border-gray-100'}`}>
                             <div className="flex items-center mb-4 text-gray-900 font-black text-xs uppercase tracking-widest">
                                 <Info className="w-4 h-4 mr-2 text-primary" />
-                                {isRestaurant ? "Order Notes" : "Request Details"}
+                                {isBillingDesk ? "Billing Notes" : (isRestaurant ? "Order Notes" : "Request Details")}
                             </div>
                             <div className="text-gray-700 leading-relaxed font-bold text-[15px]">
                                 {request?.notes || <span className="text-gray-400 italic font-medium">No special instructions provided.</span>}
@@ -139,11 +143,11 @@ export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: Re
                     <div className="p-8 bg-white border-t border-gray-50 flex flex-col md:flex-row gap-3">
                         <button
                             onClick={handleSettle}
-                            disabled={isSettling || tableRequests.length === 0}
+                            disabled={isSettling || (tableRequests.length === 0 && !isBillingDesk)}
                             className="flex-1 py-4 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-green-100 hover:bg-green-700 transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:grayscale"
                         >
                             {isSettling ? "Processing..." : (
-                                <><CreditCard className="w-4 h-4 mr-2" /> Mark as Paid & Complete</>
+                                <><CreditCard className="w-4 h-4 mr-2" /> {isBillingDesk ? "Settle Bill & Clear Table" : "Mark as Paid & Complete"}</>
                             )}
                         </button>
                         <button

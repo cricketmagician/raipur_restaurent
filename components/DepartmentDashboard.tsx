@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
 import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, Shirt, ConciergeBell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequests, updateSupabaseRequestStatus, HotelRequest, isDiningRequest, isHousekeepingRequest } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequests, updateSupabaseRequestStatus, HotelRequest, isDiningRequest, isHousekeepingRequest, isBillRequest } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
 import { RequestDetailModal } from "@/components/RequestDetailModal";
 
@@ -115,6 +115,7 @@ export function DepartmentDashboard({ department, title, icon }: DepartmentDashb
 
     const getRowStyle = (type: string) => {
         const lowerType = type.toLowerCase();
+        if (isBillRequest(type)) return "bg-emerald-50/60 border-l-8 border-l-emerald-500";
         if (lowerType === "water") return "bg-blue-50/50 border-l-8 border-l-blue-600 animate-pulse";
         if (lowerType.includes("restaurant")) return "bg-amber-50/20 border-l-4 border-l-amber-400";
         return "hover:bg-gray-50/50 border-l-4 border-l-transparent";
@@ -281,9 +282,15 @@ export function DepartmentDashboard({ department, title, icon }: DepartmentDashb
                                     <td className="p-5 text-right">
                                         <div className="flex items-center justify-end space-x-2">
                                             <button onClick={() => setSelectedRequest(req)} className="p-2 text-slate-400 hover:text-slate-900 bg-slate-50 rounded-lg"><Eye className="w-4 h-4" /></button>
-                                            {req.status === "Pending" && <button onClick={() => updateStatus(req.id, "Assigned")} className="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold text-xs">Accept</button>}
-                                            {req.status === "Assigned" && <button onClick={() => updateStatus(req.id, "In Progress")} className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-xs">Start</button>}
-                                            {req.status === "In Progress" && <button onClick={() => updateStatus(req.id, "Completed")} className="bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center"><CheckCircle className="w-4 h-4 mr-2" /> Done</button>}
+                                            {isBillRequest(req.type) ? (
+                                                <button onClick={() => setSelectedRequest(req)} className="bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-xs">Settle Bill</button>
+                                            ) : (
+                                                <>
+                                                    {req.status === "Pending" && <button onClick={() => updateStatus(req.id, "Assigned")} className="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold text-xs">Accept</button>}
+                                                    {req.status === "Assigned" && <button onClick={() => updateStatus(req.id, "In Progress")} className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-xs">Start</button>}
+                                                    {req.status === "In Progress" && <button onClick={() => updateStatus(req.id, "Completed")} className="bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center"><CheckCircle className="w-4 h-4 mr-2" /> Done</button>}
+                                                </>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>

@@ -142,8 +142,11 @@ const REQUEST_TYPE_KEYWORDS = {
     dining: ['dining order', 'restaurant order', 'restaurant', 'food order', 'room service', 'breakfast', 'lunch', 'dinner'],
     beverages: ['water', 'mineral water', 'tea', 'coffee', 'beverage'],
     housekeeping: ['towel', 'cleaning', 'housekeeping', 'laundry', 'dry cleaning'],
-    service: ['waiter call', 'reception', 'concierge', 'checkout requested'],
+    service: ['waiter call', 'reception', 'concierge', 'checkout requested', 'bill requested'],
 } as const;
+
+const BILL_REQUEST_TYPES = ['Checkout Requested', 'Bill Requested'] as const;
+const BILL_REQUEST_KEYWORDS = ['checkout requested', 'bill requested'] as const;
 
 export function requestTypeMatches(requestType: string, allowedTypes: string[]) {
     const normalized = requestType.toLowerCase();
@@ -160,6 +163,10 @@ export function isHousekeepingRequest(requestType: string) {
 
 export function isServiceRequest(requestType: string) {
     return requestTypeMatches(requestType, [...REQUEST_TYPE_KEYWORDS.service]);
+}
+
+export function isBillRequest(requestType: string) {
+    return requestTypeMatches(requestType, [...BILL_REQUEST_KEYWORDS]);
 }
 
 export type SyncStatus = RealtimeSyncStatus;
@@ -757,6 +764,40 @@ export async function addSupabaseRequest(hotelId: string, request: Partial<Hotel
     return { data, error };
 }
 
+export async function requestSupabaseBill(hotelId: string, room: string, amount: number, notes?: string) {
+    const openStatuses: RequestStatus[] = ['Pending', 'Assigned', 'In Progress'];
+
+    const { data: existingRequest, error: existingError } = await supabase
+        .from('requests')
+        .select('*')
+        .eq('hotel_id', hotelId)
+        .eq('room', room)
+        .in('type', [...BILL_REQUEST_TYPES])
+        .in('status', openStatuses)
+        .order('timestamp', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (existingError) {
+        console.error("Error checking existing bill request:", existingError);
+        return { data: null, error: existingError };
+    }
+
+    if (existingRequest) {
+        return { data: existingRequest, error: null };
+    }
+
+    return addSupabaseRequest(hotelId, {
+        room,
+        type: 'Bill Requested',
+        notes: notes || `Guest requested bill for ₹${amount.toFixed(0)}`,
+        status: 'Pending',
+        price: amount,
+        total: amount,
+        is_paid: false,
+    });
+}
+
 /**
  * Update request status in Supabase
  */
@@ -776,26 +817,56 @@ export async function updateSupabaseRequestStatus(id: string, status: RequestSta
  */
 export async function settleTableRequests(hotelId: string, roomNumber: string) {
 
-    // 1. Mark all requests as paid and completed
-    const { error: reqError } = await supabase
+    // 1. Mark all requests as completed for the session
+    const { error: statusError } = await supabase
         .from('requests')
-        .update({ status: 'Completed', is_paid: true })
+        .update({ status: 'Completed' })
         .eq('hotel_id', hotelId)
         .eq('room', roomNumber)
         .neq('status', 'Completed');
 
-    if (reqError) console.error("Error settling table requests:", reqError);
+    if (statusError) console.error("Error completing table requests:", statusError);
 
-    // 2. Mark table as vacant and clear session
+    // 2. Ensure every billable line is marked paid, even if it had already been completed earlier.
+    const { error: paidError } = await supabase
+        .from('requests')
+        .update({ is_paid: true })
+        .eq('hotel_id', hotelId)
+        .eq('room', roomNumber)
+        .eq('is_paid', false);
+
+    if (paidError) console.error("Error marking table requests paid:", paidError);
+
+    // 3. Mark table as vacant and clear session metadata
     const { error: roomError } = await supabase
         .from('rooms')
-        .update({ is_occupied: false, booking_pin: null, checked_in_at: null })
+        .update({
+            is_occupied: false,
+            booking_pin: null,
+            checkout_date: null,
+            checkout_time: null,
+            num_guests: null,
+            checked_in_at: null,
+        })
         .eq('hotel_id', hotelId)
         .eq('room_number', roomNumber);
 
     if (roomError) console.error("Error vacating table:", roomError);
 
-    return { data: null, error: reqError || roomError };
+    // 4. Close any active guest session tied to the table so a new guest can start fresh.
+    const { error: guestError } = await supabase
+        .from('guests')
+        .update({
+            status: 'checked_out',
+            check_out_date: new Date().toISOString(),
+        })
+        .eq('hotel_id', hotelId)
+        .eq('room_number', roomNumber)
+        .eq('status', 'active');
+
+    if (guestError) console.error("Error checking out active guest:", guestError);
+
+    return { data: null, error: statusError || paidError || roomError || guestError };
 }
 
 /**

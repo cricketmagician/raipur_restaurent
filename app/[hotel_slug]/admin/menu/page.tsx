@@ -32,6 +32,7 @@ export default function MenuPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
     const [editingItem, setEditingItem] = useState<Partial<MenuItem> | null>(null);
     const [editingCategory, setEditingCategory] = useState<Partial<MenuCategory> | null>(null);
     const [viewMode, setViewMode] = useState<'sections' | 'list'>('sections');
@@ -97,6 +98,17 @@ export default function MenuPage() {
         if (confirm("Delete this menu item?")) {
             await deleteSupabaseMenuItem(id, branding.id);
         }
+    };
+
+    const handleToggleAvailability = async (item: MenuItem) => {
+        if (!branding?.id) return;
+
+        setStatusUpdatingId(item.id);
+        await saveSupabaseMenuItem(branding.id, {
+            ...item,
+            is_available: !item.is_available,
+        });
+        setStatusUpdatingId(null);
     };
 
     const handleDeleteCategory = async (category: MenuCategory) => {
@@ -298,11 +310,39 @@ export default function MenuPage() {
                                                     <Utensils className="w-12 h-12" />
                                                 </div>
                                             )}
-                                            
-                                            <div className="absolute top-4 right-4 flex flex-col space-y-2">
-                                                {item.is_popular && <div className="bg-[#F59E0B] text-white p-2 rounded-xl shadow-lg"><Sparkles className="w-3 h-3" /></div>}
-                                                {!item.is_available && <div className="bg-red-500 text-white p-2 rounded-xl shadow-lg"><X className="w-3 h-3" /></div>}
+
+                                            <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-3">
+                                                <div className="flex flex-col gap-2">
+                                                    {item.is_popular && <div className="bg-[#F59E0B] text-white px-3 py-2 rounded-xl shadow-lg flex items-center gap-2"><Sparkles className="w-3 h-3" /><span className="text-[9px] font-black uppercase tracking-widest">Best Seller</span></div>}
+                                                    {item.is_recommended && <div className="bg-[#3E2723] text-white px-3 py-2 rounded-xl shadow-lg flex items-center gap-2"><Check className="w-3 h-3" /><span className="text-[9px] font-black uppercase tracking-widest">Chef Pick</span></div>}
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleToggleAvailability(item)}
+                                                    disabled={statusUpdatingId === item.id}
+                                                    className={`px-3 py-2 rounded-xl shadow-lg border backdrop-blur-md flex items-center gap-2 transition-all active:scale-95 ${item.is_available ? 'bg-emerald-500 text-white border-emerald-400' : 'bg-red-500 text-white border-red-400'}`}
+                                                >
+                                                    {statusUpdatingId === item.id ? (
+                                                        <RefreshCw className="w-3 h-3 animate-spin" />
+                                                    ) : item.is_available ? (
+                                                        <Check className="w-3 h-3" />
+                                                    ) : (
+                                                        <X className="w-3 h-3" />
+                                                    )}
+                                                    <span className="text-[9px] font-black uppercase tracking-widest">
+                                                        {item.is_available ? "Available" : "Sold Out"}
+                                                    </span>
+                                                </button>
                                             </div>
+
+                                            {!item.is_available && (
+                                                <div className="absolute inset-0 bg-black/35 backdrop-blur-[1px] flex items-center justify-center">
+                                                    <div className="px-4 py-2 rounded-full bg-red-500 text-white font-black text-[10px] uppercase tracking-[0.3em] shadow-xl">
+                                                        Item off menu
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="mb-6">
@@ -385,12 +425,22 @@ export default function MenuPage() {
                                     </div>
                                 </td>
                                 <td className="p-8 text-right">
-                                    <button 
-                                        onClick={() => { setEditingItem(item); setIsModalOpen(true); }}
-                                        className="p-4 hover:bg-[#3E2723] hover:text-[#FFF8F2] rounded-2xl transition-all"
-                                    >
-                                        <Edit className="w-4 h-4" />
-                                    </button>
+                                    <div className="flex items-center justify-end gap-3">
+                                        <button
+                                            onClick={() => handleToggleAvailability(item)}
+                                            disabled={statusUpdatingId === item.id}
+                                            className={`px-4 py-3 rounded-2xl border font-black text-[9px] uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${item.is_available ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'}`}
+                                        >
+                                            {statusUpdatingId === item.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : item.is_available ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                                            {item.is_available ? "Available" : "Sold Out"}
+                                        </button>
+                                        <button 
+                                            onClick={() => { setEditingItem(item); setIsModalOpen(true); }}
+                                            className="p-4 hover:bg-[#3E2723] hover:text-[#FFF8F2] rounded-2xl transition-all"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

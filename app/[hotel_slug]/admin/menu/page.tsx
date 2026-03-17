@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Plus, Edit, Trash2, Utensils, Palette, X, RefreshCw, Check, Image as ImageIcon, Sparkles, LayoutGrid, List, Eye } from "lucide-react";
 import {
@@ -36,6 +36,7 @@ export default function MenuPage() {
     const [editingItem, setEditingItem] = useState<Partial<MenuItem> | null>(null);
     const [editingCategory, setEditingCategory] = useState<Partial<MenuCategory> | null>(null);
     const [viewMode, setViewMode] = useState<'sections' | 'list'>('sections');
+    const [availabilityDrafts, setAvailabilityDrafts] = useState<Record<string, boolean>>({});
 
     const categoryRecords = useMemo(() => {
         const activeCategories = categories.filter((category) => category.is_active !== false);
@@ -65,6 +66,25 @@ export default function MenuPage() {
             groups[cat].push(item);
         });
         return groups;
+    }, [menuItems]);
+
+    useEffect(() => {
+        setAvailabilityDrafts((prev) => {
+            const next: Record<string, boolean> = { ...prev };
+            menuItems.forEach((item) => {
+                if (next[item.id] === undefined) {
+                    next[item.id] = item.is_available !== false;
+                }
+            });
+
+            Object.keys(next).forEach((itemId) => {
+                if (!menuItems.some((item) => item.id === itemId)) {
+                    delete next[itemId];
+                }
+            });
+
+            return next;
+        });
     }, [menuItems]);
 
     const handleSave = async (e: React.FormEvent) => {
@@ -100,13 +120,21 @@ export default function MenuPage() {
         }
     };
 
-    const handleToggleAvailability = async (item: MenuItem) => {
+    const handleToggleAvailability = (item: MenuItem) => {
+        setAvailabilityDrafts((prev) => ({
+            ...prev,
+            [item.id]: !(prev[item.id] ?? item.is_available !== false),
+        }));
+    };
+
+    const handleSaveAvailability = async (item: MenuItem) => {
         if (!branding?.id) return;
 
         setStatusUpdatingId(item.id);
+        const nextAvailability = availabilityDrafts[item.id] ?? item.is_available !== false;
         await saveSupabaseMenuItem(branding.id, {
             ...item,
-            is_available: !item.is_available,
+            is_available: nextAvailability,
         });
         setStatusUpdatingId(null);
     };
@@ -297,6 +325,9 @@ export default function MenuPage() {
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                                 {itemsByCategory[categoryKey]?.map(item => (
+                                    (() => {
+                                        const isAvailableDraft = availabilityDrafts[item.id] ?? item.is_available !== false;
+                                        return (
                                     <motion.div 
                                         key={item.id}
                                         layout
@@ -320,23 +351,20 @@ export default function MenuPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => handleToggleAvailability(item)}
-                                                    disabled={statusUpdatingId === item.id}
-                                                    className={`px-3 py-2 rounded-xl shadow-lg border backdrop-blur-md flex items-center gap-2 transition-all active:scale-95 ${item.is_available ? 'bg-emerald-500 text-white border-emerald-400' : 'bg-red-500 text-white border-red-400'}`}
+                                                    className={`px-3 py-2 rounded-xl shadow-lg border backdrop-blur-md flex items-center gap-2 transition-all active:scale-95 ${isAvailableDraft ? 'bg-emerald-500 text-white border-emerald-400' : 'bg-red-500 text-white border-red-400'}`}
                                                 >
-                                                    {statusUpdatingId === item.id ? (
-                                                        <RefreshCw className="w-3 h-3 animate-spin" />
-                                                    ) : item.is_available ? (
+                                                    {isAvailableDraft ? (
                                                         <Check className="w-3 h-3" />
                                                     ) : (
                                                         <X className="w-3 h-3" />
                                                     )}
                                                     <span className="text-[9px] font-black uppercase tracking-widest">
-                                                        {item.is_available ? "Available" : "Sold Out"}
+                                                        {isAvailableDraft ? "Available" : "Sold Out"}
                                                     </span>
                                                 </button>
                                             </div>
 
-                                            {!item.is_available && (
+                                            {!isAvailableDraft && (
                                                 <div className="absolute inset-0 bg-black/35 backdrop-blur-[1px] flex items-center justify-center">
                                                     <div className="px-4 py-2 rounded-full bg-red-500 text-white font-black text-[10px] uppercase tracking-[0.3em] shadow-xl">
                                                         Item off menu
@@ -361,6 +389,18 @@ export default function MenuPage() {
                                                 <Edit className="w-3.5 h-3.5 opacity-40 group-hover/btn:opacity-100" />
                                                 <span className="text-[10px] font-black uppercase tracking-widest">Edit</span>
                                             </button>
+                                            <button
+                                                onClick={() => handleSaveAvailability(item)}
+                                                disabled={statusUpdatingId === item.id}
+                                                className={`px-4 py-3 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] border transition-all flex items-center space-x-2 ${statusUpdatingId === item.id ? 'opacity-60' : ''} ${isAvailableDraft ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'}`}
+                                            >
+                                                {statusUpdatingId === item.id ? (
+                                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                                ) : (
+                                                    <Check className="w-3.5 h-3.5" />
+                                                )}
+                                                <span>Save</span>
+                                            </button>
                                             <button 
                                                 onClick={() => handleDelete(item.id)}
                                                 className="p-3 text-slate-300 hover:text-red-500 transition-colors"
@@ -369,6 +409,8 @@ export default function MenuPage() {
                                             </button>
                                         </div>
                                     </motion.div>
+                                        );
+                                    })()
                                 ))}
                                 
                                 <button 
@@ -399,6 +441,9 @@ export default function MenuPage() {
                     </thead>
                     <tbody>
                         {menuItems.map((item) => (
+                            (() => {
+                                const isAvailableDraft = availabilityDrafts[item.id] ?? item.is_available !== false;
+                                return (
                             <tr key={item.id} className="border-b border-slate-50 last:border-none hover:bg-slate-50/20 transition-colors">
                                 <td className="p-8">
                                     <span className="bg-[#3E2723]/5 text-[#3E2723] px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">
@@ -422,17 +467,27 @@ export default function MenuPage() {
                                         {item.is_popular && <span className="bg-[#F59E0B]/10 text-[#F59E0B] px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">Best Seller</span>}
                                         {item.is_recommended && <span className="bg-[#3E2723]/5 text-[#3E2723] px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">Chef Recommend</span>}
                                         {item.is_combo && <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">Combo Meal</span>}
+                                        <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${isAvailableDraft ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                                            {isAvailableDraft ? 'Available' : 'Sold Out'}
+                                        </span>
                                     </div>
                                 </td>
                                 <td className="p-8 text-right">
                                     <div className="flex items-center justify-end gap-3">
                                         <button
                                             onClick={() => handleToggleAvailability(item)}
-                                            disabled={statusUpdatingId === item.id}
-                                            className={`px-4 py-3 rounded-2xl border font-black text-[9px] uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${item.is_available ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'}`}
+                                            className={`px-4 py-3 rounded-2xl border font-black text-[9px] uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${isAvailableDraft ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'}`}
                                         >
-                                            {statusUpdatingId === item.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : item.is_available ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
-                                            {item.is_available ? "Available" : "Sold Out"}
+                                            {isAvailableDraft ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                                            {isAvailableDraft ? "Available" : "Sold Out"}
+                                        </button>
+                                        <button
+                                            onClick={() => handleSaveAvailability(item)}
+                                            disabled={statusUpdatingId === item.id}
+                                            className={`px-4 py-3 rounded-2xl border font-black text-[9px] uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${statusUpdatingId === item.id ? 'opacity-60' : ''} ${isAvailableDraft ? 'bg-[#3E2723] text-white border-[#3E2723]' : 'bg-[#3E2723] text-white border-[#3E2723]'}`}
+                                        >
+                                            {statusUpdatingId === item.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                                            Save
                                         </button>
                                         <button 
                                             onClick={() => { setEditingItem(item); setIsModalOpen(true); }}
@@ -443,6 +498,8 @@ export default function MenuPage() {
                                     </div>
                                 </td>
                             </tr>
+                                );
+                            })()
                         ))}
                     </tbody>
                 </table>

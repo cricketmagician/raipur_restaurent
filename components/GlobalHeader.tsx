@@ -171,7 +171,7 @@ export function GlobalHeader() {
                         <motion.div 
                             initial={false}
                             animate={{ 
-                                x: tableNumber?.toLowerCase() === 'takeaway' ? '100.5%' : '0%',
+                                x: (tableNumber?.toLowerCase() === 'takeaway' || tableNumber?.toLowerCase() === 'takeout') ? '100.5%' : '0%',
                             }}
                             transition={{ type: "spring", stiffness: 400, damping: 40 }}
                             className="absolute inset-y-1 left-1 w-[calc(50%-2px)] bg-[#00704A] rounded-full shadow-lg shadow-[#00704A]/20"
@@ -179,32 +179,29 @@ export function GlobalHeader() {
                         
                         <button 
                             onClick={() => {
-                                if (tableNumber?.toLowerCase() === 'takeaway') {
+                                if (tableNumber?.toLowerCase() === 'takeaway' || tableNumber?.toLowerCase() === 'takeout') {
                                     localStorage.removeItem(`hotel_room_${hotelSlug}`);
-                                    // Also remove the TAKEAWAY in the URL if present
-                                    const newUrl = window.location.pathname;
-                                    router.push(newUrl);
-                                    setTimeout(() => window.location.reload(), 50);
+                                    // Hard reload into the clean URL
+                                    window.location.href = window.location.pathname;
                                 }
                             }}
                             className={`relative z-10 flex-1 py-1.5 flex items-center justify-center transition-all duration-500 ${
-                                tableNumber?.toLowerCase() !== "takeaway" ? "text-white" : "text-[#00704A]/40"
+                                (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") ? "text-white" : "text-[#00704A]/40"
                             }`}
                         >
                             In-Store
                         </button>
                         <button 
                             onClick={() => {
-                                if (tableNumber?.toLowerCase() !== 'takeaway') {
+                                if (tableNumber?.toLowerCase() !== 'takeaway' && tableNumber?.toLowerCase() !== 'takeout') {
                                     localStorage.setItem(`hotel_room_${hotelSlug}`, 'Takeaway');
                                     localStorage.removeItem(`hotel_pin_${hotelSlug}`);
-                                    const newUrl = window.location.pathname + '?room=Takeaway';
-                                    router.push(newUrl);
-                                    setTimeout(() => window.location.reload(), 50);
+                                    // Hard reload into the Takeaway URL
+                                    window.location.href = window.location.pathname + "?room=Takeaway";
                                 }
                             }}
                             className={`relative z-10 flex-1 py-1.5 flex items-center justify-center transition-all duration-500 ${
-                                tableNumber?.toLowerCase() === "takeaway" ? "text-white" : "text-[#00704A]/40"
+                                (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? "text-white" : "text-[#00704A]/40"
                             }`}
                         >
                             Takeout

@@ -18,9 +18,9 @@ export function UpsellSection({ items, onAdd }: UpsellSectionProps) {
 
     return (
         <div className="mb-10">
-            <h3 className="font-serif text-xl text-black mb-6 flex items-center">
-                Complete Your Meal
-                <span className="ml-3 h-[1px] flex-1 bg-slate-100" />
+            <h3 className="font-serif text-2xl text-slate-900 mb-6 flex items-center italic">
+                Pairs beautifully with...
+                <span className="ml-4 h-[1px] flex-1 bg-slate-100" />
             </h3>
             
             <div className="flex space-x-4 overflow-x-auto no-scrollbar -mx-2 px-2 pb-4">

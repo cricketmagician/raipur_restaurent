@@ -269,7 +269,12 @@ export function StaffDashboard({ hotelSlug, department, allowedTypes, title, ico
                                             <p className="text-xs text-slate-400 font-medium line-clamp-1">{req.notes || "No special instructions"}</p>
                                         </td>
                                         <td className="p-6 text-center">
-                                            <span className="text-xs font-black text-slate-900">{req.time}</span>
+                                            <div className="flex flex-col items-center">
+                                                <span className="text-xs font-black text-slate-900">{req.time}</span>
+                                                {(req.total || 0) > 0 && (
+                                                    <span className="text-[10px] font-black text-indigo-600 mt-0.5">₹{req.total}</span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="p-6 text-right">
                                             <div className="flex items-center justify-end space-x-2">

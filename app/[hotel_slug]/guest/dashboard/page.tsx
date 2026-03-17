@@ -209,56 +209,49 @@ export default function GuestDashboard() {
             <div className="h-[120px]"></div>
 
             {/* 2. Dramatic Headline */}
-            <section className="mb-8 pt-10 relative">
+            <section className="mb-12 pt-14 relative">
                 <div className="flex items-start justify-between">
                     <div>
-                        <h2 className="text-5xl font-serif font-black text-slate-900 leading-[0.9] tracking-tighter italic">
-                            Craving<br />Something?
+                        <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.3em] mb-4">Indulge in the finest</p>
+                        <h2 className="text-6xl font-serif text-slate-900 leading-[0.85] tracking-tighter italic">
+                            Curated<br />Experiences
                         </h2>
-                        <p className="text-sm font-bold text-slate-400 mt-3 italic">Chef-picked combos guests love tonight</p>
                     </div>
                     {tableNumber && (
-                        <div className="bg-slate-900 text-white px-4 py-2 rounded-2xl flex flex-col items-center justify-center shadow-xl shadow-slate-200">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Dining At</span>
-                            <span className="text-xl font-black italic">Table {tableNumber}</span>
+                        <div className="bg-slate-900 text-[#D4AF37] px-6 py-4 rounded-[2rem] flex flex-col items-center justify-center shadow-2xl shadow-slate-200 border border-[#D4AF37]/10">
+                            <span className="text-[8px] font-black uppercase tracking-widest text-[#D4AF37]/50 mb-1">Residence</span>
+                            <span className="text-2xl font-serif italic leading-none">{tableNumber}</span>
                         </div>
                     )}
                 </div>
-                <div className="h-1.5 w-12 bg-[#F55D2C] rounded-full mt-4"></div>
             </section>
 
             {/* 3. Hero Slider (Highest Rated Combos) */}
-            <section className="mb-12 -mx-5 px-5">
-                <div className="flex items-center justify-between mb-6">
+            <section className="mb-16 -mx-5 px-5">
+                <div className="flex items-center justify-between mb-8 px-1">
                     <div className="flex flex-col">
-                        <div className="flex items-center space-x-2 mb-1">
-                            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Trending Tonight</span>
-                        </div>
-                        <h3 className="text-xl font-serif font-black text-slate-900 italic">🔥 Best Combos</h3>
-                    </div>
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100/50 px-3 py-1 rounded-full border border-slate-200/30">
-                        8 guests ordering
+                        <h3 className="text-3xl font-serif text-slate-900 italic tracking-tight">House Collections</h3>
+                        <p className="text-[11px] text-slate-400 font-medium italic mt-1">Thoughtfully paired for the perfect balance</p>
                     </div>
                 </div>
-                <div className="flex overflow-x-auto space-x-6 pb-6 no-scrollbar snap-x">
+                <div className="flex overflow-x-auto space-x-6 pb-8 no-scrollbar snap-x">
                     <div className="flex space-x-6">
                         <ComboCard 
-                            title="Monster Combo Burger"
-                            items={["2x Double Burger", "Fries", "Coke"]}
+                            title="The Signature Collection"
+                            items={["2x Buttermilk Burger", "Truffle Batons", "Velvet Coffee"]}
                             price={199}
                             originalPrice={349}
-                            trendingCount={47}
+                            trendingCount={0}
                             image="/images/menu/monster_combo_hero_1773232637404.png"
                             quantity={cart["monster_combo"] || 0}
                             onUpdateQuantity={(q) => updateQuantity("monster_combo", q)}
                         />
                         <ComboCard 
-                            title="King Size Platter"
-                            items={["Cheese Burger", "Fries", "Coke", "Brownie"]}
+                            title="Grand Platter Experience"
+                            items={["Heritage Burger", "Classic Batons", "Velvet Coffee", "Molten Ganache"]}
                             price={299}
                             originalPrice={449}
-                            trendingCount={32}
+                            trendingCount={0}
                             image="https://images.unsplash.com/photo-1594212699903-ec8a3ecc50f1?q=80&w=800"
                             quantity={cart["king_size"] || 0}
                             onUpdateQuantity={(q) => updateQuantity("king_size", q)}

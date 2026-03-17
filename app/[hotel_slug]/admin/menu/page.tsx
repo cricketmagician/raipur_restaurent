@@ -101,15 +101,23 @@ export default function MenuPage() {
                                     <p className="font-black text-slate-900">₹{Number(item.price).toFixed(2)}</p>
                                 </td>
                                 <td className="p-6">
-                                    {item.is_available ? (
-                                        <span className="flex items-center text-[10px] font-black uppercase text-green-500 tracking-tighter">
-                                            <Check className="w-3 h-3 mr-1" /> Available
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center text-[10px] font-black uppercase text-slate-300 tracking-tighter">
-                                            <X className="w-3 h-3 mr-1" /> Sold Out
-                                        </span>
-                                    )}
+                                    <div className="flex flex-col space-y-1">
+                                        {item.is_available ? (
+                                            <span className="flex items-center text-[10px] font-black uppercase text-green-500 tracking-tighter">
+                                                <Check className="w-3 h-3 mr-1" /> Available
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center text-[10px] font-black uppercase text-slate-300 tracking-tighter">
+                                                <X className="w-3 h-3 mr-1" /> Sold Out
+                                            </span>
+                                        )}
+                                        {item.is_popular && (
+                                            <span className="text-[9px] font-black uppercase text-amber-500 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100/50 w-fit">Popular</span>
+                                        )}
+                                        {item.is_recommended && (
+                                            <span className="text-[9px] font-black uppercase text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100/50 w-fit">Recommended</span>
+                                        )}
+                                    </div>
                                 </td>
                                 <td className="p-6 text-right">
                                     <div className="flex items-center justify-end space-x-2">
@@ -235,14 +243,30 @@ export default function MenuPage() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center space-x-4">
+                                <div className="grid grid-cols-2 gap-4">
                                     <button
                                         type="button"
                                         onClick={() => setEditingItem({ ...editingItem, is_available: !editingItem?.is_available })}
-                                        className={`flex-1 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center ${editingItem?.is_available ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}
+                                        className={`py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center border ${editingItem?.is_available ? 'bg-green-50 text-green-600 border-green-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}
                                     >
-                                        {editingItem?.is_available ? <Check className="w-4 h-4 mr-2" /> : <X className="w-4 h-4 mr-2" />}
-                                        {editingItem?.is_available ? "Available" : "Sold Out"}
+                                        {editingItem?.is_available ? <Check className="w-3 h-3 mr-2" /> : <X className="w-3 h-3 mr-2" />}
+                                        Available
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingItem({ ...editingItem, is_popular: !editingItem?.is_popular })}
+                                        className={`py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center border ${editingItem?.is_popular ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}
+                                    >
+                                        <Check className={`w-3 h-3 mr-2 ${editingItem?.is_popular ? 'opacity-100' : 'opacity-0'}`} />
+                                        Popular
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingItem({ ...editingItem, is_recommended: !editingItem?.is_recommended })}
+                                        className={`py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center border ${editingItem?.is_recommended ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}
+                                    >
+                                        <Check className={`w-3 h-3 mr-2 ${editingItem?.is_recommended ? 'opacity-100' : 'opacity-0'}`} />
+                                        Recommended
                                     </button>
                                 </div>
 

@@ -3,9 +3,10 @@
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. Backfill columns expected by the app
+-- 1. Ensure all required columns exist in requests table
 DO $$
 BEGIN
+    -- Core requests columns
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'requests' AND column_name = 'room') THEN
         ALTER TABLE requests ADD COLUMN room TEXT DEFAULT 'Unknown';
     END IF;
@@ -18,12 +19,19 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'requests' AND column_name = 'is_paid') THEN
         ALTER TABLE requests ADD COLUMN is_paid BOOLEAN DEFAULT false;
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'requests' AND column_name = 'items') THEN
+        ALTER TABLE requests ADD COLUMN items JSONB;
+    END IF;
+
+    -- Hotel columns
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'hotels' AND column_name = 'bg_pattern') THEN
         ALTER TABLE hotels ADD COLUMN bg_pattern TEXT;
     END IF;
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'hotels' AND column_name = 'address') THEN
         ALTER TABLE hotels ADD COLUMN address TEXT;
     END IF;
+
+    -- Menu items columns
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'menu_items' AND column_name = 'is_popular') THEN
         ALTER TABLE menu_items ADD COLUMN is_popular BOOLEAN DEFAULT false;
     END IF;
@@ -38,6 +46,7 @@ BEGIN
     END IF;
 END $$;
 
+-- 2. Create offers table if it doesn't exist
 CREATE TABLE IF NOT EXISTS offers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     hotel_id UUID REFERENCES hotels(id) ON DELETE CASCADE,
@@ -49,7 +58,7 @@ CREATE TABLE IF NOT EXISTS offers (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 2. Normalize request status values used by the UI
+-- 3. Normalize request status values used by the UI
 ALTER TABLE requests DROP CONSTRAINT IF EXISTS requests_status_check;
 ALTER TABLE requests
     ADD CONSTRAINT requests_status_check
@@ -59,7 +68,7 @@ UPDATE requests
 SET status = 'Assigned'
 WHERE status = 'Processing';
 
--- 3. Enable RLS everywhere the app expects it
+-- 4. Enable RLS everywhere the app expects it
 ALTER TABLE hotels ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
@@ -69,7 +78,7 @@ ALTER TABLE menu_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE special_offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
 
--- 4. Public read policies for guest-facing tables
+-- 5. Public read policies for guest-facing tables
 DROP POLICY IF EXISTS "Allow public read hotels" ON hotels;
 CREATE POLICY "Allow public read hotels" ON hotels FOR SELECT USING (true);
 
@@ -97,7 +106,7 @@ CREATE POLICY "Allow public read special_offers" ON special_offers FOR SELECT US
 DROP POLICY IF EXISTS "Allow public read offers" ON offers;
 CREATE POLICY "Allow public read offers" ON offers FOR SELECT USING (true);
 
--- 5. Hotel-scoped staff access
+-- 6. Hotel-scoped staff access
 DROP POLICY IF EXISTS "Profiles are viewable by self or hotel staff" ON profiles;
 CREATE POLICY "Profiles are viewable by self or hotel staff" ON profiles
     FOR SELECT USING (
@@ -242,7 +251,7 @@ CREATE POLICY "Staff can manage offers" ON offers
         )
     );
 
--- 6. Performance indexes for realtime fallback fetches
+-- 7. Performance indexes for realtime fallback fetches
 CREATE INDEX IF NOT EXISTS idx_requests_hotel_id ON requests(hotel_id);
 CREATE INDEX IF NOT EXISTS idx_requests_room ON requests(room);
 CREATE INDEX IF NOT EXISTS idx_rooms_hotel_id ON rooms(hotel_id);
@@ -254,7 +263,7 @@ CREATE INDEX IF NOT EXISTS idx_menu_items_hotel_id ON menu_items(hotel_id);
 CREATE INDEX IF NOT EXISTS idx_special_offers_hotel_id ON special_offers(hotel_id);
 CREATE INDEX IF NOT EXISTS idx_offers_hotel_id ON offers(hotel_id);
 
--- 7. Reliable UPDATE / DELETE payloads for realtime
+-- 8. Reliable UPDATE / DELETE payloads for realtime
 ALTER TABLE hotels REPLICA IDENTITY FULL;
 ALTER TABLE profiles REPLICA IDENTITY FULL;
 ALTER TABLE rooms REPLICA IDENTITY FULL;
@@ -264,7 +273,7 @@ ALTER TABLE menu_items REPLICA IDENTITY FULL;
 ALTER TABLE special_offers REPLICA IDENTITY FULL;
 ALTER TABLE offers REPLICA IDENTITY FULL;
 
--- 8. Ensure all admin-relevant tables publish to Supabase Realtime
+-- 9. Ensure all admin-relevant tables publish to Supabase Realtime
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'requests') THEN
@@ -290,6 +299,17 @@ BEGIN
     END IF;
 END $$;
 
--- 9. Reload API schema caches after repair
+-- 10. Explicit Authenticated Role Policies for Real-time
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow authenticated read requests') THEN
+        CREATE POLICY "Allow authenticated read requests" ON requests FOR SELECT TO authenticated USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow authenticated read rooms') THEN
+        CREATE POLICY "Allow authenticated read rooms" ON rooms FOR SELECT TO authenticated USING (true);
+    END IF;
+END $$;
+
+-- 11. Reload API schema caches after repair
 NOTIFY pgrst, 'reload schema';
 NOTIFY pgrst, 'reload config';

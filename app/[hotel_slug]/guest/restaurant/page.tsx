@@ -6,14 +6,16 @@ import { CheckCircle, ArrowLeft, Trash2, Plus, RefreshCw, Utensils } from "lucid
 import { addSupabaseRequest, useHotelBranding, useCart } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
 import { CartOverlay } from "@/components/CartOverlay";
-import { SHARED_MENU_ITEMS } from "@/utils/constants";
+import { UpsellToast } from "@/components/UpsellToast";
+import { SHARED_MENU_ITEMS, SHARED_COMBOS } from "@/utils/constants";
 
 export default function RestaurantPage() {
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
     const { roomNumber } = useGuestRoom();
@@ -21,6 +23,11 @@ export default function RestaurantPage() {
     const [isOrdering, setIsOrdering] = useState(false);
     const [orderComplete, setOrderComplete] = useState(false);
     const [showCart, setShowCart] = useState(false);
+
+    // Upsell State
+    const [upsellItem, setUpsellItem] = useState<any>(null);
+    const [showUpsell, setShowUpsell] = useState(false);
+    const [suggestedIds, setSuggestedIds] = useState<string[]>([]);
 
     const [activeCategory, setActiveCategory] = useState<string>("all");
 
@@ -41,9 +48,36 @@ export default function RestaurantPage() {
     const popularItems = menuItems.filter(i => i.isPopular);
     const recommendedItems = menuItems.filter(i => i.isRecommended);
 
-    const addToCart = (item: any) => {
+    const addToCart = (item: any, isUpsell = false) => {
         const currentQty = cart[item.id] || 0;
         updateQuantity(item.id, currentQty + 1);
+
+        if (isUpsell) {
+            setShowUpsell(false);
+            return;
+        }
+
+        // --- Smart Pairing Logic (Premium Philosophy) ---
+        if (item.upsellIds && item.upsellIds.length > 0) {
+            // Find a pairing that isn't already in cart and hasn't been suggested in this session
+             const potentialUpsell = SHARED_MENU_ITEMS.find(m => 
+                item.upsellIds.includes(m.id) && 
+                !cart[m.id] && 
+                !suggestedIds.includes(m.id)
+            );
+
+            if (potentialUpsell) {
+                setUpsellItem(potentialUpsell);
+                setSuggestedIds(prev => [...prev, potentialUpsell.id]);
+                
+                // Slightly delay for premium feel (Progressive Disclosure)
+                setTimeout(() => {
+                    setShowUpsell(true);
+                    // Hide after 6 seconds if no interaction
+                    setTimeout(() => setShowUpsell(false), 6000);
+                }, 800);
+            }
+        }
     };
 
     const cartItems = Object.entries(cart).map(([id, q]) => {
@@ -73,13 +107,27 @@ export default function RestaurantPage() {
         setIsOrdering(true);
         await new Promise(resolve => setTimeout(resolve, 2000));
 
+        const cartItemsData = Object.entries(cart)
+            .map(([id, q]) => {
+                const item = SHARED_MENU_ITEMS.find(m => m.id === id) || SHARED_COMBOS.find(c => c.id === id);
+                return {
+                    id,
+                    title: item?.title || 'Unknown Item',
+                    quantity: q,
+                    price: item?.price || 0,
+                    total: (item?.price || 0) * q
+                };
+            });
+
+        const cartItemsString = cartItemsData.map(item => `${item.title} x${item.quantity}`).join(", ");
+
         const { error } = await addSupabaseRequest(branding.id, {
-            room: roomNumber,
-            type: `Dining Order (${cartCount} items)`,
-            notes: cartItems.map(item => `${item.quantity}x ${item.title}`).join(", "),
-            status: "Pending",
+            room: searchParams.get('room') || roomNumber || 'Unknown',
+            type: "Dining Order",
+            notes: cartItemsString,
+            total: cartTotal,
             price: cartTotal,
-            total: cartTotal
+            items: cartItemsData
         });
 
         setIsOrdering(false);
@@ -260,6 +308,13 @@ export default function RestaurantPage() {
                 onOrder={handleOrder}
                 hotelId={branding?.id}
             />
+            <UpsellToast 
+                item={upsellItem}
+                isVisible={showUpsell}
+                onAdd={() => addToCart(upsellItem, true)}
+                onClose={() => setShowUpsell(false)}
+            />
+
             <BottomNav />
         </div>
     );

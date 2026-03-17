@@ -80,6 +80,7 @@ export interface HotelRequest {
     price?: number;
     total?: number;
     is_paid?: boolean;
+    items?: any;
 }
 
 export interface Room {
@@ -653,7 +654,8 @@ export async function addSupabaseRequest(hotelId: string, request: Partial<Hotel
         total: request.total || 0,
         timestamp: Date.now(),
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        is_paid: request.is_paid || false
+        is_paid: request.is_paid || false,
+        items: request.items || null
     };
 
     // In production, we omit the 'id' and let Supabase generate a proper UUID

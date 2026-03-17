@@ -95,12 +95,25 @@ export function RequestDetailModal({ request, roomNumber, hotelId, onClose }: Re
                                 <div className="bg-slate-50/50 rounded-3xl border border-slate-100 overflow-hidden">
                                     <div className="p-5 space-y-3">
                                         {tableRequests.map((r) => (
-                                            <div key={r.id} className="flex justify-between items-center">
-                                                <div className="flex items-center">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-3" />
-                                                    <span className="text-sm font-bold text-slate-700">{r.type}</span>
-                                                </div>
-                                                <span className="text-sm font-black text-slate-900">₹{r.total?.toLocaleString()}</span>
+                                            <div key={r.id} className="space-y-2">
+                                                {r.items && Array.isArray(r.items) ? (
+                                                    r.items.map((item: any, idx: number) => (
+                                                        <div key={idx} className="flex justify-between items-center pl-4 py-1 border-l border-slate-200">
+                                                            <div className="flex items-center">
+                                                                <span className="text-xs font-bold text-slate-600">{item.quantity}x {item.title}</span>
+                                                            </div>
+                                                            <span className="text-xs font-black text-slate-900">₹{item.total?.toLocaleString()}</span>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="flex items-center">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-3" />
+                                                            <span className="text-sm font-bold text-slate-700">{r.type}</span>
+                                                        </div>
+                                                        <span className="text-sm font-black text-slate-900">₹{r.total?.toLocaleString()}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

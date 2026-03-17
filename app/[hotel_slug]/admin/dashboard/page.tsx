@@ -302,6 +302,14 @@ export default function AdminHub() {
                             </div>
                         </div>
                     </div>
+
+                    <button 
+                        onClick={() => router.push(`/${hotelSlug}/admin/analytics`)}
+                        className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm flex items-center group mb-2"
+                    >
+                        <BarChart3 className="w-4 h-4 mr-2 text-indigo-500 group-hover:text-indigo-300" />
+                        Business Performance
+                    </button>
                 </div>
 
                 <div className="lg:col-span-4 flex items-center justify-end space-x-4">
@@ -315,17 +323,6 @@ export default function AdminHub() {
                         />
                         <Search className="w-4 h-4 text-slate-400 absolute left-4.5 top-1/2 -translate-y-1/2" />
                     </div>
-                    <button
-                        onClick={async () => {
-                            if (window.confirm("Confirm System Access Termination?")) {
-                                await signOut();
-                                router.push(`/${hotelSlug}/admin/login`);
-                            }
-                        }}
-                        className="bg-white border border-red-100 text-red-500 p-3.5 rounded-full hover:bg-red-50 transition-all shadow-sm group active:scale-95"
-                    >
-                        <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                    </button>
                 </div>
             </header>
 
@@ -411,7 +408,14 @@ export default function AdminHub() {
                                                     <span className="font-black text-slate-900 block text-lg leading-tight">
                                                         {req.room.toLowerCase() === 'takeaway' ? 'Takeaway' : `Table ${req.room}`}
                                                     </span>
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{req.time}</span>
+                                                    <div className="flex items-center space-x-2">
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{req.time}</span>
+                                                        {(req.total || 0) > 0 && (
+                                                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100/50">
+                                                                ₹{req.total}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                             <button 

@@ -81,17 +81,11 @@ export function CartOverlay({
                         </div>
 
                         <div className="space-y-4 mb-10 overflow-hidden">
-                            <CartProgressBar 
-                                currentAmount={cartTotal} 
-                                targetAmount={500} 
-                                offerText="Chef's Special Choco Lava Cake at ₹1" 
-                            />
-
                             {cartItems.map((item) => (
                                 <div key={item.id} className="flex items-center justify-between p-6 bg-white rounded-[2rem] shadow-sm border border-slate-100 group">
                                     <div>
                                         <p className="font-black text-black uppercase tracking-tighter text-xs">{item.quantity}x {item.title}</p>
-                                        <p className="text-lg font-black text-[#D4AF37] tracking-tight italic">₹{((item.price || 0) * item.quantity).toFixed(2)}</p>
+                                        <p className="text-lg font-black text-[#D4AF37] tracking-tight italic">₹{((item.price || 0) * item.quantity).toFixed(0)}</p>
                                     </div>
                                     <button
                                         onClick={() => updateQuantity(item.id || '', 0)}
@@ -110,16 +104,18 @@ export function CartOverlay({
 
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 mb-10">
                             <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-50">
-                                <span className="text-slate-400 font-black uppercase text-[11px] tracking-widest">Subtotal</span>
-                                <span className="font-black text-slate-900">₹{cartTotal.toFixed(2)}</span>
+                                <span className="text-slate-400 font-black uppercase text-[11px] tracking-widest">Selection Total</span>
+                                <span className="font-black text-slate-900">₹{cartTotal.toFixed(0)}</span>
                             </div>
                             <div className="flex justify-between items-center mb-8">
                                 <span className="text-slate-400 font-black uppercase text-[11px] tracking-widest">Delivery Bag</span>
-                                <span className="font-black text-[#F55D2C] uppercase text-[11px] tracking-widest italic">Free</span>
+                                <span className="font-black text-[#D4AF37] uppercase text-[11px] tracking-widest italic tracking-widest">Complementary</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-slate-900 font-black uppercase text-2xl tracking-tighter italic">Total</span>
-                                <span className="text-4xl text-slate-900 font-black tracking-tighter italic">₹{cartTotal.toFixed(2)}</span>
+                                <span className="text-slate-900 font-black uppercase text-2xl tracking-tighter italic leading-none">Final</span>
+                                <span className="text-4xl text-slate-900 font-black tracking-tighter italic leading-none ml-2">Experience</span>
+                                <span className="flex-1" />
+                                <span className="text-4xl text-slate-900 font-black tracking-tighter italic leading-none">₹{cartTotal.toFixed(0)}</span>
                             </div>
                         </div>
 

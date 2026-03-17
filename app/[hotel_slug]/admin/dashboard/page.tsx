@@ -115,6 +115,8 @@ export default function AdminHub() {
     const [audioInitialized, setAudioInitialized] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<HotelRequest | null>(null);
     const [activeTab, setActiveTab] = useState<"queue" | "active" | "history">("queue");
+    const [historyMode, setHistoryMode] = useState<"dine-in" | "takeaway">("dine-in");
+    const [selectedHistoryKey, setSelectedHistoryKey] = useState<string | null>(null);
 
     const loading = brandingLoading || authLoading || profileLoading;
     const syncStates: SyncStatus[] = [brandingSyncStatus, requestsSyncStatus, roomsSyncStatus];
@@ -232,6 +234,55 @@ export default function AdminHub() {
     const queueRequests = roleFilteredRequests.filter(r => r.status === "Pending");
     const activeRequests = roleFilteredRequests.filter(r => r.status === "Assigned" || r.status === "In Progress");
     const historyRequests = roleFilteredRequests.filter(r => r.status === "Completed");
+    const historySessions = useMemo(() => {
+        const grouped = new Map<string, {
+            key: string;
+            room: string;
+            isTakeaway: boolean;
+            label: string;
+            requests: HotelRequest[];
+            total: number;
+            lastTimestamp: number;
+            requestCount: number;
+        }>();
+
+        historyRequests.forEach((request) => {
+            const normalizedRoom = request.room.trim();
+            const isTakeaway = normalizedRoom.toLowerCase() === "takeaway";
+            const key = isTakeaway ? "takeaway" : `table-${normalizedRoom}`;
+            const existing = grouped.get(key);
+
+            if (existing) {
+                existing.requests.push(request);
+                existing.total += request.total || 0;
+                existing.lastTimestamp = Math.max(existing.lastTimestamp, request.timestamp);
+                existing.requestCount += 1;
+                return;
+            }
+
+            grouped.set(key, {
+                key,
+                room: normalizedRoom,
+                isTakeaway,
+                label: isTakeaway ? "Takeaway" : `Table ${normalizedRoom}`,
+                requests: [request],
+                total: request.total || 0,
+                lastTimestamp: request.timestamp,
+                requestCount: 1,
+            });
+        });
+
+        return Array.from(grouped.values())
+            .map((session) => ({
+                ...session,
+                requests: [...session.requests].sort((left, right) => right.timestamp - left.timestamp),
+            }))
+            .sort((left, right) => right.lastTimestamp - left.lastTimestamp);
+    }, [historyRequests]);
+    const dineInHistorySessions = historySessions.filter((session) => !session.isTakeaway);
+    const takeawayHistorySessions = historySessions.filter((session) => session.isTakeaway);
+    const filteredHistorySessions = historyMode === "dine-in" ? dineInHistorySessions : takeawayHistorySessions;
+    const selectedHistorySession = filteredHistorySessions.find((session) => session.key === selectedHistoryKey) || null;
     const roomGuestMap = useMemo(() => {
         const map = new Map<string, typeof guests[number]>();
         guests
@@ -267,6 +318,82 @@ export default function AdminHub() {
         const upsellOrders = diningRequests.filter(r => (r.items && r.items.length > 1));
         return (upsellOrders.length / diningRequests.length) * 100;
     }, [diningRequests]);
+
+    useEffect(() => {
+        if (activeTab !== "history") {
+            return;
+        }
+
+        if (historyMode === "dine-in" && filteredHistorySessions.length === 0 && takeawayHistorySessions.length > 0) {
+            setHistoryMode("takeaway");
+            return;
+        }
+
+        if (historyMode === "takeaway" && filteredHistorySessions.length === 0 && dineInHistorySessions.length > 0) {
+            setHistoryMode("dine-in");
+            return;
+        }
+
+        if (!filteredHistorySessions.length) {
+            setSelectedHistoryKey(null);
+            return;
+        }
+
+        if (!selectedHistoryKey || !filteredHistorySessions.some((session) => session.key === selectedHistoryKey)) {
+            setSelectedHistoryKey(filteredHistorySessions[0].key);
+        }
+    }, [activeTab, historyMode, filteredHistorySessions, dineInHistorySessions.length, takeawayHistorySessions.length, selectedHistoryKey]);
+
+    const getRequestAccent = (req: HotelRequest) => {
+        const billRequest = isBillRequest(req.type);
+        const isTakeaway = req.room.toLowerCase() === 'takeaway';
+
+        if (billRequest) {
+            return {
+                tint: '#ECFDF5',
+                edge: '#10B981',
+                iconBg: '#D1FAE5',
+                iconColor: '#047857',
+                amountBg: '#ECFDF5',
+                amountColor: '#047857',
+                badgeText: 'Bill Desk',
+            };
+        }
+
+        if (isTakeaway) {
+            return {
+                tint: '#F5F3FF',
+                edge: '#8B5CF6',
+                iconBg: '#E9D5FF',
+                iconColor: '#7C3AED',
+                amountBg: '#F5F3FF',
+                amountColor: '#6D28D9',
+                badgeText: 'Takeaway',
+            };
+        }
+
+        if (isDiningRequest(req.type)) {
+            return {
+                tint: '#EEF2FF',
+                edge: '#4F46E5',
+                iconBg: '#E0E7FF',
+                iconColor: '#4338CA',
+                amountBg: '#EEF2FF',
+                amountColor: '#4338CA',
+                badgeText: 'Dining',
+            };
+        }
+
+        return {
+            tint: '#FFF7ED',
+            edge: '#F59E0B',
+            iconBg: '#FEF3C7',
+            iconColor: '#B45309',
+            amountBg: '#FFF7ED',
+            amountColor: '#B45309',
+            badgeText: 'Service',
+        };
+    };
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
@@ -460,241 +587,372 @@ export default function AdminHub() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative min-h-[400px]">
-                        <AnimatePresence mode="popLayout">
-                            {(activeTab === 'queue' ? queueRequests : (activeTab === 'active' ? activeRequests : historyRequests)).length === 0 ? (
-                                <motion.div 
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="col-span-2 flex flex-col items-center justify-center p-20 text-slate-300 italic font-bold"
-                                >
-                                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                                        <CheckCircle className="w-8 h-8 opacity-20" />
+                    {activeTab === 'history' ? (
+                        <div className="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)] gap-6 min-h-[460px]">
+                            <div className="rounded-[2.2rem] border border-slate-100 bg-white p-5 shadow-xl shadow-slate-200/20 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400 mb-1">History Sessions</p>
+                                        <h3 className="text-2xl font-black text-slate-900 tracking-tight">Browse by source</h3>
                                     </div>
-                                    No {activeTab} activity at the moment
-                                </motion.div>
-                            ) : (
-                                (activeTab === 'queue' ? queueRequests : (activeTab === 'active' ? activeRequests : historyRequests)).map((req) => {
-                                    const billRequest = isBillRequest(req.type);
-                                    const isTakeaway = req.room.toLowerCase() === 'takeaway';
-                                    const guest = req.status === "Completed" ? null : roomGuestMap.get(req.room);
-                                    const loyalty = guest ? loyaltyByPhone.get(normalizePhone(guest.phone)) : null;
-                                    const guestName = loyalty?.name || guest?.name || null;
-                                    const guestPhone = guest?.phone || loyalty?.phone || null;
-                                    const guestLastSeen = formatLastSeen(loyalty?.last_visit_at || guest?.check_in_date);
-                                    const isKnownGuest = !!loyalty || !!guestName;
-                                    const accent = billRequest
-                                        ? {
-                                            tint: '#ECFDF5',
-                                            edge: '#10B981',
-                                            iconBg: '#D1FAE5',
-                                            iconColor: '#047857',
-                                            amountBg: '#ECFDF5',
-                                            amountColor: '#047857',
-                                            badgeText: 'Bill Desk',
-                                        }
-                                        : isTakeaway
-                                            ? {
-                                                tint: '#F5F3FF',
-                                                edge: '#8B5CF6',
-                                                iconBg: '#E9D5FF',
-                                                iconColor: '#7C3AED',
-                                                amountBg: '#F5F3FF',
-                                                amountColor: '#6D28D9',
-                                                badgeText: 'Takeaway',
-                                            }
-                                            : isDiningRequest(req.type)
-                                                ? {
-                                                    tint: '#EEF2FF',
-                                                    edge: '#4F46E5',
-                                                    iconBg: '#E0E7FF',
-                                                    iconColor: '#4338CA',
-                                                    amountBg: '#EEF2FF',
-                                                    amountColor: '#4338CA',
-                                                    badgeText: 'Dining',
-                                                }
-                                                : {
-                                                    tint: '#FFF7ED',
-                                                    edge: '#F59E0B',
-                                                    iconBg: '#FEF3C7',
-                                                    iconColor: '#B45309',
-                                                    amountBg: '#FFF7ED',
-                                                    amountColor: '#B45309',
-                                                    badgeText: 'Service',
-                                                };
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-300">Sessions</p>
+                                        <p className="text-xl font-black text-slate-900">{historySessions.length}</p>
+                                    </div>
+                                </div>
 
-                                    return (
-                                    <motion.div
-                                        key={req.id}
-                                        layout
-                                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.9, x: -20 }}
-                                        className="rounded-[2rem] p-6 border backdrop-blur-xl transition-all relative group overflow-hidden"
-                                        style={{
-                                            background: `linear-gradient(180deg, ${accent.tint} 0%, rgba(255,255,255,0.98) 34%, rgba(255,255,255,0.98) 100%)`,
-                                            borderColor: `${accent.edge}26`,
-                                            boxShadow: `0 28px 70px -42px ${accent.edge}55`,
-                                        }}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => setHistoryMode("dine-in")}
+                                        className={`rounded-2xl border px-4 py-3 text-left transition-all ${historyMode === "dine-in" ? "bg-indigo-50 border-indigo-200 ring-2 ring-indigo-500/10" : "bg-white border-slate-100 hover:border-slate-200"}`}
                                     >
-                                        <div
-                                            className="absolute inset-x-0 top-0 h-1.5"
-                                            style={{ background: `linear-gradient(90deg, ${accent.edge}, ${accent.edge}55, transparent)` }}
-                                        />
-                                        <div className="absolute right-0 top-0 h-28 w-28 rounded-full blur-3xl opacity-40" style={{ backgroundColor: accent.tint }} />
+                                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-2">Dine In</p>
+                                        <p className="text-xl font-black text-slate-900">{dineInHistorySessions.length}</p>
+                                    </button>
+                                    <button
+                                        onClick={() => setHistoryMode("takeaway")}
+                                        className={`rounded-2xl border px-4 py-3 text-left transition-all ${historyMode === "takeaway" ? "bg-purple-50 border-purple-200 ring-2 ring-purple-500/10" : "bg-white border-slate-100 hover:border-slate-200"}`}
+                                    >
+                                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-2">Takeaway</p>
+                                        <p className="text-xl font-black text-slate-900">{takeawayHistorySessions.length}</p>
+                                    </button>
+                                </div>
 
-                                        <div className="relative z-10 flex items-start justify-between mb-5">
-                                            <div className="flex items-center">
-                                                <div
-                                                    className="w-14 h-14 rounded-[1.35rem] flex items-center justify-center font-black text-xl mr-4 shadow-xl"
-                                                    style={{ backgroundColor: accent.iconBg, color: accent.iconColor }}
-                                                >
-                                                    {billRequest ? <CreditCard className="w-6 h-6" /> : (isTakeaway ? <ShoppingBag className="w-6 h-6" /> : req.room)}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                        <span className="font-black text-slate-900 block text-[1.7rem] leading-none tracking-tight">
-                                                            {isTakeaway ? 'Takeaway' : `Table ${req.room}`}
-                                                        </span>
-                                                        <span
-                                                            className="text-[9px] font-black uppercase tracking-[0.18em] px-2.5 py-1 rounded-full border"
-                                                            style={{ backgroundColor: accent.amountBg, color: accent.amountColor, borderColor: `${accent.edge}20` }}
-                                                        >
-                                                            {accent.badgeText}
-                                                        </span>
-                                                        {isKnownGuest && (
-                                                            <span className="text-[9px] font-black uppercase tracking-[0.18em] px-2.5 py-1 rounded-full border bg-slate-900 text-white border-slate-900">
-                                                                Known Guest
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <span className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-400 block">
-                                                        {req.type}
+                                <div className="space-y-3 max-h-[540px] overflow-y-auto pr-1">
+                                    {filteredHistorySessions.length === 0 ? (
+                                        <div className="rounded-[1.75rem] border border-dashed border-slate-200 bg-slate-50/70 p-6 text-center">
+                                            <p className="text-sm font-black text-slate-400">No {historyMode} history yet</p>
+                                        </div>
+                                    ) : (
+                                        filteredHistorySessions.map((session) => (
+                                            <button
+                                                key={session.key}
+                                                onClick={() => setSelectedHistoryKey(session.key)}
+                                                className={`w-full rounded-[1.75rem] border p-4 text-left transition-all ${selectedHistoryKey === session.key ? "bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-300/30" : "bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50/70"}`}
+                                            >
+                                                <div className="flex items-center justify-between gap-3 mb-3">
+                                                    <span className={`text-lg font-black tracking-tight ${selectedHistoryKey === session.key ? "text-white" : "text-slate-900"}`}>
+                                                        {session.label}
                                                     </span>
-                                                    <div className="flex items-center space-x-2 mt-2">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
-                                                            <Clock3 className="w-3 h-3 mr-1.5" />
-                                                            {req.time}
-                                                        </span>
-                                                        {(req.total || 0) > 0 && (
-                                                            <span
-                                                                className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border"
-                                                                style={{ backgroundColor: accent.amountBg, color: accent.amountColor, borderColor: `${accent.edge}18` }}
-                                                            >
-                                                                ₹{req.total}
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                                    <span className={`text-[10px] font-black uppercase tracking-[0.18em] px-2.5 py-1 rounded-full ${selectedHistoryKey === session.key ? "bg-white/10 text-white" : (session.isTakeaway ? "bg-purple-50 text-purple-700" : "bg-indigo-50 text-indigo-700")}`}>
+                                                        {session.isTakeaway ? "Takeaway" : "Dine In"}
+                                                    </span>
+                                                </div>
+                                                <div className={`flex items-center justify-between text-[11px] font-black uppercase tracking-[0.16em] ${selectedHistoryKey === session.key ? "text-white/70" : "text-slate-400"}`}>
+                                                    <span>{session.requestCount} requests</span>
+                                                    <span>₹{session.total.toFixed(0)}</span>
+                                                </div>
+                                                <p className={`mt-3 text-xs font-bold ${selectedHistoryKey === session.key ? "text-white/60" : "text-slate-400"}`}>
+                                                    Last closed at {new Date(session.lastTimestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                                </p>
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="rounded-[2.4rem] border border-slate-100 bg-white p-6 shadow-xl shadow-slate-200/20">
+                                {!selectedHistorySession ? (
+                                    <div className="h-full min-h-[420px] flex flex-col items-center justify-center text-center p-10">
+                                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                                            <Clock3 className="w-8 h-8 text-slate-300" />
+                                        </div>
+                                        <p className="text-xl font-black text-slate-400 mb-2">Select a session</p>
+                                        <p className="text-sm font-bold text-slate-300">Pick a table or takeaway history card to review completed orders.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                                            <div>
+                                                <div className="flex items-center gap-3 flex-wrap mb-2">
+                                                    <h3 className="text-3xl font-black text-slate-900 tracking-tight">{selectedHistorySession.label}</h3>
+                                                    <span className={`text-[10px] font-black uppercase tracking-[0.18em] px-3 py-1.5 rounded-full ${selectedHistorySession.isTakeaway ? "bg-purple-50 text-purple-700" : "bg-indigo-50 text-indigo-700"}`}>
+                                                        {selectedHistorySession.isTakeaway ? "Takeaway History" : "Dine-In History"}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm font-bold text-slate-400">
+                                                    {selectedHistorySession.requestCount} completed requests • Last activity {new Date(selectedHistorySession.lastTimestamp).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                                                </p>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3 md:min-w-[260px]">
+                                                <div className="rounded-[1.6rem] border border-slate-100 bg-slate-50/70 px-4 py-3">
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-1">Orders</p>
+                                                    <p className="text-2xl font-black text-slate-900">{selectedHistorySession.requestCount}</p>
+                                                </div>
+                                                <div className="rounded-[1.6rem] border border-slate-100 bg-slate-50/70 px-4 py-3">
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-1">Revenue</p>
+                                                    <p className="text-2xl font-black text-slate-900">₹{selectedHistorySession.total.toFixed(0)}</p>
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => setSelectedRequest(req)}
-                                                className="w-10 h-10 rounded-full bg-white/80 border border-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow-sm"
-                                            >
-                                                <Eye className="w-4 h-4 text-slate-400" />
-                                            </button>
                                         </div>
 
-                                        <div className="relative z-10 space-y-4">
-                                            <div className="grid grid-cols-[auto_1fr] gap-3 items-start">
-                                                <div className="w-11 h-11 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
-                                                    {billRequest ? (
-                                                        <CreditCard className="w-4 h-4" style={{ color: accent.iconColor }} />
-                                                    ) : isTakeaway ? (
-                                                        <ShoppingBag className="w-4 h-4" style={{ color: accent.iconColor }} />
-                                                    ) : isDiningRequest(req.type) ? (
-                                                        <Utensils className="w-4 h-4" style={{ color: accent.iconColor }} />
-                                                    ) : (
-                                                        <Bell className="w-4 h-4" style={{ color: accent.iconColor }} />
-                                                    )}
-                                                </div>
-                                                <div className="min-w-0 rounded-[1.35rem] border border-white bg-white/75 px-4 py-3 shadow-sm">
-                                                    <div className="flex items-center justify-between gap-3 mb-1">
-                                                        <span className="text-sm font-black text-slate-900 truncate">
-                                                            {isDiningRequest(req.type) ? summarizeRequestItems(req) : req.type}
-                                                        </span>
-                                                        <StatusBadge status={req.status} />
-                                                    </div>
-                                                    <p className="text-xs font-medium text-slate-500 leading-5 line-clamp-2">
-                                                        {req.notes || "No extra note added for this request."}
-                                                    </p>
-                                                </div>
-                                            </div>
+                                        <div className="space-y-4">
+                                            {selectedHistorySession.requests.map((req) => {
+                                                const accent = getRequestAccent(req);
+                                                const billRequest = isBillRequest(req.type);
 
-                                            <div className="rounded-[1.4rem] border border-slate-100/80 bg-white/80 px-4 py-3 shadow-sm">
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <div className="min-w-0">
-                                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Guest Snapshot</p>
-                                                        {guestName ? (
-                                                            <div className="space-y-1.5">
-                                                                <div className="flex items-center gap-2 text-sm font-black text-slate-900">
-                                                                    <UserRound className="w-4 h-4 text-slate-400" />
-                                                                    <span className="truncate">{guestName}</span>
+                                                return (
+                                                    <div
+                                                        key={req.id}
+                                                        className="rounded-[1.8rem] border p-5"
+                                                        style={{
+                                                            background: `linear-gradient(180deg, ${accent.tint} 0%, rgba(255,255,255,0.98) 46%, rgba(255,255,255,0.98) 100%)`,
+                                                            borderColor: `${accent.edge}20`,
+                                                        }}
+                                                    >
+                                                        <div className="flex items-start justify-between gap-4 mb-4">
+                                                            <div className="flex items-start gap-4 min-w-0">
+                                                                <div
+                                                                    className="w-12 h-12 rounded-[1.15rem] flex items-center justify-center shrink-0"
+                                                                    style={{ backgroundColor: accent.iconBg, color: accent.iconColor }}
+                                                                >
+                                                                    {billRequest ? <CreditCard className="w-5 h-5" /> : (selectedHistorySession.isTakeaway ? <ShoppingBag className="w-5 h-5" /> : <Utensils className="w-5 h-5" />)}
                                                                 </div>
-                                                                {guestPhone && (
-                                                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-                                                                        <Phone className="w-3.5 h-3.5" />
-                                                                        <span>{guestPhone}</span>
+                                                                <div className="min-w-0">
+                                                                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                                        <p className="text-lg font-black text-slate-900 truncate">
+                                                                            {isDiningRequest(req.type) ? summarizeRequestItems(req) : req.type}
+                                                                        </p>
+                                                                        <span
+                                                                            className="text-[9px] font-black uppercase tracking-[0.16em] px-2.5 py-1 rounded-full border"
+                                                                            style={{ backgroundColor: accent.amountBg, color: accent.amountColor, borderColor: `${accent.edge}20` }}
+                                                                        >
+                                                                            {accent.badgeText}
+                                                                        </span>
                                                                     </div>
-                                                                )}
+                                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.18em]">{req.time}</p>
+                                                                </div>
                                                             </div>
-                                                        ) : (
-                                                            <p className="text-sm font-medium text-slate-400">No guest profile linked to this session yet.</p>
-                                                        )}
-                                                    </div>
 
-                                                    {isKnownGuest && (
-                                                        <div className="text-right shrink-0">
-                                                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-[0.18em] border border-emerald-100">
-                                                                <Gem className="w-3 h-3" />
-                                                                Returning
+                                                            <div className="flex items-center gap-3 shrink-0">
+                                                                <span
+                                                                    className="text-[10px] font-black uppercase tracking-[0.16em] px-3 py-1.5 rounded-full border"
+                                                                    style={{ backgroundColor: accent.amountBg, color: accent.amountColor, borderColor: `${accent.edge}18` }}
+                                                                >
+                                                                    ₹{(req.total || 0).toFixed(0)}
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => setSelectedRequest(req)}
+                                                                    className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm"
+                                                                >
+                                                                    <Eye className="w-4 h-4 text-slate-400" />
+                                                                </button>
                                                             </div>
-                                                            {guestLastSeen && (
-                                                                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400 mt-2">
-                                                                    Last visit {guestLastSeen}
-                                                                </p>
-                                                            )}
-                                                            {typeof loyalty?.points === "number" && loyalty.points > 0 && (
-                                                                <p className="text-[11px] font-black text-slate-900 mt-1">{loyalty.points} pts</p>
+                                                        </div>
+
+                                                        <div className="rounded-[1.35rem] border border-white bg-white/80 px-4 py-3 shadow-sm">
+                                                            <p className="text-xs font-medium text-slate-500 leading-6">
+                                                                {req.notes || "No extra note added for this request."}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative min-h-[400px]">
+                            <AnimatePresence mode="popLayout">
+                                {(activeTab === 'queue' ? queueRequests : activeRequests).length === 0 ? (
+                                    <motion.div 
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="col-span-2 flex flex-col items-center justify-center p-20 text-slate-300 italic font-bold"
+                                    >
+                                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                                            <CheckCircle className="w-8 h-8 opacity-20" />
+                                        </div>
+                                        No {activeTab} activity at the moment
+                                    </motion.div>
+                                ) : (
+                                    (activeTab === 'queue' ? queueRequests : activeRequests).map((req) => {
+                                        const billRequest = isBillRequest(req.type);
+                                        const isTakeaway = req.room.toLowerCase() === 'takeaway';
+                                        const guest = req.status === "Completed" ? null : roomGuestMap.get(req.room);
+                                        const loyalty = guest ? loyaltyByPhone.get(normalizePhone(guest.phone)) : null;
+                                        const guestName = loyalty?.name || guest?.name || null;
+                                        const guestPhone = guest?.phone || loyalty?.phone || null;
+                                        const guestLastSeen = formatLastSeen(loyalty?.last_visit_at || guest?.check_in_date);
+                                        const isKnownGuest = !!loyalty || !!guestName;
+                                        const accent = getRequestAccent(req);
+
+                                        return (
+                                        <motion.div
+                                            key={req.id}
+                                            layout
+                                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.9, x: -20 }}
+                                            className="rounded-[2rem] p-6 border backdrop-blur-xl transition-all relative group overflow-hidden"
+                                            style={{
+                                                background: `linear-gradient(180deg, ${accent.tint} 0%, rgba(255,255,255,0.98) 34%, rgba(255,255,255,0.98) 100%)`,
+                                                borderColor: `${accent.edge}26`,
+                                                boxShadow: `0 28px 70px -42px ${accent.edge}55`,
+                                            }}
+                                        >
+                                            <div
+                                                className="absolute inset-x-0 top-0 h-1.5"
+                                                style={{ background: `linear-gradient(90deg, ${accent.edge}, ${accent.edge}55, transparent)` }}
+                                            />
+                                            <div className="absolute right-0 top-0 h-28 w-28 rounded-full blur-3xl opacity-40" style={{ backgroundColor: accent.tint }} />
+
+                                            <div className="relative z-10 flex items-start justify-between mb-5">
+                                                <div className="flex items-center">
+                                                    <div
+                                                        className="w-14 h-14 rounded-[1.35rem] flex items-center justify-center font-black text-xl mr-4 shadow-xl"
+                                                        style={{ backgroundColor: accent.iconBg, color: accent.iconColor }}
+                                                    >
+                                                        {billRequest ? <CreditCard className="w-6 h-6" /> : (isTakeaway ? <ShoppingBag className="w-6 h-6" /> : req.room)}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                            <span className="font-black text-slate-900 block text-[1.7rem] leading-none tracking-tight">
+                                                                {isTakeaway ? 'Takeaway' : `Table ${req.room}`}
+                                                            </span>
+                                                            <span
+                                                                className="text-[9px] font-black uppercase tracking-[0.18em] px-2.5 py-1 rounded-full border"
+                                                                style={{ backgroundColor: accent.amountBg, color: accent.amountColor, borderColor: `${accent.edge}20` }}
+                                                            >
+                                                                {accent.badgeText}
+                                                            </span>
+                                                            {isKnownGuest && (
+                                                                <span className="text-[9px] font-black uppercase tracking-[0.18em] px-2.5 py-1 rounded-full border bg-slate-900 text-white border-slate-900">
+                                                                    Known Guest
+                                                                </span>
                                                             )}
                                                         </div>
-                                                    )}
+                                                        <span className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-400 block">
+                                                            {req.type}
+                                                        </span>
+                                                        <div className="flex items-center space-x-2 mt-2">
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                                                                <Clock3 className="w-3 h-3 mr-1.5" />
+                                                                {req.time}
+                                                            </span>
+                                                            {(req.total || 0) > 0 && (
+                                                                <span
+                                                                    className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border"
+                                                                    style={{ backgroundColor: accent.amountBg, color: accent.amountColor, borderColor: `${accent.edge}18` }}
+                                                                >
+                                                                    ₹{req.total}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => setSelectedRequest(req)}
+                                                    className="w-10 h-10 rounded-full bg-white/80 border border-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow-sm"
+                                                >
+                                                    <Eye className="w-4 h-4 text-slate-400" />
+                                                </button>
+                                            </div>
+
+                                            <div className="relative z-10 space-y-4">
+                                                <div className="grid grid-cols-[auto_1fr] gap-3 items-start">
+                                                    <div className="w-11 h-11 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                                                        {billRequest ? (
+                                                            <CreditCard className="w-4 h-4" style={{ color: accent.iconColor }} />
+                                                        ) : isTakeaway ? (
+                                                            <ShoppingBag className="w-4 h-4" style={{ color: accent.iconColor }} />
+                                                        ) : isDiningRequest(req.type) ? (
+                                                            <Utensils className="w-4 h-4" style={{ color: accent.iconColor }} />
+                                                        ) : (
+                                                            <Bell className="w-4 h-4" style={{ color: accent.iconColor }} />
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0 rounded-[1.35rem] border border-white bg-white/75 px-4 py-3 shadow-sm">
+                                                        <div className="flex items-center justify-between gap-3 mb-1">
+                                                            <span className="text-sm font-black text-slate-900 truncate">
+                                                                {isDiningRequest(req.type) ? summarizeRequestItems(req) : req.type}
+                                                            </span>
+                                                            <StatusBadge status={req.status} />
+                                                        </div>
+                                                        <p className="text-xs font-medium text-slate-500 leading-5 line-clamp-2">
+                                                            {req.notes || "No extra note added for this request."}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="rounded-[1.4rem] border border-slate-100/80 bg-white/80 px-4 py-3 shadow-sm">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Guest Snapshot</p>
+                                                            {guestName ? (
+                                                                <div className="space-y-1.5">
+                                                                    <div className="flex items-center gap-2 text-sm font-black text-slate-900">
+                                                                        <UserRound className="w-4 h-4 text-slate-400" />
+                                                                        <span className="truncate">{guestName}</span>
+                                                                    </div>
+                                                                    {guestPhone && (
+                                                                        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                                                                            <Phone className="w-3.5 h-3.5" />
+                                                                            <span>{guestPhone}</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ) : (
+                                                                <p className="text-sm font-medium text-slate-400">No guest profile linked to this session yet.</p>
+                                                            )}
+                                                        </div>
+
+                                                        {isKnownGuest && (
+                                                            <div className="text-right shrink-0">
+                                                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-[0.18em] border border-emerald-100">
+                                                                    <Gem className="w-3 h-3" />
+                                                                    Returning
+                                                                </div>
+                                                                {guestLastSeen && (
+                                                                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400 mt-2">
+                                                                        Last visit {guestLastSeen}
+                                                                    </p>
+                                                                )}
+                                                                {typeof loyalty?.points === "number" && loyalty.points > 0 && (
+                                                                    <p className="text-[11px] font-black text-slate-900 mt-1">{loyalty.points} pts</p>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div className="relative z-10 mt-6 flex space-x-2">
-                                            {billRequest ? (
-                                                <button onClick={() => setSelectedRequest(req)} className="flex-1 bg-slate-900 text-white py-3.5 rounded-[1.1rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95 flex items-center justify-center shadow-lg">
-                                                    <CheckCircle className="w-4 h-4 mr-2" /> Settle Bill
-                                                </button>
-                                            ) : (
-                                                <>
-                                                    {req.status === "Pending" && (
-                                                        <button onClick={() => updateStatus(req.id, "Assigned")} className="flex-1 bg-slate-900 text-white py-3.5 rounded-[1.1rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95 shadow-lg">
-                                                            Accept
-                                                        </button>
-                                                    )}
-                                                    {req.status === "Assigned" && (
-                                                        <button onClick={() => updateStatus(req.id, "In Progress")} className="flex-1 py-3.5 rounded-[1.1rem] font-black text-[10px] uppercase tracking-[0.2em] transition-all active:scale-95 shadow-lg text-white"
-                                                            style={{ backgroundColor: accent.edge }}>
-                                                            Start
-                                                        </button>
-                                                    )}
-                                                    {req.status === "In Progress" && (
-                                                        <button onClick={() => updateStatus(req.id, "Completed")} className="flex-1 bg-emerald-600 text-white py-3.5 rounded-[1.1rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center shadow-lg shadow-emerald-100">
-                                                            <CheckCircle className="w-4 h-4 mr-2" /> Complete
-                                                        </button>
-                                                    )}
-                                                </>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                    );
-                                })
-                            )}
-                        </AnimatePresence>
-                    </div>
+                                            <div className="relative z-10 mt-6 flex space-x-2">
+                                                {billRequest ? (
+                                                    <button onClick={() => setSelectedRequest(req)} className="flex-1 bg-slate-900 text-white py-3.5 rounded-[1.1rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95 flex items-center justify-center shadow-lg">
+                                                        <CheckCircle className="w-4 h-4 mr-2" /> Settle Bill
+                                                    </button>
+                                                ) : (
+                                                    <>
+                                                        {req.status === "Pending" && (
+                                                            <button onClick={() => updateStatus(req.id, "Assigned")} className="flex-1 bg-slate-900 text-white py-3.5 rounded-[1.1rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95 shadow-lg">
+                                                                Accept
+                                                            </button>
+                                                        )}
+                                                        {req.status === "Assigned" && (
+                                                            <button onClick={() => updateStatus(req.id, "In Progress")} className="flex-1 py-3.5 rounded-[1.1rem] font-black text-[10px] uppercase tracking-[0.2em] transition-all active:scale-95 shadow-lg text-white"
+                                                                style={{ backgroundColor: accent.edge }}>
+                                                                Start
+                                                            </button>
+                                                        )}
+                                                        {req.status === "In Progress" && (
+                                                            <button onClick={() => updateStatus(req.id, "Completed")} className="flex-1 bg-emerald-600 text-white py-3.5 rounded-[1.1rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center shadow-lg shadow-emerald-100">
+                                                                <CheckCircle className="w-4 h-4 mr-2" /> Complete
+                                                            </button>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                        );
+                                    })
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
                 </div>
 
                 {/* TABLE STATUS MAP: Floor Overview */}

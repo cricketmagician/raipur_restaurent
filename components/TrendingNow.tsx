@@ -43,20 +43,23 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                 </span>
             </div>
 
-            <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-8 -mx-4 px-4 items-end">
+            <div className="grid grid-cols-2 gap-4">
                 {items.map((item, idx) => (
                     <motion.div
                         key={item.id}
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.08 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onItemClick(item.id)}
-                        className="flex-none w-[78%] sm:w-[72%] overflow-hidden cursor-pointer relative group border shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-500"
+                        className="overflow-hidden cursor-pointer relative group border shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-500"
                         style={{ 
                             borderRadius: theme.radius,
                             backgroundColor: theme.surface,
                             borderColor: `${theme.primary}05`
                         }}
                     >
-                        <div className={`overflow-hidden relative ${idx === 0 ? 'aspect-[5/6]' : 'aspect-[4/5]'}`}>
+                        <div className="overflow-hidden relative aspect-[4/5]">
                             <img 
                                 src={item.image} 
                                 alt={item.title} 
@@ -73,7 +76,7 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                             </div>
 
                             <div className="absolute bottom-8 left-8 right-8">
-                                <h4 className="text-3xl font-black tracking-tighter leading-none text-white mb-2 drop-shadow-lg">
+                                <h4 className="text-[2rem] font-black tracking-tighter leading-[0.95] text-white mb-2 drop-shadow-lg line-clamp-3">
                                     {item.title}
                                 </h4>
                                 <div className="flex items-center space-x-2">

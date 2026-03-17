@@ -201,6 +201,10 @@ export default function GuestDashboard() {
         
         return sum + ((item?.price || comboItem?.price || 0) * q);
     }, 0);
+    const liveBillTotal = requests
+        .filter((request) => (request.total || 0) > 0 && !request.is_paid)
+        .reduce((sum, request) => sum + (request.total || 0), 0);
+    const openOrderCount = requests.filter((request) => request.status !== "Completed").length;
     
     // Calculate REAL sales data from requests
     const menuItemsWithSales = React.useMemo(() => {
@@ -488,29 +492,83 @@ export default function GuestDashboard() {
                     }} 
                 />
 
-                {/* 3. 🤤 Perfect Pairs (AOV Booster - Contextual Appearance) */}
-                <div className="space-y-6">
-                    {(cartCount > 0 || isHungry) && (
-                        <div className="flex flex-wrap items-center justify-center gap-3 px-2 mb-2 animate-in fade-in slide-in-from-top-4 duration-700">
-                            {[
-                                { label: "Pizza", icon: "🍕" },
-                                { label: "Coffee", icon: "☕" },
-                                { label: "Burger", icon: "🍔" },
-                                { label: "Dessert", icon: "🍰" }
-                            ].map((tag) => (
-                                <button 
-                                    key={tag.label}
-                                    onClick={() => router.push(`/${hotelSlug}/guest/restaurant?tag=${tag.label.toLowerCase()}`)}
-                                    className="px-5 py-2.5 rounded-full bg-white shadow-sm border border-black/5 text-xs font-black flex items-center gap-2 active:scale-90 transition-all hover:bg-slate-50"
-                                    style={{ color: theme.primary }}
-                                >
-                                    <span>{tag.icon}</span>
-                                    <span className="uppercase tracking-widest">{tag.label}</span>
-                                </button>
-                            ))}
+                {/* 3. Premium Editorial Strip */}
+                <section className="space-y-4">
+                    <div className="relative overflow-hidden rounded-[2.5rem] border shadow-[0_24px_80px_rgba(0,0,0,0.12)]">
+                        <img
+                            src={getDirectImageUrl(branding?.heroImage) || stories[0]?.image_url || "/images/branding/hero.png"}
+                            alt="Dining atmosphere"
+                            className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/45 to-black/20" />
+                        <div className="relative z-10 px-6 py-7">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/12 border border-white/10 backdrop-blur-xl mb-4">
+                                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                                <span className="text-[9px] font-black uppercase tracking-[0.24em] text-white">Tonight&apos;s Edit</span>
+                            </div>
+                            <h3 className="text-[2rem] font-black tracking-tight leading-[0.95] text-white mb-3">
+                                Explore the full menu,
+                                <br />
+                                not just a few shortcuts.
+                            </h3>
+                            <p className="text-sm font-medium leading-6 text-white/72 max-w-[280px] mb-6">
+                                Mains, desserts, pairings and coffee live in one immersive menu flow designed for faster choices.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
+                                className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all"
+                            >
+                                Open Full Menu
+                                <ArrowUpRight className="w-4 h-4" />
+                            </button>
                         </div>
-                    )}
-                    
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <button
+                            onClick={() => router.push(`/${hotelSlug}/guest/bill`)}
+                            className="rounded-[2rem] border bg-white/82 backdrop-blur-xl p-5 text-left shadow-[0_18px_50px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all"
+                            style={{ borderColor: `${theme.primary}10` }}
+                        >
+                            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: `${theme.primary}10`, color: theme.primary }}>
+                                <Receipt className="w-5 h-5" />
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-40 mb-2" style={{ color: theme.primary }}>
+                                Live Bill
+                            </p>
+                            <h4 className="text-xl font-black tracking-tight mb-1" style={{ color: theme.primary }}>
+                                ₹{liveBillTotal.toFixed(0)}
+                            </h4>
+                            <p className="text-[11px] font-medium leading-5 opacity-60" style={{ color: theme.primary }}>
+                                {liveBillTotal > 0 ? "Review charges and request settlement anytime." : "Your table is clean. New orders will appear here."}
+                            </p>
+                        </button>
+
+                        <button
+                            onClick={() => loyaltyProfile ? router.push(`/${hotelSlug}/guest/profile`) : setIsLoyaltyOpen(true)}
+                            className="rounded-[2rem] border bg-white/82 backdrop-blur-xl p-5 text-left shadow-[0_18px_50px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all"
+                            style={{ borderColor: `${theme.primary}10` }}
+                        >
+                            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: `${theme.secondary}55`, color: theme.primary }}>
+                                <Sparkles className="w-5 h-5" />
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-40 mb-2" style={{ color: theme.primary }}>
+                                {loyaltyProfile ? "Member Lounge" : "Guest Identity"}
+                            </p>
+                            <h4 className="text-lg font-black tracking-tight mb-1" style={{ color: theme.primary }}>
+                                {loyaltyProfile ? `${currentPoints} vibe points` : "Save your details"}
+                            </h4>
+                            <p className="text-[11px] font-medium leading-5 opacity-60" style={{ color: theme.primary }}>
+                                {loyaltyProfile
+                                    ? `${openOrderCount > 0 ? `${openOrderCount} live table updates` : "Ready for a fresh order"}`
+                                    : "Faster takeaway checkout and known guest recognition."}
+                            </p>
+                        </button>
+                    </div>
+                </section>
+
+                {/* 4. 🤤 Perfect Pairs (AOV Booster - Contextual Appearance) */}
+                <div className="space-y-6">
                     <AnimatePresence>
                         {(cartCount > 0 || isHungry || upsellItem) && (
                             <motion.div
@@ -537,57 +595,8 @@ export default function GuestDashboard() {
                     </AnimatePresence>
                 </div>
 
-                {/* 4. 🌈 Mood Section (Decision Shortcut) */}
+                {/* 5. 🌈 Mood Section (Decision Shortcut) */}
                 <MoodSection onMoodClick={(id) => router.push(`/${hotelSlug}/guest/restaurant?mood=${id}`)} />
-
-                {/* 5. ⚡ Quick Picks (Refactored Visual Hierarchy) */}
-                <div className="space-y-6">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] px-2" style={{ color: theme.primary }}>⚡ Quick Picks</h3>
-                    <div className="flex flex-nowrap overflow-x-auto pb-6 gap-4 no-scrollbar -mx-2 px-2">
-                        {[
-                            { label: 'Coffee', icon: '☕' },
-                            { label: 'Burgers', icon: '🍔' },
-                            { label: 'Sides', icon: '🍟' },
-                            { label: 'Desserts', icon: '🍰' }
-                        ].map((chip) => (
-                            <button 
-                                key={chip.label}
-                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant?cat=${chip.label.toLowerCase()}`)}
-                                className="flex-none px-10 py-5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] active:scale-95 transition-all flex items-center space-x-4 group border"
-                                style={{ 
-                                    borderRadius: theme.radius,
-                                    backgroundColor: theme.surface,
-                                    borderColor: `${theme.primary}10`
-                                }}
-                            >
-                                <span className="text-2xl group-hover:scale-125 transition-transform duration-500">{chip.icon}</span>
-                                <span className="font-black text-[10px] uppercase tracking-widest" style={{ color: theme.text }}>{chip.label}</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* 6. 🍽 Categories / Navigation */}
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between px-2">
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: theme.primary }}>
-                            🍽 Browse Menu
-                        </h3>
-                    </div>
-                    <motion.button 
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                        className="w-full text-white py-8 shadow-[0_10px_30px_rgba(0,0,0,0.08)] flex items-center justify-between px-8 group overflow-hidden relative"
-                        style={{ 
-                            backgroundColor: theme.primary,
-                            borderRadius: theme.radius 
-                        }}
-                    >
-                        <span className="text-2xl font-black tracking-tighter relative z-10">All Categories</span>
-                        <ArrowUpRight className="w-8 h-8 relative z-10 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                    </motion.button>
-                </div>
 
                 {/* 🎁 Glassy & Thin Rewards Section (Moved lower) */}
                 <motion.div 

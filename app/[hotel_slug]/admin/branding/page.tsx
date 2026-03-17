@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useHotelBranding, supabase } from "@/utils/store";
 import { Save, Image as ImageIcon, CheckCircle, AlertCircle, Type, Palette, Smartphone } from "lucide-react";
+import { getDirectImageUrl } from "@/utils/image";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function BrandingSettingsPage() {
@@ -304,7 +305,7 @@ export default function BrandingSettingsPage() {
                             className="aspect-[9/16] rounded-[3rem] shadow-2xl relative overflow-hidden border-[8px] border-slate-900"
                             style={{ 
                                 backgroundColor: formData.primaryColor,
-                                backgroundImage: formData.bgPattern ? `url(${formData.bgPattern})` : 'none',
+                                backgroundImage: formData.bgPattern ? `url(${getDirectImageUrl(formData.bgPattern)})` : 'none',
                                 backgroundSize: 'cover',
                                 backgroundPosition: 'center'
                             }}
@@ -315,7 +316,7 @@ export default function BrandingSettingsPage() {
                             <div className="relative z-10 h-full flex flex-col items-center justify-center p-8 text-center">
                                 <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-3xl p-4 mb-8 border border-white/20 shadow-2xl">
                                     {formData.logoImage || formData.logo ? (
-                                        <img src={formData.logoImage || formData.logo} alt="Logo" className="w-full h-full object-contain" />
+                                        <img src={getDirectImageUrl(formData.logoImage || formData.logo)} alt="Logo" className="w-full h-full object-contain" />
                                     ) : (
                                         <div className="w-full h-full bg-slate-800 rounded-xl animate-pulse" />
                                     )}

@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useMemo } from "react";
 import { ServiceCard } from "@/components/ServiceCard";
 import { ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles, Search, ArrowUpRight, Receipt, ChevronRight, User, ArrowRight, Star, MapPin, Wifi, Car, Hammer, Shirt, Briefcase, Bath, MoreHorizontal, Home } from "lucide-react";
+import { getDirectImageUrl } from "@/utils/image";
 import { ImpulseBottomSheet } from "@/components/ImpulseBottomSheet";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -131,7 +132,7 @@ export default function GuestDashboard() {
             id: `t${index}`,
             title: item.title,
             description: item.description || "The community favorite choice.",
-            image: item.image_url || "/images/menu_demo/coffee.png",
+            image: item.image_url ? getDirectImageUrl(item.image_url) : "/images/menu_demo/coffee.png",
             price: item.price,
             tag: index === 0 ? "Bestseller" : "Trending",
             menuItemId: item.id
@@ -152,7 +153,7 @@ export default function GuestDashboard() {
                     id: "p1",
                     title: `${main.title} + ${companion.title}`,
                     subtitle: "Handcrafted Pairing",
-                    image: main.image_url || "/images/menu_demo/coffee.png",
+                    image: main.image_url ? getDirectImageUrl(main.image_url) : "/images/menu_demo/coffee.png",
                     price: main.price + companion.price,
                     originalId: main.id // We'll just add the main one for simplicity or handle both
                 });
@@ -167,7 +168,7 @@ export default function GuestDashboard() {
                      id: `p${pairs.length + 1}`,
                      title: item.title,
                      subtitle: "Perfect with anything",
-                     image: item.image_url || "/images/menu_demo/coffee.png",
+                     image: item.image_url ? getDirectImageUrl(item.image_url) : "/images/menu_demo/coffee.png",
                      price: item.price,
                      originalId: item.id
                  });
@@ -345,7 +346,7 @@ export default function GuestDashboard() {
             {/* 1. Premium Hero Section */}
             <div className="absolute top-0 left-0 right-0 h-[45vh] overflow-hidden -z-10 bg-black">
                 <img 
-                    src={branding?.heroImage || "/images/branding/hero.png"} 
+                    src={getDirectImageUrl(branding?.heroImage) || "/images/branding/hero.png"} 
                     alt="Hotel Interior" 
                     className="w-full h-full object-cover opacity-60 scale-105"
                 />

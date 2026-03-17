@@ -23,6 +23,7 @@ export default function AdminLayout({
 
     // Check if we are on the login page
     const isLoginPage = pathname?.endsWith('/login') || pathname?.includes('/auth/');
+    const isMenuStudio = pathname === `/${hotelSlug}/admin/menu`;
 
     useEffect(() => {
         if (authLoading) return;
@@ -112,7 +113,8 @@ export default function AdminLayout({
     return (
         <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex font-sans selection:bg-blue-100 selection:text-blue-900">
             {/* Minimalist Sidebar */}
-            <aside className="w-64 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 hidden md:flex flex-col h-screen sticky top-0 z-40 transition-all duration-500 ease-in-out">
+            {!isMenuStudio && (
+                <aside className="w-64 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 hidden md:flex flex-col h-screen sticky top-0 z-40 transition-all duration-500 ease-in-out">
                 <div className="p-7 mb-2">
                     <div className="flex items-center space-x-3 mb-6">
                         <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 transform transition-transform hover:scale-105 duration-300">
@@ -195,7 +197,8 @@ export default function AdminLayout({
                         </button>
                     </div>
                 </div>
-            </aside>
+                </aside>
+            )}
 
             {/* Main Content Area */}
             <main className="flex-1 min-h-screen overflow-x-hidden relative">
@@ -204,6 +207,22 @@ export default function AdminLayout({
                 <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-50/50 rounded-full blur-[100px] -z-10 -translate-x-1/2 translate-y-1/2" />
                 
                 <div className="relative z-10 h-full">
+                    {isMenuStudio && (
+                        <div className="sticky top-0 z-30 px-4 pt-4">
+                            <div className="max-w-[1600px] mx-auto bg-white/90 backdrop-blur-xl border border-slate-200/60 shadow-[0_12px_40px_-20px_rgba(0,0,0,0.2)] rounded-[1.8rem] px-5 py-4 flex items-center justify-between gap-4">
+                                <div>
+                                    <p className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-400">Menu Studio</p>
+                                    <h2 className="text-lg font-black text-slate-900">Create categories, then build the menu</h2>
+                                </div>
+                                <button
+                                    onClick={() => router.push(`/${hotelSlug}/admin/dashboard`)}
+                                    className="px-4 py-2.5 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.22em] active:scale-95 transition-all"
+                                >
+                                    Back to Dashboard
+                                </button>
+                            </div>
+                        </div>
+                    )}
                     {children}
 
                 </div>

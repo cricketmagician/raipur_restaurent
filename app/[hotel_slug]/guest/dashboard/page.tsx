@@ -26,7 +26,8 @@ import {
     Music,
     MapPin,
     ShoppingBag,
-    RefreshCw
+    RefreshCw,
+    Receipt // Added Receipt icon
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -203,106 +204,137 @@ export default function GuestDashboard() {
     );
 
     const tableNumberDisplay = tableNumber;
-
     return (
-        <div className="pb-40 px-5 pt-6 min-h-screen bg-noise max-w-[520px] mx-auto overflow-x-hidden font-sans">
-            {/* Header is handled by GlobalHeader in GuestLayout */}
-
-            <div className="space-y-12 py-10">
-                {/* 1. The Entrance Header (Luxury Centered Spec) */}
-                <div className="flex flex-col items-center text-center space-y-6">
-                    {branding?.logoImage || branding?.logo ? (
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-20 h-20 rounded-[1.25rem] overflow-hidden shadow-2xl border border-white p-1 bg-white"
-                        >
-                            <img src={branding.logoImage || branding.logo} alt="Hotel Logo" className="w-full h-full object-cover rounded-[1rem]" />
-                        </motion.div>
-                    ) : (
-                        <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center">
-                            <Utensils className="text-[#FAF7F2] w-8 h-8" />
-                        </div>
-                    )}
-                    
-                    <div className="space-y-2">
-                        <motion.h2 
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-4xl font-serif text-slate-900 italic tracking-tighter"
-                        >
-                            Good Evening, {tableNumberDisplay === 'Takeaway' ? 'Guest' : (tableNumberDisplay || 'Guest')}
-                        </motion.h2>
-                        <motion.p 
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="text-slate-400 font-sans tracking-[0.2em] uppercase text-[10px] font-bold"
-                        >
-                            Ready for a delightful dining experience?
-                        </motion.p>
-                    </div>
-                </div>
-
-                {/* 2. The Primary CTA (BIG BUTTON) */}
-                <motion.div 
-                    whileTap={{ scale: 0.98 }}
-                    className="px-2"
-                >
-                    <button 
-                        onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                        className="w-full bg-[#8B0000] text-[#FAF7F2] py-8 rounded-[1.25rem] shadow-2xl shadow-[#8B0000]/20 flex items-center justify-center space-x-4 group overflow-hidden relative"
+        <div className="pb-40 px-6 pt-10 min-h-screen bg-noise max-w-[500px] mx-auto overflow-x-hidden font-sans selection:bg-[#F59E0B]/30">
+            {/* 1. Live Spend Widget (Pulse) */}
+            <AnimatePresence>
+                {requests.some(r => (r.total || 0) > 0) && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-10"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                        <Utensils className="w-6 h-6" />
-                        <span className="text-2xl font-serif italic tracking-tight">Explore Menu</span>
-                        <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                </motion.div>
-
-                {/* 3. Curated Selection (Luxury Spec) */}
-                <div className="space-y-8">
-                    <div className="flex items-center justify-between px-2">
-                        <h3 className="text-xl font-serif italic text-slate-900 tracking-tight">✨ Curated for You</h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-8">
-                        {menuItems.slice(0, 2).map((item, idx) => (
-                            <motion.div 
-                                key={item.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 + idx * 0.1 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                                className="bg-white rounded-[2rem] overflow-hidden shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)] border border-slate-50 relative group"
-                            >
-                                <div className="aspect-[16/10] overflow-hidden">
-                                    <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        <button 
+                            onClick={() => router.push(`/${hotelSlug}/guest/bill`)}
+                            className="w-full bg-white rounded-[2rem] p-6 border border-[#3E2723]/5 shadow-xl shadow-[#3E2723]/5 flex items-center justify-between group active:scale-[0.98] transition-all"
+                        >
+                            <div className="flex items-center">
+                                <div className="w-12 h-12 bg-[#3E2723] rounded-2xl flex items-center justify-center mr-4 shadow-lg shadow-[#3E2723]/10">
+                                    <Receipt className="w-5 h-5 text-[#FFF8F2]" />
                                 </div>
-                                <div className="p-8">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h4 className="text-2xl font-serif italic text-slate-900">{item.title}</h4>
-                                        <p className="text-xl font-serif text-[#8B0000]">₹{item.price}</p>
+                                <div className="text-left">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-0.5">Current Ledger</p>
+                                    <div className="flex items-center">
+                                        <span className="text-2xl font-serif italic text-[#3E2723] tracking-tighter">
+                                            ₹{requests.reduce((sum, r) => sum + (r.total || 0), 0).toLocaleString()}
+                                        </span>
+                                        <motion.div 
+                                            animate={{ opacity: [0.3, 1, 0.3] }}
+                                            transition={{ duration: 2, repeat: Infinity }}
+                                            className="w-2 h-2 bg-emerald-400 rounded-full ml-3" 
+                                        />
                                     </div>
-                                    <p className="text-slate-400 text-sm font-medium line-clamp-1 italic">
-                                        “{item.description || 'A timeless culinary masterpiece prepared with love.'}”
-                                    </p>
                                 </div>
-                            </motion.div>
+                            </div>
+                            <ChevronRight className="w-6 h-6 text-[#3E2723]/30 group-hover:text-[#3E2723] transition-colors" />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <div className="space-y-12">
+                {/* 1. The Vibe Header */}
+                <header className="text-center pt-4">
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="inline-block p-4 rounded-[2.5rem] bg-white shadow-xl shadow-[#3E2723]/5 mb-8"
+                    >
+                        <img src={branding?.logo || "/cafe-logo.png"} alt="Cafe Logo" className="h-14 w-auto object-contain mx-auto" />
+                    </motion.div>
+                    <motion.h1 
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-4xl font-serif italic text-[#3E2723] leading-tight mb-2"
+                    >
+                        Good Evening ☕
+                    </motion.h1>
+                    <motion.p 
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-slate-400 font-medium italic text-lg"
+                    >
+                        What are you craving today?
+                    </motion.p>
+                </header>
+
+                {/* 2. Primary Action */}
+                <motion.button 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
+                    className="w-full bg-[#3E2723] text-[#FFF8F2] py-8 rounded-[1.75rem] shadow-2xl shadow-[#3E2723]/20 flex items-center justify-center space-x-4 group overflow-hidden relative active:scale-95 transition-all"
+                >
+                    <span className="text-2xl font-serif italic relative z-10">Explore the Menu</span>
+                    <ArrowUpRight className="w-6 h-6 relative z-10 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                </motion.button>
+
+                {/* 3. Quick Picks (Craving Chips) */}
+                <div className="space-y-6">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] px-2">Quick Picks</h3>
+                    <div className="flex flex-nowrap overflow-x-auto pb-4 gap-4 no-scrollbar -mx-2 px-2">
+                        {[
+                            { label: 'Coffee', icon: '☕', color: 'bg-amber-50' },
+                            { label: 'Burgers', icon: '🍔', color: 'bg-orange-50' },
+                            { label: 'Snacks', icon: '🍟', color: 'bg-yellow-50' },
+                            { label: 'Desserts', icon: '🍰', color: 'bg-rose-50' }
+                        ].map((chip) => (
+                            <button 
+                                key={chip.label}
+                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant?cat=${chip.label}`)}
+                                className={`flex-none px-8 py-4 rounded-full border border-[#3E2723]/5 shadow-sm active:scale-90 transition-all flex items-center space-x-3 group bg-white hover:bg-[#3E2723] hover:text-[#FFF8F2]`}
+                            >
+                                <span className="text-xl group-hover:scale-125 transition-transform">{chip.icon}</span>
+                                <span className="font-bold text-sm uppercase tracking-widest">{chip.label}</span>
+                            </button>
                         ))}
                     </div>
                 </div>
 
-                {/* 4. Secondary Actions */}
-                <motion.button 
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => router.push(`/${hotelSlug}/guest/status`)}
-                    className="w-full py-6 rounded-[1.25rem] border border-slate-200 text-slate-500 font-serif italic text-lg hover:bg-white transition-colors"
-                >
-                    View My Orders
-                </motion.button>
+                {/* 4. Trending Now (Social Proof) */}
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] flex items-center">
+                            🔥 Trending Now
+                        </h3>
+                    </div>
+
+                    <motion.div 
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
+                        className="bg-white rounded-[2.5rem] overflow-hidden shadow-2xl shadow-[#3E2723]/5 border border-[#3E2723]/5 relative group cursor-pointer"
+                    >
+                        <div className="aspect-[4/3] overflow-hidden relative">
+                            <img 
+                                src="/artifacts/trending_combo_cafe.png" 
+                                alt="Cold Coffee + Brownie Combo" 
+                                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#3E2723]/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                            <div className="absolute bottom-8 left-8 right-8 text-white">
+                                <h4 className="text-4xl font-serif italic mb-2 tracking-tight">The Midnight Combo</h4>
+                                <p className="text-[#FFF8F2]/80 font-medium italic">Cold Coffee + Warm Brownie — the ultimate vibe.</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
             </div>
+
             <BottomNav />
         </div>
     );

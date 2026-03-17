@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { MenuCard } from "@/components/MenuCard";
-import { CheckCircle, ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles } from "lucide-react";
+import { CheckCircle, ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles, Search } from "lucide-react";
 import { addSupabaseRequest, useHotelBranding, useCart } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
@@ -165,37 +165,49 @@ export default function RestaurantPage() {
     }
 
     return (
-        <div className="pb-40 px-5 pt-safe min-h-screen bg-[#FAF7F2] text-slate-900">
-            {/* 1. Refined Categories (Luxury Spec) */}
-            <div className="mb-12 pt-8 overflow-x-auto no-scrollbar flex items-center space-x-6">
-                {categories.map((category) => {
-                    const isActive = activeCategory === category.id;
-                    return (
-                        <motion.button
-                            key={category.id}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setActiveCategory(category.id)}
-                            className="flex flex-col items-center space-y-3 min-w-[70px]"
-                        >
-                            <div className={`w-16 h-16 rounded-[1.25rem] flex items-center justify-center transition-all duration-500 shadow-sm ${
-                                isActive 
-                                ? 'bg-[#8B0000] text-[#FAF7F2] shadow-xl shadow-[#8B0000]/20' 
-                                : 'bg-white text-slate-400 border border-slate-100'
-                            }`}>
-                                <span className="text-2xl">{category.icon}</span>
-                            </div>
-                            <span className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${isActive ? 'text-[#8B0000]' : 'text-slate-400'}`}>
-                                {category.name}
-                            </span>
-                        </motion.button>
-                    );
-                })}
+        <div className="pb-40 px-6 pt-10 min-h-screen bg-noise text-[#3E2723] max-w-[500px] mx-auto overflow-x-hidden font-sans selection:bg-[#F59E0B]/30">
+            {/* 1. Integrated Search & Categories */}
+            <div className="space-y-8 mb-12">
+                <div className="relative group">
+                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#F59E0B] transition-colors" />
+                    <input 
+                        type="text" 
+                        placeholder="Search: Coffee, burger..." 
+                        className="w-full bg-white border border-[#3E2723]/5 rounded-full py-6 pl-16 pr-6 shadow-xl shadow-[#3E2723]/5 focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/20 transition-all font-medium italic text-lg"
+                    />
+                </div>
+
+                <div className="overflow-x-auto no-scrollbar flex items-center space-x-4 -mx-2 px-2 pb-2">
+                    {categories.map((category) => {
+                        const isActive = activeCategory === category.id;
+                        return (
+                            <motion.button
+                                key={category.id}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setActiveCategory(category.id)}
+                                className={`flex-none px-6 py-4 rounded-full border transition-all flex items-center space-x-3 shadow-sm ${
+                                    isActive 
+                                    ? 'bg-[#3E2723] text-[#FFF8F2] border-[#3E2723] shadow-lg shadow-[#3E2723]/10' 
+                                    : 'bg-white text-slate-400 border-[#3E2723]/5 hover:border-[#3E2723]/20'
+                                }`}
+                            >
+                                <span className={`text-xl ${isActive ? 'scale-110' : ''}`}>{category.icon}</span>
+                                <span className={`text-[10px] font-black uppercase tracking-[0.2em]`}>
+                                    {category.name}
+                                </span>
+                            </motion.button>
+                        );
+                    })}
+                </div>
             </div>
 
-            {/* 2. Anchoring Effect (BIG CARD for Featured Item) */}
+            {/* 2. Most Loved (Social Proof Hero) */}
             {activeCategory === 'all' && (
-                <div className="mb-14">
-                    <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] mb-6 px-1">Chef's Selection</h2>
+                <div className="mb-16">
+                    <div className="flex items-center space-x-3 mb-6 px-1">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Most Loved</span>
+                        <div className="h-[1px] flex-1 bg-slate-100" />
+                    </div>
                     {menuItems.slice(0, 1).map((item) => (
                         <motion.div 
                             key={item.id}
@@ -204,25 +216,25 @@ export default function RestaurantPage() {
                             viewport={{ once: true }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => addToCart(item)}
-                            className="bg-white rounded-[2.5rem] overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-50 relative group"
+                            className="bg-white rounded-[2.5rem] overflow-hidden shadow-2xl shadow-[#3E2723]/5 border border-[#3E2723]/5 relative group"
                         >
                             <div className="aspect-[16/10] overflow-hidden relative">
-                                <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
-                                <div className="absolute top-6 left-6 bg-slate-900/90 backdrop-blur-md text-[#FAF7F2] px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center">
-                                    <Sparkles className="w-3 h-3 mr-2 text-amber-400" />
-                                    Chef's Signature
+                                <img src="/artifacts/most_loved_coffee.png" alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+                                <div className="absolute top-6 left-6 bg-[#3E2723] text-[#FFF8F2] px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center shadow-lg">
+                                    <Sparkles className="w-3 h-3 mr-2 text-[#F59E0B]" />
+                                    Crowd Favorite
                                 </div>
                             </div>
                             <div className="p-8">
-                                <div className="flex justify-between items-start mb-3">
-                                    <h3 className="text-3xl font-serif italic text-slate-900">{item.title}</h3>
-                                    <p className="text-2xl font-serif text-[#8B0000]">₹{item.price}</p>
+                                <div className="flex justify-between items-start mb-2">
+                                    <h3 className="text-3xl font-serif italic text-[#3E2723]">{item.title}</h3>
+                                    <p className="text-2xl font-serif text-[#F59E0B]">₹{item.price}</p>
                                 </div>
-                                <p className="text-slate-400 text-sm font-medium italic mb-6 leading-relaxed">
-                                    “{item.description || 'A timeless culinary masterpiece prepared with love.'}”
+                                <p className="text-slate-400 text-sm font-medium italic mb-8 leading-relaxed">
+                                    “{item.description || 'Smooth, chilled & absolutely addictive.'}”
                                 </p>
-                                <button className="w-full py-5 rounded-[1.25rem] bg-slate-900 text-[#FAF7F2] font-serif italic text-lg shadow-xl shadow-slate-200">
-                                    Add to your table
+                                <button className="w-full py-6 rounded-[1.5rem] bg-[#3E2723] text-[#FFF8F2] font-serif italic text-xl shadow-xl shadow-[#3E2723]/20 active:scale-95 transition-all">
+                                    Add to Cravings
                                 </button>
                             </div>
                         </motion.div>
@@ -230,10 +242,13 @@ export default function RestaurantPage() {
                 </div>
             )}
 
-            {/* 3. The Selection (Main List) */}
-            <div className="space-y-10">
-                <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] mb-8 px-1">All Items</h2>
-                <div className="space-y-8 pb-20">
+            {/* 3. The Cravings List */}
+            <div className="space-y-8">
+                <div className="flex items-center space-x-3 mb-8 px-1">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">All Cravings</span>
+                    <div className="h-[1px] flex-1 bg-slate-100" />
+                </div>
+                <div className="space-y-6 pb-20">
                     {filteredItems.slice(activeCategory === 'all' ? 1 : 0).map((item) => (
                         <motion.div 
                             key={item.id}
@@ -242,41 +257,51 @@ export default function RestaurantPage() {
                             viewport={{ once: true }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => addToCart(item)}
-                            className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-50 flex items-center space-x-6 relative group"
+                            className="bg-white rounded-[2rem] p-5 shadow-xl shadow-[#3E2723]/5 border border-[#3E2723]/5 flex items-center space-x-6 relative group"
                         >
-                            <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm border border-slate-50">
-                                <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                            <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm border border-[#3E2723]/5">
+                                <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                             </div>
-                            <div className="flex-1 min-w-0 pr-4">
-                                <h4 className="text-xl font-serif italic text-slate-900 truncate mb-1">{item.title}</h4>
-                                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-4">₹{item.price}</p>
-                                <button className="text-[10px] font-bold uppercase tracking-widest text-[#8B0000] border-b border-[#8B0000]/20 pb-0.5">
-                                    Add to table
-                                </button>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start mb-1">
+                                    <h4 className="text-xl font-serif italic text-[#3E2723] truncate">{item.title}</h4>
+                                    <p className="font-serif text-[#F59E0B]">₹{item.price}</p>
+                                </div>
+                                <p className="text-slate-400 text-[10px] font-medium italic line-clamp-1 mb-4">
+                                    “{item.description || "A timeless classic."}”
+                                </p>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex space-x-1">
+                                        {[1,2,3,4,5].map(i => <div key={i} className="w-1 h-1 bg-slate-100 rounded-full" />)}
+                                    </div>
+                                    <button className="text-[10px] font-black uppercase tracking-widest text-[#3E2723] border-b-2 border-[#F59E0B] pb-0.5 active:translate-y-0.5 transition-all">
+                                        Add to Order
+                                    </button>
+                                </div>
                             </div>
                         </motion.div>
                     ))}
                 </div>
             </div>
 
-            {/* Floating Selection Preview */}
+            {/* Floating Selection Preview (Mini Cart) */}
             <AnimatePresence>
                 {cartCount > 0 && !showCart && (
                     <motion.div
-                        initial={{ y: 100 }}
-                        animate={{ y: 0 }}
-                        exit={{ y: 100 }}
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 100, opacity: 0 }}
                         className="fixed bottom-32 left-0 right-0 px-6 z-40"
                     >
                         <button
                             onClick={() => setShowCart(true)}
-                            className="w-full bg-slate-900 text-[#FAF7F2] p-6 rounded-[1.5rem] flex items-center justify-between shadow-2xl shadow-black/20"
+                            className="w-full bg-[#3E2723] text-[#FFF8F2] p-6 rounded-[2rem] flex items-center justify-between shadow-2xl shadow-[#3E2723]/40 border border-[#FFF8F2]/10"
                         >
                             <div className="flex items-center space-x-4">
-                                <div className="bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-bold">
-                                    {cartCount} JOURNEYS
+                                <div className="bg-[#F59E0B]/20 text-[#F59E0B] px-4 py-2 rounded-xl text-[10px] font-black tracking-widest">
+                                    {cartCount} ITEMS
                                 </div>
-                                <span className="text-sm font-serif italic tracking-tight">View Your Selection</span>
+                                <span className="text-sm font-serif italic tracking-tight">Your Cravings Bag</span>
                             </div>
                             <span className="text-2xl font-serif italic">₹{cartTotal.toFixed(0)}</span>
                         </button>

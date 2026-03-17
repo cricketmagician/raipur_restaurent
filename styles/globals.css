@@ -4,27 +4,27 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: #8B0000; /* Luxury Deep Red */
-  --color-secondary: #000000; /* Rich Black */
-  --color-accent: #B8860B; /* Burnished Gold */
-
+  --color-primary: #3E2723; /* Espresso Brown */
+  --color-secondary: #F59E0B; /* Crave Orange */
+  --color-accent: #3E2723;
+  
   --font-serif: var(--font-playfair), serif;
   --font-sans: var(--font-inter), sans-serif;
 
-  /* Standardized Luxury Radii (14px base) */
+  /* Standardized Radii */
   --radius-sm: 0.5rem;   /* 8px */
-  --radius-md: 0.875rem; /* 14px - Primary Radius */
-  --radius-lg: 1rem;     /* 16px */
-  --radius-xl: 1.5rem;   /* 24px */
-  --radius-2xl: 2rem;    /* 32px */
-  --radius-3xl: 3rem;    /* 48px */
+  --radius-md: 0.875rem; /* 14px */
+  --radius-lg: 1.25rem;  /* 20px */
+  --radius-xl: 1.75rem;  /* 28px */
+  --radius-2xl: 2.5rem;  /* 40px */
+  --radius-full: 9999px;
 }
 
 @utility glass {
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(12px) saturate(120%);
-  -webkit-backdrop-filter: blur(12px) saturate(120%);
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  background: rgba(255, 248, 242, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(62, 39, 35, 0.05);
 }
 
 @utility glass-dark {
@@ -35,7 +35,7 @@
 }
 
 @utility premium-shadow {
-  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 25px 60px -15px rgba(62, 39, 35, 0.08);
 }
 
 @utility gold-glow {
@@ -43,8 +43,8 @@
 }
 
 :root {
-  --background: #FAF7F2; /* Warm Premium Cream */
-  --foreground: #1A1A1A; /* Elegant Off-Black */
+  --background: #FFF8F2; /* Warm Vanilla */
+  --foreground: #2A1A15; /* Deep Espresso Tint */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }

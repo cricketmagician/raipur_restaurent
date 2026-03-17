@@ -469,56 +469,89 @@ export default function AdminHub() {
                         <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100/50">Real-time Map</span>
                     </div>
 
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/20">
-                        <div className="grid grid-cols-4 gap-4">
+                    <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-2xl shadow-slate-200/20 relative overflow-hidden">
+                         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+                         
+                        <div className="grid grid-cols-4 md:grid-cols-5 gap-6 relative z-10">
                             {rooms.length > 0 ? (
                                 rooms.map(room => {
-                                    const isActive = requests.some(r => r.room === room.room_number && r.status !== 'Completed');
+                                    const activeReq = requests.filter(r => r.room === room.room_number && r.status !== 'Completed');
+                                    const isActive = activeReq.length > 0;
+                                    const isRevenue = activeReq.some(r => (r.total || 0) > 0);
+
                                     return (
-                                        <div 
+                                        <motion.button 
                                             key={room.id}
-                                            className={`aspect-square rounded-2xl flex flex-col items-center justify-center transition-all border-2 relative group overflow-hidden ${isActive 
-                                                ? 'bg-indigo-50 border-indigo-200' 
-                                                : (room.is_occupied ? 'bg-slate-50 border-slate-200' : 'bg-white border-slate-100 hover:border-slate-200')}`}
+                                            whileHover={{ scale: 1.05, translateY: -5 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => {
+                                                if (isActive) {
+                                                    setSelectedRequest(activeReq[0]);
+                                                }
+                                            }}
+                                            className={`aspect-square rounded-[2rem] flex flex-col items-center justify-center transition-all border-2 relative group overflow-hidden shadow-sm ${isActive 
+                                                ? (isRevenue ? 'bg-indigo-600 border-indigo-500 text-white shadow-indigo-200' : 'bg-slate-900 border-slate-800 text-white shadow-slate-200') 
+                                                : (room.is_occupied ? 'bg-white border-slate-200 text-slate-900' : 'bg-slate-50 border-slate-100 hover:border-slate-200 border-dashed')}`}
                                         >
-                                            <span className={`text-sm font-black mb-0.5 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`}>{room.room_number}</span>
-                                            <div className="flex space-x-1">
-                                                <div className={`w-1 h-1 rounded-full ${room.is_occupied ? 'bg-indigo-400' : 'bg-slate-200'}`} />
-                                                {isActive && (
-                                                    <motion.div 
-                                                        animate={{ scale: [1, 1.5, 1] }}
-                                                        transition={{ duration: 1.5, repeat: Infinity }}
-                                                        className="w-1 h-1 rounded-full bg-red-400" 
-                                                    />
-                                                )}
-                                            </div>
+                                            <span className={`text-base font-black mb-1 ${!isActive && !room.is_occupied ? 'opacity-20' : 'opacity-100'}`}>{room.room_number}</span>
+                                            
                                             {isActive && (
-                                                <div className="absolute top-1 right-1">
-                                                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping" />
+                                                <div className="flex items-center space-x-1.5">
+                                                    <motion.div 
+                                                        animate={{ scale: [1, 1.4, 1] }}
+                                                        transition={{ duration: 1.5, repeat: Infinity }}
+                                                        className={`w-2 h-2 rounded-full ${isRevenue ? 'bg-white' : 'bg-red-500'}`} 
+                                                    />
+                                                    <span className="text-[8px] font-black uppercase tracking-widest">{activeReq.length} SIG</span>
                                                 </div>
                                             )}
-                                        </div>
+
+                                            {!isActive && room.is_occupied && (
+                                                <div className="flex items-center space-x-1">
+                                                    <div className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
+                                                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">LIVE</span>
+                                                </div>
+                                            )}
+
+                                            {isActive && (
+                                                <div className="absolute top-2 right-2">
+                                                    <motion.div 
+                                                        animate={{ opacity: [0, 1, 0] }}
+                                                        transition={{ duration: 2, repeat: Infinity }}
+                                                        className={`w-1.5 h-1.5 rounded-full ${isRevenue ? 'bg-emerald-400' : 'bg-amber-400'}`} 
+                                                    />
+                                                </div>
+                                            )}
+                                        </motion.button>
                                     );
                                 })
                             ) : (
-                                [1,2,3,4,5,6,7,8,9,10,11,12].map(n => (
-                                    <div key={n} className="aspect-square bg-slate-50 rounded-2xl border border-slate-100 border-dashed" />
+                                [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(n => (
+                                    <div key={n} className="aspect-square bg-slate-50/50 rounded-[2rem] border border-slate-100 border-dashed animate-pulse" />
                                 ))
                             )}
                         </div>
                         
-                        <div className="mt-8 space-y-3">
-                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                <span>Legend</span>
+                        <div className="mt-12 pt-8 border-t border-slate-50 space-y-4">
+                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                                <span>Signal Matrix Legend</span>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="flex items-center space-x-2">
-                                    <div className="w-3 h-3 rounded bg-indigo-50 border border-indigo-200" />
-                                    <span className="text-[10px] font-bold text-slate-500">Active Request</span>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="flex items-center space-x-3 bg-slate-50 px-4 py-2.5 rounded-2xl">
+                                    <div className="w-3 h-3 rounded-full bg-indigo-600 shadow-lg shadow-indigo-100" />
+                                    <span className="text-[10px] font-black text-slate-500 uppercase">Paid Signal</span>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                    <div className="w-3 h-3 rounded bg-slate-50 border border-slate-200" />
-                                    <span className="text-[10px] font-bold text-slate-500">Occupied</span>
+                                <div className="flex items-center space-x-3 bg-slate-50 px-4 py-2.5 rounded-2xl">
+                                    <div className="w-3 h-3 rounded-full bg-slate-900 shadow-lg shadow-slate-100" />
+                                    <span className="text-[10px] font-black text-slate-500 uppercase">Service Call</span>
+                                </div>
+                                <div className="flex items-center space-x-3 bg-slate-50 px-4 py-2.5 rounded-2xl">
+                                    <div className="w-3 h-3 rounded-full bg-white border-2 border-slate-200" />
+                                    <span className="text-[10px] font-black text-slate-500 uppercase">Occupied</span>
+                                </div>
+                                <div className="flex items-center space-x-3 bg-slate-50 px-4 py-2.5 rounded-2xl">
+                                    <div className="w-3 h-3 rounded-full bg-slate-100 border border-slate-200 border-dashed" />
+                                    <span className="text-[10px] font-black text-slate-500 uppercase">Vacant</span>
                                 </div>
                             </div>
                         </div>

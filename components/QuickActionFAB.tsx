@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Bell, Droplets, X, ChevronRight, Zap } from "lucide-react";
+import { Plus, Bell, Droplets, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHotelBranding, addSupabaseRequest } from "@/utils/store";
 import { useParams, useRouter } from "next/navigation";
@@ -101,17 +101,17 @@ export function QuickActionFAB() {
 
     return (
         <>
-            <div className="fixed bottom-32 right-6 z-[110] flex flex-col items-end w-[calc(100%-3rem)] max-w-[320px] pointer-events-none">
+            <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[110] w-[calc(100%-1.5rem)] max-w-[360px] pointer-events-none">
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="flex flex-col items-end space-y-4 mb-6 w-full pointer-events-auto"
+                            className="flex flex-col space-y-4 pointer-events-auto"
                         >
                             {preselectedAction && (
-                                <div className="w-full rounded-[1.5rem] bg-white/95 border border-white/60 p-4 shadow-2xl mb-2">
+                                <div className="w-full rounded-[1.5rem] bg-white/95 border border-white/60 p-4 shadow-2xl">
                                     <p className="text-[9px] font-black uppercase tracking-[0.25em] text-[#F55D2C] mb-1">Ready to confirm</p>
                                     <p className="text-sm font-black text-slate-900">
                                         Tap the highlighted request again to send it.
@@ -192,52 +192,6 @@ export function QuickActionFAB() {
                         </motion.div>
                     )}
                 </AnimatePresence>
-
-                <motion.button
-                    onClick={() => {
-                        setIsOpen(!isOpen);
-                        setConfirming(null);
-                    }}
-                    whileTap={{ scale: 0.9 }}
-                    className={`w-16 h-16 rounded-[2rem] flex items-center justify-center shadow-2xl transition-all duration-500 overflow-hidden relative ${
-                        isOpen 
-                            ? 'bg-slate-900 border-slate-800' 
-                            : 'bg-[#F55D2C] border-[#F55D2C] shadow-[#F55D2C]/30'
-                    } border-4 text-white hover:scale-105 active:scale-95 pointer-events-auto`}
-                >
-                    <AnimatePresence mode="wait">
-                        {isOpen ? (
-                            <motion.div
-                                key="close"
-                                initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
-                                animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                                exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-                                transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                            >
-                                <X className="w-8 h-8" />
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="plus"
-                                initial={{ opacity: 0, rotate: 90, scale: 0.5 }}
-                                animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                                exit={{ opacity: 0, rotate: -90, scale: 0.5 }}
-                                transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                            >
-                                <Zap className="w-8 h-8 fill-current" />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                    
-                    {/* Subtle pulse animation when closed */}
-                    {!isOpen && (
-                        <motion.div
-                            animate={{ scale: [1, 1.2, 1], opacity: [0, 0.2, 0] }}
-                            transition={{ repeat: Infinity, duration: 2 }}
-                            className="absolute inset-0 bg-white rounded-full"
-                        />
-                    )}
-                </motion.button>
             </div>
 
             {/* Backdrop when open */}

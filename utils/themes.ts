@@ -16,10 +16,10 @@ export type GuestTheme = {
 export const GUEST_THEMES: Record<GuestTheme['id'], GuestTheme> = {
     CAFE: {
         id: 'CAFE',
-        primary: "#00704A", // Starbucks Green
-        secondary: "#D4E9E2",
-        accent: "#006241",
-        background: "#F9F7F2", // Warmer, more paper-like background
+        primary: "#1E3932", // Deep Starbucks Forest Green
+        secondary: "#D4E9E2", // Soft Mint
+        accent: "#8B4513", // Saddle Brown for a warm, coffee-driven touch
+        background: "#FCFBF7", // Ultra-warm parchment
         surface: "#FFFFFF",
         text: "#1E3932",
         textMuted: "#6B7280",

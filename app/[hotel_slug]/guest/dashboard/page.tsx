@@ -50,7 +50,7 @@ export default function GuestDashboard() {
 
     const [scrolled, setScrolled] = useState(false);
     const [activeCategory, setActiveCategory] = useState("all");
-    const [hungerMode, setHungerMode] = useState(false);
+    const [hungerLevel, setHungerLevel] = useState<'light' | 'hungry' | 'very-hungry'>('hungry');
     const [upsellItem, setUpsellItem] = useState<{ id: string; title: string } | null>(null);
     const [submittingType, setSubmittingType] = React.useState<string | null>(null);
     const [showCart, setShowCart] = useState(false);
@@ -212,7 +212,11 @@ export default function GuestDashboard() {
     }, [requests, menuItems]);
 
     const filteredItems = (activeCategory === "all" ? menuItemsWithSales : menuItemsWithSales.filter(i => i.category === activeCategory))
-        .filter(item => !hungerMode || item.price > 150);
+        .filter(item => {
+            if (hungerLevel === 'light') return item.price < 300; // Prefer snacks/drinks
+            if (hungerLevel === 'very-hungry') return item.price > 150; // Prefer filling meals
+            return true; // Hungry = Everything
+        });
 
     const handleOrder = async () => {
         if (!branding?.id) return;
@@ -337,70 +341,39 @@ export default function GuestDashboard() {
                         animate={{ opacity: 1, x: 0 }}
                     >
                         <h1 className="text-3xl font-black tracking-tighter" style={{ color: theme.primary }}>
-                            {timeTheme.greeting.split(" ")[0]}, {tableNumber !== "Takeaway" ? `Table ${tableNumber}` : "Guest"}
+                            Hey 👋
                         </h1>
-                        <p className="text-sm font-bold mt-1 italic" style={{ color: theme.accent }}>{timeTheme.subtext}</p>
+                        <p className="text-sm font-bold mt-1 italic opacity-60" style={{ color: theme.text }}>
+                            What are you craving today?
+                        </p>
                     </motion.div>
                 </div>
 
-                {/* Glassy & Thin Rewards Section */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={() => !loyaltyProfile && setIsLoyaltyOpen(true)}
-                    className={`rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden group transition-all duration-500 backdrop-blur-3xl border ${!loyaltyProfile ? 'cursor-pointer hover:scale-[1.01]' : ''}`}
-                    style={{ 
-                        backgroundColor: `${theme.primary}05`, // Ultra-light tint
-                        borderColor: `${theme.primary}20`,
-                        borderRadius: theme.radius
-                    }}
-                >
-                    <div className="relative z-10 flex items-center justify-between">
-                        <div>
-                            <div className="flex items-center space-x-2 mb-1">
-                                <Sparkles className="w-3 h-3 text-amber-500" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
-                                    {loyaltyProfile ? `Welcome, ${loyaltyProfile.name}` : "Member Lounge"}
-                                </span>
-                            </div>
-                            
-                            {loyaltyProfile ? (
-                                <div className="flex items-baseline space-x-2">
-                                    <span className="text-3xl font-black" style={{ color: theme.primary }}>{currentPoints}</span>
-                                    <span className="text-xs font-bold opacity-40 tracking-tight uppercase">vibe points</span>
-                                </div>
-                            ) : (
-                                <div>
-                                    <h3 className="text-xl font-black italic tracking-tighter" style={{ color: theme.primary }}>Join the Vibe.</h3>
-                                    <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-0.5">Earn points on every bite</p>
-                                </div>
-                            )}
-                        </div>
-
-                        {!loyaltyProfile && (
-                            <div className="w-10 h-10 rounded-full flex items-center justify-center transition-all border"
-                                 style={{ backgroundColor: `${theme.primary}10`, borderColor: `${theme.primary}20`, color: theme.primary }}>
-                                <ArrowRight className="w-5 h-5" />
-                            </div>
-                        )}
-
-                        {loyaltyProfile && (
-                            <div className="text-right">
-                                <div className="w-24 bg-black/5 h-1 rounded-full overflow-hidden mb-1">
-                                    <motion.div 
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${progressPercent}%` }}
-                                        className="h-full" 
-                                        style={{ backgroundColor: theme.primary }}
-                                    />
-                                </div>
-                                <p className="text-[8px] font-black opacity-30 tracking-widest uppercase">
-                                    {pointsToNextTreat} TO GO
-                                </p>
-                            </div>
-                        )}
+                {/* Hunger Mode Toggle */}
+                <div className="mb-10 px-2">
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Your Appetite</span>
+                        <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100 flex items-center">
+                             {hungerLevel === 'light' ? '😌 Just a bite' : hungerLevel === 'hungry' ? '😋 Getting hungry' : '🔥 Starving'}
+                        </span>
                     </div>
-                </motion.div>
+                    <div className="bg-white/50 backdrop-blur-sm p-1.5 rounded-full border border-black/5 flex items-center shadow-inner">
+                        {(['light', 'hungry', 'very-hungry'] as const).map((level) => (
+                            <button
+                                key={level}
+                                onClick={() => setHungerLevel(level)}
+                                className={`flex-1 py-3 px-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 relative z-10`}
+                                style={{ 
+                                    color: hungerLevel === level ? 'white' : `${theme.text}44`,
+                                    backgroundColor: hungerLevel === level ? theme.primary : 'transparent'
+                                }}
+                            >
+                                {level.replace('-', ' ')}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
             </header>
 
             <div className="space-y-12">
@@ -446,7 +419,7 @@ export default function GuestDashboard() {
                             <button 
                                 key={chip.label}
                                 onClick={() => router.push(`/${hotelSlug}/guest/restaurant?cat=${chip.label.toLowerCase()}`)}
-                                className="flex-none px-10 py-5 shadow-xl active:scale-95 transition-all flex items-center space-x-4 group border"
+                                className="flex-none px-10 py-5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] active:scale-95 transition-all flex items-center space-x-4 group border"
                                 style={{ 
                                     borderRadius: theme.radius,
                                     backgroundColor: theme.surface,
@@ -470,7 +443,7 @@ export default function GuestDashboard() {
                     <motion.button 
                         whileTap={{ scale: 0.97 }}
                         onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                        className="w-full text-white py-8 shadow-2xl flex items-center justify-between px-8 group overflow-hidden relative"
+                        className="w-full text-white py-8 shadow-[0_10px_30px_rgba(0,0,0,0.08)] flex items-center justify-between px-8 group overflow-hidden relative"
                         style={{ 
                             backgroundColor: theme.primary,
                             borderRadius: theme.radius 
@@ -481,6 +454,104 @@ export default function GuestDashboard() {
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                     </motion.button>
                 </div>
+
+                {/* 🎁 Glassy & Thin Rewards Section (Moved lower) */}
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    onClick={() => !loyaltyProfile && setIsLoyaltyOpen(true)}
+                    className={`rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden group transition-all duration-500 backdrop-blur-3xl border ${!loyaltyProfile ? 'cursor-pointer hover:scale-[1.01]' : ''}`}
+                    style={{ 
+                        backgroundColor: `${theme.primary}05`, // Ultra-light tint
+                        borderColor: `${theme.primary}20`,
+                        borderRadius: theme.radius
+                    }}
+                >
+                    <div className="relative z-10 flex items-center justify-between">
+                        <div>
+                            <div className="flex items-center space-x-2 mb-1">
+                                <Sparkles className="w-3 h-3 text-amber-500" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
+                                    {loyaltyProfile ? `Welcome, ${loyaltyProfile.name}` : "Member Lounge"}
+                                </span>
+                            </div>
+                            
+                            {loyaltyProfile ? (
+                                <div className="flex items-baseline space-x-2">
+                                    <span className="text-3xl font-black" style={{ color: theme.primary }}>{currentPoints}</span>
+                                    <span className="text-xs font-bold opacity-40 tracking-tight uppercase">vibe points</span>
+                                </div>
+                            ) : (
+                                <div>
+                                    <h3 className="text-xl font-black italic tracking-tighter" style={{ color: theme.primary }}>Join the Vibe.</h3>
+                                    <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-0.5">Earn points while you order</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {!loyaltyProfile && (
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center transition-all border"
+                                 style={{ backgroundColor: `${theme.primary}10`, borderColor: `${theme.primary}20`, color: theme.primary }}>
+                                <ArrowRight className="w-5 h-5" />
+                            </div>
+                        )}
+
+                        {loyaltyProfile && (
+                            <div className="text-right">
+                                <div className="w-24 bg-black/5 h-1 rounded-full overflow-hidden mb-1">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${progressPercent}%` }}
+                                        className="h-full" 
+                                        style={{ backgroundColor: theme.primary }}
+                                    />
+                                </div>
+                                <p className="text-[8px] font-black opacity-30 tracking-widest uppercase">
+                                    {pointsToNextTreat} TO GO
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+
+                {/* 🧾 Current Tab (Discovery First, Bill Last) */}
+                <AnimatePresence>
+                    {requests.some(r => (r.total || 0) > 0) && (
+                        <div className="space-y-6">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] px-2" style={{ color: theme.primary }}>🧾 Current Tab</h3>
+                            <button 
+                                onClick={() => router.push(`/${hotelSlug}/guest/bill`)}
+                                className="w-full rounded-[2rem] p-8 border flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative"
+                                style={{ 
+                                    backgroundColor: `${theme.primary}05`, 
+                                    borderColor: `${theme.primary}10`,
+                                    borderRadius: theme.radius
+                                }}
+                            >
+                                <div className="flex items-center relative z-10">
+                                    <div 
+                                        className="w-14 h-14 flex items-center justify-center mr-6 shadow-sm border" 
+                                        style={{ 
+                                            borderRadius: `calc(${theme.radius} * 0.6)`,
+                                            backgroundColor: theme.surface,
+                                            borderColor: `${theme.primary}10`
+                                        }}
+                                    >
+                                        <Receipt className="w-6 h-6" style={{ color: theme.primary }} />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-[8px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: theme.primary }}>Total Bill</p>
+                                        <span className="text-3xl font-black tracking-tighter" style={{ color: theme.text }}>
+                                            ₹{requests.reduce((sum, r) => sum + (r.total || 0), 0).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-8 h-8 opacity-20 group-hover:opacity-100 transition-all relative z-10" style={{ color: theme.text }} />
+                            </button>
+                        </div>
+                    )}
+                </AnimatePresence>
 
 
                 {/* Seasonal Collection (Optionalized at bottom or integrated elsewhere) */}

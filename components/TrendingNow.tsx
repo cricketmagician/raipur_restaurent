@@ -43,48 +43,51 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                 </span>
             </div>
 
-            <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-6 -mx-2 px-2">
-                {items.map((item) => (
+            <div className="flex space-x-6 overflow-x-auto no-scrollbar pb-10 -mx-4 px-4 items-end">
+                {items.map((item, idx) => (
                     <motion.div
                         key={item.id}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onItemClick(item.id)}
-                        className="flex-none w-[85%] overflow-hidden shadow-2xl cursor-pointer relative group border"
+                        className={`flex-none overflow-hidden cursor-pointer relative group border shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-500 ${idx === 0 ? 'w-[88%]' : 'w-[75%]'}`}
                         style={{ 
                             borderRadius: theme.radius,
                             backgroundColor: theme.surface,
-                            borderColor: `${theme.primary}10`
+                            borderColor: `${theme.primary}05`
                         }}
                     >
-                        <div className="aspect-[16/10] overflow-hidden relative">
+                        <div className={`overflow-hidden relative ${idx === 0 ? 'aspect-[4/5]' : 'aspect-square'}`}>
                             <img 
                                 src={item.image} 
                                 alt={item.title} 
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t via-transparent to-transparent" style={{ backgroundImage: `linear-gradient(to top, ${theme.primary}88, transparent, transparent)` }} />
+                            {/* Dark gradient overlay for text readability */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             
-                            <div className="absolute top-6 left-6">
-                                <span className="backdrop-blur-md px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest shadow-xl border" style={{ backgroundColor: `${theme.surface}e6`, color: theme.primary, borderColor: `${theme.primary}10` }}>
+                            {/* Social Proof Overlays */}
+                            <div className="absolute top-6 left-6 flex flex-col space-y-2">
+                                <span className="px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest shadow-xl border bg-white text-black border-white/20">
                                     {item.tag}
                                 </span>
+                            </div>
+
+                            <div className="absolute bottom-8 left-8 right-8">
+                                <h4 className="text-3xl font-black tracking-tighter leading-none text-white mb-2 drop-shadow-lg">
+                                    {item.title}
+                                </h4>
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                                        Most ordered this evening
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
                         <div className="p-8">
-                            <div className="flex justify-between items-start mb-2">
-                                <h4 className="text-2xl font-black tracking-tighter leading-tight" style={{ color: theme.text }}>
-                                    {item.title}
-                                </h4>
-                                <div className="p-2 rounded-full" style={{ backgroundColor: theme.secondary }}>
-                                    <ArrowUpRight className="w-5 h-5" style={{ color: theme.primary }} />
-                                </div>
-                            </div>
-                            <p className="text-sm font-medium italic mb-4 line-clamp-1" style={{ color: theme.text, opacity: 0.6 }}>
-                                {item.description}
-                            </p>
                             <div className="flex items-center justify-between">
-                                <span className="text-xl font-black" style={{ color: theme.text }}>₹{item.price}</span>
+                                <span className="text-2xl font-black" style={{ color: theme.text }}>₹{item.price}</span>
                                 
                                 {cart[item.menuItemId] > 0 ? (
                                     <div 
@@ -97,18 +100,18 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                                                 e.stopPropagation();
                                                 onUpdateQuantity(item.menuItemId, cart[item.menuItemId] - 1);
                                             }}
-                                            className="w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm"
+                                            className="w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm"
                                             style={{ color: theme.primary, backgroundColor: theme.surface }}
                                         >
                                             -
                                         </button>
-                                        <span className="w-8 text-center text-[10px] font-black" style={{ color: theme.text }}>{cart[item.menuItemId]}</span>
+                                        <span className="w-10 text-center text-xs font-black" style={{ color: theme.text }}>{cart[item.menuItemId]}</span>
                                         <button 
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onUpdateQuantity(item.menuItemId, cart[item.menuItemId] + 1);
                                             }}
-                                            className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md"
+                                            className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md"
                                             style={{ backgroundColor: theme.primary }}
                                         >
                                             +
@@ -121,10 +124,10 @@ export function TrendingNow({ items, cart, onUpdateQuantity, onItemClick }: Tren
                                             triggerFly(item.menuItemId, item.image, e);
                                             onUpdateQuantity(item.menuItemId, 1);
                                         }}
-                                        className="w-10 h-10 text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all font-black"
+                                        className="h-12 px-8 text-white rounded-full flex items-center justify-center shadow-xl active:scale-95 transition-all font-black text-xs uppercase tracking-widest"
                                         style={{ backgroundColor: theme.primary }}
                                     >
-                                        <Plus className="w-5 h-5" />
+                                        Add to Bag
                                     </button>
                                 )}
                             </div>

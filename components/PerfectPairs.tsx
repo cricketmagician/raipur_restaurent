@@ -36,84 +36,90 @@ export function PerfectPairs({ pairs, cart, onUpdateQuantity }: PerfectPairsProp
                 🤤 Perfect Pairs
             </h3>
 
-            <div className="grid grid-cols-1 gap-4">
-                {pairs.map((pair) => (
+            <div className="grid grid-cols-1 gap-6">
+                {pairs.map((pair, idx) => (
                     <motion.div
                         key={pair.id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="p-6 border flex items-center group relative overflow-hidden shadow-xl"
+                        className="p-8 border flex items-center group relative overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_15px_45px_rgba(0,0,0,0.1)] transition-all duration-500"
                         style={{ 
                             borderRadius: theme.radius,
                             backgroundColor: theme.surface,
-                            borderColor: `${theme.primary}10`
+                            borderColor: `${theme.primary}08`
                         }}
                     >
-                        {/* Abstract background shape */}
+                        {/* Abstract visual interest */}
                         <div 
-                            className="absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl transition-colors opacity-20" 
+                            className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full blur-3xl transition-colors opacity-10 group-hover:opacity-20 duration-700" 
                             style={{ backgroundColor: theme.primary }} 
                         />
 
                         <div 
-                            className="w-24 h-24 rounded-full overflow-hidden mr-6 shadow-xl border-4 shrink-0 relative z-10"
+                            className="w-28 h-28 rounded-[2rem] overflow-hidden mr-8 shadow-2xl border-2 shrink-0 relative z-10 group-hover:scale-105 transition-transform duration-700"
                             style={{ borderColor: theme.surface }}
                         >
                             <img src={pair.image} alt={pair.title} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                         </div>
 
                         <div className="flex-1 min-w-0 relative z-10">
-                            <h4 className="text-lg font-black tracking-tight" style={{ color: theme.text }}>{pair.title}</h4>
-                            <p className="text-[10px] font-bold uppercase tracking-widest mt-1 mb-3" style={{ color: theme.primary }}>
+                            <div className="flex items-center space-x-2 mb-2">
+                                <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border" 
+                                      style={{ backgroundColor: `${theme.primary}08`, color: theme.primary, borderColor: `${theme.primary}10` }}>
+                                    {idx === 0 ? "Made for each other" : "Classic combo"}
+                                </span>
+                            </div>
+                            <h4 className="text-xl font-black tracking-tight mb-1" style={{ color: theme.text }}>{pair.title}</h4>
+                            <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4" style={{ color: theme.text }}>
                                 {pair.subtitle}
                             </p>
-                            <span className="text-xl font-black" style={{ color: theme.text }}>₹{pair.price}</span>
-                        </div>
-
-                        {cart[pair.originalId] > 0 ? (
-                            <div 
-                                className="flex items-center rounded-full p-1 border relative z-10" 
-                                style={{ backgroundColor: `${theme.primary}0a`, borderColor: `${theme.primary}1a` }}
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <button 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onUpdateQuantity(pair.originalId, cart[pair.originalId] - 1);
-                                    }}
-                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm"
-                                    style={{ color: theme.primary, backgroundColor: theme.surface }}
-                                >
-                                    -
-                                </button>
-                                <span className="w-8 text-center text-xs font-black" style={{ color: theme.text }}>{cart[pair.originalId]}</span>
-                                <button 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onUpdateQuantity(pair.originalId, cart[pair.originalId] + 1);
-                                    }}
-                                    className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md"
-                                    style={{ backgroundColor: theme.primary }}
-                                >
-                                    +
-                                </button>
+                            <div className="flex items-center justify-between">
+                                <span className="text-2xl font-black" style={{ color: theme.text }}>₹{pair.price}</span>
+                                
+                                {cart[pair.originalId] > 0 ? (
+                                    <div 
+                                        className="flex items-center rounded-full p-1 border" 
+                                        style={{ backgroundColor: `${theme.primary}0a`, borderColor: `${theme.primary}1a` }}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onUpdateQuantity(pair.originalId, cart[pair.originalId] - 1);
+                                            }}
+                                            className="w-8 h-8 rounded-full flex items-center justify-center transition-all bg-white shadow-sm"
+                                            style={{ color: theme.primary }}
+                                        >
+                                            -
+                                        </button>
+                                        <span className="w-8 text-center text-xs font-black" style={{ color: theme.text }}>{cart[pair.originalId]}</span>
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onUpdateQuantity(pair.originalId, cart[pair.originalId] + 1);
+                                            }}
+                                            className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md"
+                                            style={{ backgroundColor: theme.primary }}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={(e) => {
+                                            triggerFly(pair.originalId, pair.image, e);
+                                            onUpdateQuantity(pair.originalId, 1);
+                                        }}
+                                        className="text-white px-6 py-3 rounded-full shadow-lg active:scale-90 transition-all font-black text-[10px] uppercase tracking-widest"
+                                        style={{ backgroundColor: theme.primary }}
+                                    >
+                                        Upgrade
+                                    </button>
+                                )}
                             </div>
-                        ) : (
-                            <button
-                                onClick={(e) => {
-                                    triggerFly(pair.originalId, pair.image, e);
-                                    onUpdateQuantity(pair.originalId, 1);
-                                }}
-                                className="text-white p-4 rounded-2xl shadow-lg active:scale-90 transition-all relative z-10 font-black"
-                                style={{ 
-                                    backgroundColor: theme.primary,
-                                    borderRadius: `calc(${theme.radius} * 0.5)`
-                                }}
-                            >
-                                <Plus className="w-6 h-6" />
-                            </button>
-                        )}
+                        </div>
                     </motion.div>
                 ))}
             </div>

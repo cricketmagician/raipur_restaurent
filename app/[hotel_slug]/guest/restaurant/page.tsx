@@ -3,20 +3,19 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MenuCard } from "@/components/MenuCard";
 import { CheckCircle, Search, Sparkles, TrendingUp, Gift } from "lucide-react";
-import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, useGuestLoyalty, saveGuestLoyaltySession, addLoyaltyPoints } from "@/utils/store";
+import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, useGuestLoyalty, saveGuestLoyaltySession, addLoyaltyPoints, type MenuItem } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
 import { CartOverlay } from "@/components/CartOverlay";
-import { SHARED_MENU_ITEMS, SHARED_COMBOS } from "@/utils/constants";
 import { CATEGORY_THEMES, useTheme } from "@/utils/themes";
-import { ImpulseBottomSheet } from "@/components/ImpulseBottomSheet";
 import { CategoryDiscoveryGrid } from "@/components/CategoryDiscoveryGrid";
 import { CategoryHeroHeader } from "@/components/CategoryHeroHeader";
 import { ChefRecommendCard } from "@/components/ChefRecommendCard";
 import { CategoryScroll } from "@/components/CategoryScroll";
 import { LoyaltySignIn } from "@/components/LoyaltySignIn";
+import { InlineUpsellRail } from "@/components/InlineUpsellRail";
 
 const MOCK_FOOD_ITEMS = [
     {
@@ -102,6 +101,72 @@ const MOCK_FOOD_ITEMS = [
     }
 ];
 
+const CONTEXTUAL_UPSELL_RULES = [
+    {
+        matchKeywords: ["pizza", "pizzas"],
+        title: "Complete your pizza order",
+        subtitle: "Garlic breads, loaded fries, dips and drinks usually convert best after a pizza add.",
+        targetKeywords: ["sides", "fries", "drinks", "beverages", "dip", "dips", "garlic", "bread"],
+    },
+    {
+        matchKeywords: ["burger", "burgers"],
+        title: "Make it a burger combo",
+        subtitle: "Fries, shakes and crispy sides are the fastest add-ons once a burger hits the bag.",
+        targetKeywords: ["fries", "sides", "drinks", "beverages", "shake", "dessert"],
+    },
+];
+
+const buildSearchText = (item: Pick<MenuItem, "category" | "title">) =>
+    `${normalizeCategoryKey(item.category)} ${normalizeCategoryKey(item.title)}`;
+
+const resolveUpsellRule = (item: Pick<MenuItem, "category" | "title">) => {
+    const haystack = buildSearchText(item);
+    return CONTEXTUAL_UPSELL_RULES.find((rule) =>
+        rule.matchKeywords.some((keyword) => haystack.includes(normalizeCategoryKey(keyword)))
+    ) || null;
+};
+
+const matchesUpsellKeywords = (item: Pick<MenuItem, "category" | "title">, keywords: string[]) => {
+    const haystack = buildSearchText(item);
+    return keywords.some((keyword) => haystack.includes(normalizeCategoryKey(keyword)));
+};
+
+const buildInlineUpsellContent = (anchorItem: MenuItem, items: MenuItem[]) => {
+    const explicitItems = (anchorItem.upsell_items || [])
+        .map((upsellId) => items.find((item) => item.id === upsellId))
+        .filter((item): item is MenuItem => Boolean(item) && item.id !== anchorItem.id && item.is_available !== false);
+
+    const rule = resolveUpsellRule(anchorItem);
+    const seen = new Set(explicitItems.map((item) => item.id));
+
+    const fallbackItems = rule
+        ? items
+            .filter((item) =>
+                item.id !== anchorItem.id &&
+                item.is_available !== false &&
+                !seen.has(item.id) &&
+                !item.is_combo &&
+                matchesUpsellKeywords(item, rule.targetKeywords)
+            )
+            .sort((left, right) => Number(right.is_popular) - Number(left.is_popular) || left.price - right.price)
+        : [];
+
+    const suggestions = [...explicitItems, ...fallbackItems].slice(0, 6);
+
+    if (!suggestions.length) {
+        return null;
+    }
+
+    const exploreCategory = suggestions[0]?.category ? normalizeCategoryKey(suggestions[0].category) : null;
+
+    return {
+        title: rule?.title || `Complete your ${formatCategoryName(anchorItem.category).toLowerCase()} order`,
+        subtitle: rule?.subtitle || "Guests usually add a side or a quick drink with this pick.",
+        exploreCategory,
+        items: suggestions,
+    };
+};
+
 export default function RestaurantPage() {
     const router = useRouter();
     const params = useParams();
@@ -125,9 +190,7 @@ export default function RestaurantPage() {
     const recommendSectionRef = useRef<HTMLDivElement>(null);
 
     // Upsell State
-    const [upsellItem, setUpsellItem] = useState<any>(null);
-    const [showUpsell, setShowUpsell] = useState(false);
-    const [suggestedIds, setSuggestedIds] = useState<string[]>([]);
+    const [inlineUpsellAnchorId, setInlineUpsellAnchorId] = useState<string | null>(null);
     const [loyaltyProfile, setLoyaltyProfile] = useState<{ phone: string; name: string; lastVisitAt?: string | null } | null>(() => {
         if (typeof window === "undefined") return null;
         const stored = localStorage.getItem(`guest_loyalty_${hotelSlug}`);
@@ -135,7 +198,7 @@ export default function RestaurantPage() {
     });
     const { loyalty: realLoyalty } = useGuestLoyalty(branding?.id, loyaltyProfile?.phone || null);
 
-    const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
+    const { menuItems } = useSupabaseMenuItems(branding?.id);
 
     // Use mock data if no items in DB (for visual testing)
     const effectiveItems = menuItems.length > 0 ? menuItems : MOCK_FOOD_ITEMS;
@@ -203,30 +266,37 @@ export default function RestaurantPage() {
     const popularItems = filteredItems.filter(i => i.is_popular && !i.is_recommended && !i.is_combo);
     const normalItems = filteredItems.filter(i => !i.is_recommended && !i.is_popular && !i.is_combo);
 
+    const inlineUpsellAnchorItem = useMemo(
+        () => availableItems.find((item) => item.id === inlineUpsellAnchorId) || null,
+        [availableItems, inlineUpsellAnchorId]
+    );
+    const inlineUpsellContent = useMemo(
+        () => (inlineUpsellAnchorItem ? buildInlineUpsellContent(inlineUpsellAnchorItem as MenuItem, availableItems as MenuItem[]) : null),
+        [inlineUpsellAnchorItem, availableItems]
+    );
+    const shouldShowInlineUpsell = Boolean(
+        inlineUpsellAnchorItem &&
+        inlineUpsellContent &&
+        cart[inlineUpsellAnchorItem.id] > 0
+    );
+
+    useEffect(() => {
+        if (inlineUpsellAnchorId && !cart[inlineUpsellAnchorId]) {
+            setInlineUpsellAnchorId(null);
+        }
+    }, [cart, inlineUpsellAnchorId]);
+
     const addToCart = (item: any, isUpsell = false) => {
         if (item.is_available === false) return;
         const currentQty = cart[item.id] || 0;
         updateQuantity(item.id, currentQty + 1);
 
         if (isUpsell) {
-            setShowUpsell(false);
             return;
         }
 
-        if (item.upsell_items && item.upsell_items.length > 0) {
-            const potentialUpsell = effectiveItems.find(m => 
-                item.upsell_items.includes(m.id) && 
-                !cart[m.id] && 
-                !suggestedIds.includes(m.id)
-            );
-
-            if (potentialUpsell) {
-                setTimeout(() => {
-                    setUpsellItem(potentialUpsell);
-                    setShowUpsell(true);
-                    setSuggestedIds(prev => [...prev, potentialUpsell.id]);
-                }, 500);
-            }
+        if (buildInlineUpsellContent(item as MenuItem, availableItems as MenuItem[])) {
+            setInlineUpsellAnchorId(item.id);
         }
     };
 
@@ -238,6 +308,25 @@ export default function RestaurantPage() {
 
     const cartTotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
     const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);
+
+    const renderInlineUpsellSection = (anchorId: string) => {
+        if (!shouldShowInlineUpsell || inlineUpsellAnchorId !== anchorId || !inlineUpsellContent) {
+            return null;
+        }
+
+        return (
+            <InlineUpsellRail
+                title={inlineUpsellContent.title}
+                subtitle={inlineUpsellContent.subtitle}
+                items={inlineUpsellContent.items}
+                cart={cart}
+                onAdd={(upsellItem) => addToCart(upsellItem, true)}
+                onRemove={(upsellItem) => updateQuantity(upsellItem.id, Math.max(0, (cart[upsellItem.id] || 0) - 1))}
+                browseLabel={inlineUpsellContent.exploreCategory ? `Open ${formatCategoryName(inlineUpsellContent.exploreCategory)}` : undefined}
+                onBrowse={inlineUpsellContent.exploreCategory ? () => handleCategoryClick(inlineUpsellContent.exploreCategory as string) : undefined}
+            />
+        );
+    };
 
     useEffect(() => {
         if (!menuItems.length) return;
@@ -431,6 +520,7 @@ export default function RestaurantPage() {
                                             />
                                         ))}
                                     </div>
+                                    {inlineUpsellAnchorId && recommendedItems.some((item) => item.id === inlineUpsellAnchorId) && renderInlineUpsellSection(inlineUpsellAnchorId)}
                                 </section>
                             )}
 
@@ -445,21 +535,23 @@ export default function RestaurantPage() {
                                     </div>
                                     <div className="space-y-12">
                                         {comboItems.map((item) => (
-                                            <MenuCard
-                                                key={item.id}
-                                                id={item.id}
-                                                title={item.title}
-                                                description={item.description || ""}
-                                                price={item.price}
-                                                image={item.image_url}
-                                                isPopular={item.is_popular}
-                                                isRecommended={item.is_recommended}
-                                                theme={CATEGORY_THEMES[normalizeCategoryKey(item.category)] || CATEGORY_THEMES.all}
-                                                onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
-                                                quantity={cart[item.id] || 0}
-                                                onAdd={() => addToCart(item)}
-                                                onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
-                                            />
+                                            <React.Fragment key={item.id}>
+                                                <MenuCard
+                                                    id={item.id}
+                                                    title={item.title}
+                                                    description={item.description || ""}
+                                                    price={item.price}
+                                                    image={item.image_url}
+                                                    isPopular={item.is_popular}
+                                                    isRecommended={item.is_recommended}
+                                                    theme={CATEGORY_THEMES[normalizeCategoryKey(item.category)] || CATEGORY_THEMES.all}
+                                                    onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
+                                                    quantity={cart[item.id] || 0}
+                                                    onAdd={() => addToCart(item)}
+                                                    onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
+                                                />
+                                                {renderInlineUpsellSection(item.id)}
+                                            </React.Fragment>
                                         ))}
                                     </div>
                                 </section>
@@ -476,8 +568,37 @@ export default function RestaurantPage() {
                                     </div>
                                     <div className="space-y-12">
                                         {popularItems.map((item) => (
+                                            <React.Fragment key={item.id}>
+                                                <MenuCard
+                                                    id={item.id}
+                                                    title={item.title}
+                                                    description={item.description || ""}
+                                                    price={item.price}
+                                                    image={item.image_url}
+                                                    isPopular={item.is_popular}
+                                                    isRecommended={item.is_recommended}
+                                                    theme={CATEGORY_THEMES[normalizeCategoryKey(item.category)] || CATEGORY_THEMES.all}
+                                                    onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
+                                                    quantity={cart[item.id] || 0}
+                                                    onAdd={() => addToCart(item)}
+                                                    onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
+                                                />
+                                                {renderInlineUpsellSection(item.id)}
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* Full List Section */}
+                            <section className="space-y-8">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 px-1">
+                                    {activeCategory === 'all' ? 'Full Menu' : `Other ${activeCategoryRecord?.name || formatCategoryName(activeCategory)}`}
+                                </h3>
+                                <div className="space-y-12">
+                                    {normalItems.map((item) => (
+                                        <React.Fragment key={item.id}>
                                             <MenuCard
-                                                key={item.id}
                                                 id={item.id}
                                                 title={item.title}
                                                 description={item.description || ""}
@@ -491,33 +612,8 @@ export default function RestaurantPage() {
                                                 onAdd={() => addToCart(item)}
                                                 onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
                                             />
-                                        ))}
-                                    </div>
-                                </section>
-                            )}
-
-                            {/* Full List Section */}
-                            <section className="space-y-8">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 px-1">
-                                    {activeCategory === 'all' ? 'Full Menu' : `Other ${activeCategoryRecord?.name || formatCategoryName(activeCategory)}`}
-                                </h3>
-                                <div className="space-y-12">
-                                    {normalItems.map((item) => (
-                                        <MenuCard
-                                            key={item.id}
-                                            id={item.id}
-                                            title={item.title}
-                                            description={item.description || ""}
-                                            price={item.price}
-                                            image={item.image_url}
-                                            isPopular={item.is_popular}
-                                            isRecommended={item.is_recommended}
-                                            theme={CATEGORY_THEMES[normalizeCategoryKey(item.category)] || CATEGORY_THEMES.all}
-                                            onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
-                                            quantity={cart[item.id] || 0}
-                                            onAdd={() => addToCart(item)}
-                                            onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
-                                        />
+                                            {renderInlineUpsellSection(item.id)}
+                                        </React.Fragment>
                                     ))}
                                 </div>
                             </section>
@@ -569,12 +665,6 @@ export default function RestaurantPage() {
                     guestName={loyaltyProfile?.name || ""}
                     guestPhone={loyaltyProfile?.phone || ""}
                     lastVisitAt={loyaltyProfile?.lastVisitAt || realLoyalty?.last_visit_at || null}
-                />
-                <ImpulseBottomSheet 
-                    item={upsellItem as any}
-                    isVisible={showUpsell}
-                    onAdd={() => addToCart(upsellItem, true)}
-                    onClose={() => setShowUpsell(false)}
                 />
                 <BottomNav />
             </div>

@@ -620,7 +620,7 @@ export default function MenuPage() {
                                                 ))
                                             }
                                         </div>
-                                        <p className="text-[9px] text-slate-400 italic">These items will appear in the "Make it better?" toast when this item is selected.</p>
+                                        <p className="text-[9px] text-slate-400 italic">These items power the inline upsell rail and add-on prompts when this dish is added in the guest menu.</p>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

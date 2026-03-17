@@ -15,6 +15,80 @@ import { ImpulseBottomSheet } from "@/components/ImpulseBottomSheet";
 import { CategoryDiscoveryGrid } from "@/components/CategoryDiscoveryGrid";
 import { CategoryHeroHeader } from "@/components/CategoryHeroHeader";
 import { ChefRecommendCard } from "@/components/ChefRecommendCard";
+import { CategoryScroll } from "@/components/CategoryScroll";
+
+const MOCK_FOOD_ITEMS = [
+    {
+        id: "mock_p1",
+        title: "Margherita Supreme",
+        description: "Fresh buffalo mozzarella, basil leaves, and slow-roasted tomato sauce.",
+        price: 349,
+        category: "pizzas",
+        image_url: "/images/food/margherita_pizza.png",
+        is_recommended: true,
+        is_popular: true
+    },
+    {
+        id: "mock_b1",
+        title: "Double Beast Burger",
+        description: "Two prime beef patties, three slices of cheddar, and caramelized onions.",
+        price: 499,
+        category: "burgers",
+        image_url: "/images/food/cheese_burger.png",
+        is_recommended: true,
+        is_popular: true
+    },
+    {
+        id: "mock_c1",
+        title: "Artisan Cappuccino",
+        description: "Rich espresso blend with perfectly micro-foamed milk.",
+        price: 189,
+        category: "coffee",
+        image_url: "/images/food/cappuccino.png",
+        is_recommended: true,
+        is_popular: false
+    },
+    {
+        id: "mock_p2",
+        title: "Farm Fresh Pizza",
+        description: "Bell peppers, onions, mushrooms, and sweet corn on a classic crust.",
+        price: 299,
+        category: "pizzas",
+        image_url: "/images/food/margherita_pizza.png",
+        is_recommended: false,
+        is_popular: false
+    },
+    {
+        id: "mock_b2",
+        title: "Tex-Mex Burger",
+        description: "Spicy chicken patty, jalapeños, and avocado lime mayo.",
+        price: 389,
+        category: "burgers",
+        image_url: "/images/food/cheese_burger.png",
+        is_recommended: false,
+        is_popular: true
+    },
+    {
+        id: "mock_c2",
+        title: "Hazelnut Latte",
+        description: "Roasted hazelnut flavor with silky steamed milk.",
+        price: 219,
+        category: "coffee",
+        image_url: "/images/food/cappuccino.png",
+        is_recommended: false,
+        is_popular: false
+    },
+    {
+        id: "mock_d1",
+        title: "Molten Lava Mystery",
+        description: "Warm chocolate cake with a gooey center and fresh berries.",
+        price: 249,
+        category: "desserts",
+        image_url: "/images/food/chocolate_cake.png",
+        is_recommended: true,
+        is_popular: true
+    }
+];
 
 export default function RestaurantPage() {
     const router = useRouter();
@@ -42,6 +116,7 @@ export default function RestaurantPage() {
     const [suggestedIds, setSuggestedIds] = useState<string[]>([]);
 
     const categories = [
+        { id: "all", name: "All", icon: "🍱" },
         { id: "pizzas", name: "Pizzas", icon: "🍕" },
         { id: "burgers", name: "Burgers", icon: "🍔" },
         { id: "coffee", name: "Coffee", icon: "☕" },
@@ -52,12 +127,20 @@ export default function RestaurantPage() {
 
     const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
 
+    // Use mock data if no items in DB (for visual testing)
+    const effectiveItems = menuItems.length > 0 ? menuItems : MOCK_FOOD_ITEMS;
+
     // Handle initial navigation or deep linking
     useEffect(() => {
         const cat = searchParams.get('cat');
-        if (cat && cat !== 'all') {
-            setActiveCategory(cat);
-            setView('detail');
+        if (cat) {
+            if (cat === 'all') {
+                setActiveCategory('all');
+                setView('discovery');
+            } else {
+                setActiveCategory(cat);
+                setView('detail');
+            }
         } else {
             setView('discovery');
         }
@@ -81,7 +164,7 @@ export default function RestaurantPage() {
     };
 
     const currentCategoryTheme = CATEGORY_THEMES[activeCategory] || CATEGORY_THEMES.all;
-    const filteredItems = activeCategory === "all" ? menuItems : menuItems.filter(i => i.category.toLowerCase() === activeCategory);
+    const filteredItems = activeCategory === "all" ? effectiveItems : effectiveItems.filter(i => i.category.toLowerCase() === activeCategory);
     const recommendedItems = filteredItems.filter(i => i.is_recommended);
     const normalItems = filteredItems.filter(i => !i.is_recommended);
 
@@ -95,7 +178,7 @@ export default function RestaurantPage() {
         }
 
         if (item.upsell_items && item.upsell_items.length > 0) {
-            const potentialUpsell = menuItems.find(m => 
+            const potentialUpsell = effectiveItems.find(m => 
                 item.upsell_items.includes(m.id) && 
                 !cart[m.id] && 
                 !suggestedIds.includes(m.id)
@@ -112,10 +195,10 @@ export default function RestaurantPage() {
     };
 
     const cartItems = Object.entries(cart).map(([id, q]) => {
-        let item = menuItems.find(m => m.id === id);
+        let item = effectiveItems.find(m => m.id === id);
         if (!item) return null;
         return { ...item, quantity: q };
-    }).filter((item): item is (typeof menuItems[0] & { quantity: number }) => item !== null);
+    }).filter((item): item is (typeof effectiveItems[0] & { quantity: number }) => item !== null);
 
     const cartTotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
     const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);
@@ -127,7 +210,7 @@ export default function RestaurantPage() {
 
         const cartItemsData = Object.entries(cart)
             .map(([id, q]) => {
-                const item = menuItems.find(m => m.id === id);
+                const item = effectiveItems.find(m => m.id === id);
                 return {
                     id,
                     title: item?.title || 'Unknown Item',
@@ -193,6 +276,13 @@ export default function RestaurantPage() {
             style={{ backgroundColor: theme.background, fontFamily: theme.fontSans, color: theme.text }}
         >
             <div className="relative z-10">
+                {/* Top Categories Scroll - requested by user */}
+                <CategoryScroll 
+                    categories={categories}
+                    activeCategory={activeCategory}
+                    onCategoryChange={handleCategoryClick}
+                />
+
                 <AnimatePresence mode="wait">
                     {view === 'discovery' ? (
                         <motion.div
@@ -201,7 +291,7 @@ export default function RestaurantPage() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                         >
-                            <header className="mb-10">
+                            <header className="mb-10 mt-8">
                                 <h1 className="text-3xl font-black tracking-tighter mb-8" style={{ color: theme.primary }}>Menu</h1>
                                 <div className="relative group">
                                     <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" style={{ color: theme.primary }} />
@@ -215,7 +305,7 @@ export default function RestaurantPage() {
                             </header>
 
                             <CategoryDiscoveryGrid 
-                                categories={categories} 
+                                categories={categories.filter(c => c.id !== 'all')} 
                                 onCategoryClick={handleCategoryClick}
                                 activeCategory={activeCategory}
                                 theme={theme}

@@ -40,17 +40,21 @@ export default function ItemPage() {
     const [isAdded, setIsAdded] = useState(false);
 
     const item = useMemo(() => menuItems.find((i) => i.id === itemId), [menuItems, itemId]);
+    const availableMenuItems = useMemo(
+        () => menuItems.filter((menuItem) => menuItem.is_available !== false),
+        [menuItems]
+    );
     const relatedItems = useMemo(
         () =>
-            menuItems
+            availableMenuItems
                 .filter((menuItem) => menuItem.id !== item?.id && normalizeCategoryKey(menuItem.category) === normalizeCategoryKey(item?.category))
                 .slice(0, 3),
-        [menuItems, item]
+        [availableMenuItems, item]
     );
     const pairing = useMemo(() => {
         if (!item || !item.upsell_items || item.upsell_items.length === 0) return null;
-        return menuItems.find((menuItem) => item.upsell_items?.includes(menuItem.id) && menuItem.is_available) || null;
-    }, [item, menuItems]);
+        return availableMenuItems.find((menuItem) => item.upsell_items?.includes(menuItem.id)) || null;
+    }, [item, availableMenuItems]);
 
     const categoryKey = normalizeCategoryKey(item?.category || "all");
     const categoryTheme = CATEGORY_THEMES[categoryKey] || CATEGORY_THEMES.all;
@@ -59,6 +63,7 @@ export default function ItemPage() {
 
     const handleAdd = (e: React.MouseEvent) => {
         if (!item) return;
+        if (item.is_available === false) return;
         if (item.image_url) triggerFly(item.id, item.image_url, e);
         updateQuantity(item.id, (cart[item.id] || 0) + 1);
         setIsAdded(true);
@@ -67,6 +72,7 @@ export default function ItemPage() {
 
     const handleAddPairing = (e: React.MouseEvent) => {
         if (!pairing) return;
+        if (pairing.is_available === false) return;
         if (pairing.image_url) triggerFly(pairing.id, pairing.image_url, e);
         updateQuantity(pairing.id, (cart[pairing.id] || 0) + 1);
     };
@@ -224,6 +230,12 @@ export default function ItemPage() {
                             </span>
                         </div>
 
+                        {item.is_available === false && (
+                            <div className="mb-4 rounded-[1.2rem] border border-red-200 bg-red-50 px-4 py-3 text-red-700 font-black uppercase tracking-[0.22em] text-[9px]">
+                                Sold out right now
+                            </div>
+                        )}
+
                         <p className="text-base leading-relaxed text-slate-600 mb-6">
                             {item.description || "A carefully built dish designed to feel like a restaurant recommendation, not a generic menu row."}
                         </p>
@@ -267,6 +279,7 @@ export default function ItemPage() {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))}
+                                disabled={item.is_available === false}
                                 className="w-14 h-14 rounded-full flex items-center justify-center border border-slate-200 bg-white shadow-sm active:scale-95 transition-all"
                                 style={{ color: globalTheme.primary }}
                             >
@@ -281,6 +294,7 @@ export default function ItemPage() {
 
                             <button
                                 onClick={(e) => handleAdd(e)}
+                                disabled={item.is_available === false}
                                 className="w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg active:scale-95 transition-all"
                                 style={{ backgroundColor: globalTheme.primary }}
                             >
@@ -290,10 +304,11 @@ export default function ItemPage() {
 
                         <button
                             onClick={(e) => handleAdd(e)}
+                            disabled={item.is_available === false}
                             className="mt-4 w-full py-4 rounded-[1.35rem] text-white font-black text-[10px] uppercase tracking-[0.3em] shadow-xl active:scale-[0.99] transition-all"
                             style={{ backgroundColor: globalTheme.primary }}
                         >
-                            {isAdded ? "Added to Bag" : "Add to Order"}
+                            {item.is_available === false ? "Sold Out" : (isAdded ? "Added to Bag" : "Add to Order")}
                         </button>
                     </motion.section>
 

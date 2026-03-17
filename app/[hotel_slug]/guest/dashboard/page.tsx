@@ -110,6 +110,10 @@ export default function GuestDashboard() {
     }, []);
 
     const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
+    const availableMenuItems = useMemo(
+        () => menuItems.filter((item) => item.is_available !== false),
+        [menuItems]
+    );
     const categoryRecords = useMemo(() => {
         const activeCategories = menuCategories.filter((category) => category.is_active !== false);
         return activeCategories.length > 0 ? activeCategories : deriveMenuCategories(menuItems);
@@ -133,7 +137,7 @@ export default function GuestDashboard() {
     ];
 
     const trendingItems = useMemo(() => {
-        const popular = menuItems.filter(i => i.is_popular).slice(0, 2);
+        const popular = availableMenuItems.filter(i => i.is_popular).slice(0, 2);
         return popular.map((item, index) => ({
             id: `t${index}`,
             title: item.title,
@@ -143,17 +147,17 @@ export default function GuestDashboard() {
             tag: index === 0 ? "Bestseller" : "Trending",
             menuItemId: item.id
         }));
-    }, [menuItems]);
+    }, [availableMenuItems]);
 
     const perfectPairs = useMemo(() => {
         // Try to find items with pairings, or just pick two interesting ones
-        const itemsWithPairings = menuItems.filter(i => i.is_recommended && i.upsell_items && i.upsell_items.length > 0);
+        const itemsWithPairings = availableMenuItems.filter(i => i.is_recommended && i.upsell_items && i.upsell_items.length > 0);
         const pairs: any[] = [];
         
         if (itemsWithPairings.length >= 1) {
             const main = itemsWithPairings[0];
             const companionId = main.upsell_items![0];
-            const companion = menuItems.find(m => m.id === companionId);
+            const companion = availableMenuItems.find(m => m.id === companionId);
             if (companion) {
                 pairs.push({
                     id: "p1",
@@ -168,7 +172,7 @@ export default function GuestDashboard() {
         
         // Fallback or second pair
         if (pairs.length < 2) {
-             const others = menuItems.filter(i => !pairs.some(p => p.originalId === i.id)).slice(0, 2 - pairs.length);
+             const others = availableMenuItems.filter(i => !pairs.some(p => p.originalId === i.id)).slice(0, 2 - pairs.length);
              others.forEach((item, i) => {
                  pairs.push({
                      id: `p${pairs.length + 1}`,
@@ -181,12 +185,12 @@ export default function GuestDashboard() {
              });
         }
         return pairs;
-    }, [menuItems]);
+    }, [availableMenuItems]);
 
         // No change needed to updateQuantity itself as it's now from useCart
 
     const cartTotal = Object.entries(cart).reduce((sum, [id, q]) => {
-        const item = menuItems.find(m => m.id === id);
+        const item = availableMenuItems.find(m => m.id === id);
         const comboItem = (id.includes("combo") || id === "king_size") ? SHARED_COMBOS.find(c => c.id === id) : null;
         
         return sum + ((item?.price || comboItem?.price || 0) * q);
@@ -210,14 +214,14 @@ export default function GuestDashboard() {
         });
 
         // Enrich menu items with real sales data
-        const enriched = menuItems.map(item => ({
+        const enriched = availableMenuItems.map(item => ({
             ...item,
             salesCount: salesMap[item.title] || 0,
             isBestseller: (salesMap[item.title] || 0) >= 5 || !!item.is_popular
         }));
 
         return enriched as any[];
-    }, [requests, menuItems]);
+    }, [requests, availableMenuItems]);
 
     const filteredItems = (activeCategory === "all" ? menuItemsWithSales : menuItemsWithSales.filter(i => normalizeCategoryKey(i.category) === activeCategory))
         .filter(item => {
@@ -225,6 +229,16 @@ export default function GuestDashboard() {
             if (hungerLevel === 'very-hungry') return item.price > 150; // Prefer filling meals
             return true; // Hungry = Everything
         });
+
+    React.useEffect(() => {
+        if (!menuItems.length) return;
+
+        const soldOutIds = Object.keys(cart).filter((id) =>
+            menuItems.some((item) => item.id === id && item.is_available === false)
+        );
+
+        soldOutIds.forEach((id) => updateQuantity(id, 0));
+    }, [menuItems, cart, updateQuantity]);
 
     const handleOrder = async () => {
         if (!branding?.id) return;
@@ -245,8 +259,18 @@ export default function GuestDashboard() {
         setIsOrdering(true);
         await new Promise(resolve => setTimeout(resolve, 2000));
 
+        const soldOutIds = Object.keys(cart).filter((id) =>
+            menuItems.some((item) => item.id === id && item.is_available === false)
+        );
+
+        if (soldOutIds.length > 0) {
+            soldOutIds.forEach((id) => updateQuantity(id, 0));
+            setToast({ message: "Some sold out items were removed from your bag. Please review your cart.", type: "error", isVisible: true });
+            return;
+        }
+
         const cartItems = Object.entries(cart).map(([id, q]) => {
-            let item = menuItems.find(m => m.id === id);
+            let item = availableMenuItems.find(m => m.id === id);
             if (!item && (id.includes("combo") || id === "king_size")) {
                 const foundCombo = [
                     { id: "monster_combo", title: "Monster Combo Burger", price: 199 },
@@ -299,9 +323,11 @@ export default function GuestDashboard() {
             return;
         }
 
+        if (item.is_available === false) return;
+
         if (item.upsell_items && item.upsell_items.length > 0) {
-            const potentialUpsell = menuItems.find(m => 
-                item.upsell_items.includes(m.id) && 
+            const potentialUpsell = availableMenuItems.find(m =>
+                item.upsell_items.includes(m.id) &&
                 !cart[m.id]
             );
 
@@ -315,6 +341,11 @@ export default function GuestDashboard() {
     };
 
     const addToCart = (item: any, isUpsell = false) => {
+        if (item.is_available === false) {
+            setToast({ message: "This item is sold out right now.", type: "error", isVisible: true });
+            return;
+        }
+
         const currentQty = cart[item.id] || 0;
         updateQuantity(item.id, currentQty + 1);
         
@@ -650,10 +681,10 @@ export default function GuestDashboard() {
                 stories={stories}
                 onClose={() => setStoryConfig({ ...storyConfig, isVisible: false })}
                 onOrder={(story) => {
-                    const item = menuItems.find(m => m.id === story.menuItemId);
-                    if (item) {
-                        addToCart(item);
-                        setStoryConfig({ ...storyConfig, isVisible: false });
+            const item = availableMenuItems.find(m => m.id === story.menuItemId);
+            if (item) {
+                addToCart(item);
+                setStoryConfig({ ...storyConfig, isVisible: false });
                         setToast({ message: "Added to Bag! ✨", type: "success", isVisible: true });
                     }
                 }}

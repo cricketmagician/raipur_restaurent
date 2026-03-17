@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MenuCard } from "@/components/MenuCard";
 import { CheckCircle, Search, Sparkles, TrendingUp, Gift } from "lucide-react";
 import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, useGuestLoyalty, saveGuestLoyaltySession, addLoyaltyPoints } from "@/utils/store";
@@ -139,6 +139,10 @@ export default function RestaurantPage() {
 
     // Use mock data if no items in DB (for visual testing)
     const effectiveItems = menuItems.length > 0 ? menuItems : MOCK_FOOD_ITEMS;
+    const availableItems = useMemo(
+        () => effectiveItems.filter((item: any) => item.is_available !== false),
+        [effectiveItems]
+    );
     const categoryRecords = menuCategories.filter((category) => category.is_active !== false).length > 0
         ? menuCategories.filter((category) => category.is_active !== false)
         : deriveMenuCategories(effectiveItems as any);
@@ -190,9 +194,9 @@ export default function RestaurantPage() {
     const activeCategoryRecord = categoryRecords.find((category) => normalizeCategoryKey(category.slug || category.name) === activeCategory);
     
     // Filtering Logic
-    const filteredItems = activeCategory === "all"
-        ? effectiveItems
-        : effectiveItems.filter(i => normalizeCategoryKey(i.category) === activeCategory);
+    const filteredItems = (activeCategory === "all"
+        ? availableItems
+        : availableItems.filter(i => normalizeCategoryKey(i.category) === activeCategory));
     
     const recommendedItems = filteredItems.filter(i => i.is_recommended);
     const comboItems = filteredItems.filter(i => i.is_combo && !i.is_recommended);
@@ -200,6 +204,7 @@ export default function RestaurantPage() {
     const normalItems = filteredItems.filter(i => !i.is_recommended && !i.is_popular && !i.is_combo);
 
     const addToCart = (item: any, isUpsell = false) => {
+        if (item.is_available === false) return;
         const currentQty = cart[item.id] || 0;
         updateQuantity(item.id, currentQty + 1);
 
@@ -234,6 +239,16 @@ export default function RestaurantPage() {
     const cartTotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
     const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);
 
+    useEffect(() => {
+        if (!menuItems.length) return;
+
+        const soldOutIds = Object.keys(cart).filter((id) =>
+            menuItems.some((item) => item.id === id && item.is_available === false)
+        );
+
+        soldOutIds.forEach((id) => updateQuantity(id, 0));
+    }, [menuItems, cart, updateQuantity]);
+
     const handleLoyaltySignIn = async (phone: string, name: string) => {
         const profile = { phone, name, lastVisitAt: new Date().toISOString() };
         localStorage.setItem(`guest_loyalty_${hotelSlug}`, JSON.stringify(profile));
@@ -246,6 +261,16 @@ export default function RestaurantPage() {
 
     const handleOrder = async () => {
         if (!branding?.id) return;
+        const soldOutIds = Object.keys(cart).filter((id) =>
+            menuItems.some((item) => item.id === id && item.is_available === false)
+        );
+
+        if (soldOutIds.length > 0) {
+            soldOutIds.forEach((id) => updateQuantity(id, 0));
+            alert("Some sold out items were removed from your bag. Please review your cart and place the order again.");
+            return;
+        }
+
         if (orderMode === "takeaway" && !loyaltyProfile) {
             setIsLoyaltyOpen(true);
             return;

@@ -206,31 +206,48 @@ export default function GuestDashboard() {
         <div className="pb-40 px-5 pt-6 min-h-screen bg-noise max-w-[520px] mx-auto overflow-x-hidden font-sans">
             {/* Header is handled by GlobalHeader in GuestLayout */}
 
-            <div className="h-[120px]"></div>
+            {/* 1. Hospitality Greeting */}
+            <header className="mb-12 pt-14">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                >
+                    <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-2 font-sans">Welcome back</p>
+                    <h1 className="text-5xl font-serif italic text-slate-900 leading-[0.9] tracking-tighter mb-4">
+                        Good Evening,<br />{branding?.name || 'Guest'}
+                    </h1>
+                    <p className="text-slate-500 font-serif italic text-lg leading-relaxed max-w-[280px]">
+                        “Ready for a delightful<br />dining experience?”
+                    </p>
+                </motion.div>
+            </header>
 
-            {/* 2. Dramatic Headline */}
-            <section className="mb-12 pt-14 relative">
-                <div className="flex items-start justify-between">
-                    <div>
-                        <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.3em] mb-4">Indulge in the finest</p>
-                        <h2 className="text-6xl font-serif text-slate-900 leading-[0.85] tracking-tighter italic">
-                            Curated<br />Experiences
-                        </h2>
+            {/* 2. Central Action (Explore Menu) */}
+            <section className="mb-16">
+                <motion.button
+                    whileHover={{ scale: 1.02, boxShadow: "0 30px 60px rgba(0,0,0,0.1)" }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                        const menuSection = document.getElementById('menu-experience');
+                        menuSection?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="w-full bg-slate-900 text-[#FAF7F2] py-10 rounded-[2.5rem] flex flex-col items-center justify-center relative overflow-hidden group shadow-2xl transition-all"
+                >
+                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform">
+                        <Utensils className="w-24 h-24" />
                     </div>
-                    {tableNumber && (
-                        <div className="bg-slate-900 text-[#D4AF37] px-6 py-4 rounded-[2rem] flex flex-col items-center justify-center shadow-2xl shadow-slate-200 border border-[#D4AF37]/10">
-                            <span className="text-[8px] font-black uppercase tracking-widest text-[#D4AF37]/50 mb-1">Residence</span>
-                            <span className="text-2xl font-serif italic leading-none">{tableNumber}</span>
-                        </div>
-                    )}
-                </div>
+                    <span className="text-xs font-black uppercase tracking-[0.4em] mb-4 text-[#D4AF37]">The Collection</span>
+                    <span className="text-4xl font-serif italic mb-6">Explore Menu</span>
+                    <ChevronRight className="w-8 h-8 text-[#D4AF37] animate-bounce-x" />
+                </motion.button>
             </section>
 
-            {/* 3. Hero Slider (Highest Rated Combos) */}
-            <section className="mb-16 -mx-5 px-5">
+            {/* 3. Hero Slider (House Collections) */}
+            <section id="menu-experience" className="mb-20 -mx-5 px-5">
                 <div className="flex items-center justify-between mb-8 px-1">
                     <div className="flex flex-col">
-                        <h3 className="text-3xl font-serif text-slate-900 italic tracking-tight">House Collections</h3>
+                        <h3 className="text-3xl font-serif text-slate-900 italic tracking-tight">Curated for You</h3>
                         <p className="text-[11px] text-slate-400 font-medium italic mt-1">Thoughtfully paired for the perfect balance</p>
                     </div>
                 </div>
@@ -298,11 +315,34 @@ export default function GuestDashboard() {
                 <FoodStory stories={stories} />
             </section>
 
-            {/* 6. Popular Right Now (Modern Grid) */}
-            <section className="mb-10">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-serif font-black text-slate-900">🔥 Trending in your area</h3>
+            {/* 6. Popular Right Now (Modern Grid with Anchoring) */}
+            <section className="mb-14">
+                <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-2xl font-serif text-slate-900 italic">Chef’s Selection</h3>
+                    <div className="h-[1px] flex-1 bg-slate-100 mx-6"></div>
                 </div>
+
+                {/* Anchoring: First item is dramatically larger */}
+                {filteredItems.length > 0 && (
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        className="mb-10"
+                    >
+                        <div className="relative group">
+                            <div className="absolute -inset-4 bg-[#722F37]/5 rounded-[3.5rem] -z-10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <MenuListItem 
+                                {...filteredItems[0]}
+                                isLarge={true} // New prop for visual hierarchy
+                                trendingCount={(filteredItems[0].salesCount || 0)}
+                                quantity={cart[filteredItems[0].id] || 0}
+                                onUpdateQuantity={(q) => updateQuantity(filteredItems[0].id, q)}
+                            />
+                        </div>
+                    </motion.div>
+                )}
+
                 <motion.div 
                     initial="hidden"
                     animate="show"
@@ -315,49 +355,11 @@ export default function GuestDashboard() {
                     }}
                     className="grid grid-cols-2 gap-4"
                 >
-                    {[...filteredItems]
-                        .sort((a, b) => {
-                            // Primary sort: Sales Volume
-                            if ((b.salesCount || 0) !== (a.salesCount || 0)) {
-                                return (b.salesCount || 0) - (a.salesCount || 0);
-                            }
-                            // Secondary sort: High Rating
-                            return (b.rating || 0) - (a.rating || 0);
-                        })
-                        .slice(0, 4)
-                        .map((item) => (
-                            <MenuListItem 
-                                key={item.id}
-                                {...item}
-                                trendingCount={(item.salesCount || 0)}
-                                quantity={cart[item.id] || 0}
-                                onUpdateQuantity={(q) => updateQuantity(item.id, q)}
-                            />
-                        ))}
-                </motion.div>
-            </section>
-
-            {/* 7. Full Menu Section (Compact Grid) */}
-            <section className="space-y-6 mb-20 px-1 pt-10 border-t border-slate-100">
-                <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-serif font-black text-slate-900">⭐ Loved by diners</h3>
-                </div>
-                <motion.div 
-                    initial="hidden"
-                    animate="show"
-                    variants={{
-                        show: {
-                            transition: {
-                                staggerChildren: 0.05
-                            }
-                        }
-                    }}
-                    className="grid grid-cols-2 gap-4"
-                >
-                    {filteredItems.map((item) => (
+                    {filteredItems.slice(1, 5).map((item) => (
                         <MenuListItem 
                             key={item.id}
                             {...item}
+                            trendingCount={(item.salesCount || 0)}
                             quantity={cart[item.id] || 0}
                             onUpdateQuantity={(q) => updateQuantity(item.id, q)}
                         />

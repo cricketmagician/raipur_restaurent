@@ -69,8 +69,8 @@ export function CartOverlay({
                     >
                         <div className="flex items-center justify-between mb-10">
                             <div>
-                                <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter italic leading-none">Your</h2>
-                                <h2 className="text-4xl font-black text-[#F55D2C] uppercase tracking-tighter italic leading-none">Bucket</h2>
+                                <h2 className="text-4xl font-serif text-slate-900 italic tracking-tighter leading-none">Your</h2>
+                                <h2 className="text-4xl font-serif text-[#722F37] italic tracking-tighter leading-none">Selection</h2>
                             </div>
                             <button
                                 onClick={onClose}
@@ -84,12 +84,12 @@ export function CartOverlay({
                             {cartItems.map((item) => (
                                 <div key={item.id} className="flex items-center justify-between p-6 bg-white rounded-[2rem] shadow-sm border border-slate-100 group">
                                     <div>
-                                        <p className="font-black text-black uppercase tracking-tighter text-xs">{item.quantity}x {item.title}</p>
-                                        <p className="text-lg font-black text-[#D4AF37] tracking-tight italic">₹{((item.price || 0) * item.quantity).toFixed(0)}</p>
+                                        <p className="font-serif text-slate-900 italic text-xs capitalize">{item.quantity}x {item.title.toLowerCase()}</p>
+                                        <p className="text-lg font-black text-[#B8860B] tracking-tight italic">₹{((item.price || 0) * item.quantity).toFixed(0)}</p>
                                     </div>
                                     <button
                                         onClick={() => updateQuantity(item.id || '', 0)}
-                                        className="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center active:scale-90 transition-all"
+                                        className="w-10 h-10 bg-red-50/50 text-red-500 rounded-xl flex items-center justify-center active:scale-90 transition-all border border-red-100/50"
                                     >
                                         <Trash2 className="w-5 h-5" />
                                     </button>
@@ -104,27 +104,27 @@ export function CartOverlay({
 
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 mb-10">
                             <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-50">
-                                <span className="text-slate-400 font-black uppercase text-[11px] tracking-widest">Selection Total</span>
-                                <span className="font-black text-slate-900">₹{cartTotal.toFixed(0)}</span>
+                                <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Selection Total</span>
+                                <span className="font-serif italic text-slate-900">₹{cartTotal.toFixed(0)}</span>
                             </div>
                             <div className="flex justify-between items-center mb-8">
-                                <span className="text-slate-400 font-black uppercase text-[11px] tracking-widest">Delivery Bag</span>
-                                <span className="font-black text-[#D4AF37] uppercase text-[11px] tracking-widest italic tracking-widest">Complementary</span>
+                                <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Delivery Bag</span>
+                                <span className="font-bold text-[#B8860B] uppercase text-[10px] tracking-[0.2em] italic">Complementary</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-slate-900 font-black uppercase text-2xl tracking-tighter italic leading-none">Final</span>
-                                <span className="text-4xl text-slate-900 font-black tracking-tighter italic leading-none ml-2">Experience</span>
+                                <span className="text-slate-900 font-serif text-2xl tracking-tighter italic leading-none">Final</span>
+                                <span className="text-4xl text-slate-900 font-serif tracking-tighter italic leading-none ml-2">Experience</span>
                                 <span className="flex-1" />
-                                <span className="text-4xl text-slate-900 font-black tracking-tighter italic leading-none">₹{cartTotal.toFixed(0)}</span>
+                                <span className="text-4xl text-slate-900 font-serif tracking-tighter italic leading-none">₹{cartTotal.toFixed(0)}</span>
                             </div>
                         </div>
 
                         <button
                             onClick={onOrder}
                             disabled={isOrdering}
-                            className="w-full bg-[#F55D2C] text-white py-6 rounded-[2rem] font-black text-xl uppercase italic shadow-2xl shadow-[#F55D2C]/40 orange-glow disabled:opacity-50 active:scale-95 transition-all flex items-center justify-center tracking-tighter"
+                            className="w-full bg-[#722F37] text-white py-6 rounded-[2rem] font-serif text-xl uppercase italic shadow-2xl shadow-[#722F37]/20 disabled:opacity-50 active:scale-95 transition-all flex items-center justify-center tracking-tighter"
                         >
-                            {isOrdering ? <RefreshCw className="w-8 h-8 animate-spin" /> : "Confirm & Order"}
+                            {isOrdering ? <RefreshCw className="w-8 h-8 animate-spin" /> : "Confirm Experience"}
                         </button>
                     </motion.div>
                 </>

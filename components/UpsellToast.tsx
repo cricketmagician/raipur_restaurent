@@ -38,7 +38,7 @@ export function UpsellToast({ item, isVisible, onAdd, onClose }: UpsellToastProp
                         </div>
                         
                         <div className="flex-1 min-w-0 mr-4">
-                            <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest mb-1 flex items-center">
+                            <p className="text-[#B8860B] text-[10px] font-black uppercase tracking-widest mb-1 flex items-center">
                                 <Sparkles className="w-3 h-3 mr-1" /> Pairs Beautifully
                             </p>
                             <h4 className="text-white font-serif text-lg leading-tight truncate">{item.title}</h4>
@@ -48,13 +48,13 @@ export function UpsellToast({ item, isVisible, onAdd, onClose }: UpsellToastProp
                         <div className="flex items-center space-x-2">
                             <button
                                 onClick={onAdd}
-                                className="bg-[#D4AF37] text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-transform"
+                                className="bg-[#B8860B] text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-transform"
                             >
                                 Add
                             </button>
                             <button
                                 onClick={onClose}
-                                className="text-slate-500 p-2 hover:text-white transition-colors"
+                                className="text-slate-400 p-2 hover:text-white transition-colors"
                             >
                                 <Plus className="w-5 h-5 rotate-45" />
                             </button>

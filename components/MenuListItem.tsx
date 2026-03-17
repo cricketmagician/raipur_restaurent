@@ -22,7 +22,7 @@ export function MenuListItem({
     description, 
     price, 
     image, 
-    trendingCount,
+    trendingCount = 0,
     quantity,
     onUpdateQuantity 
 }: Omit<MenuListItemProps, 'rating' | 'reviews' | 'isBestseller'>) {

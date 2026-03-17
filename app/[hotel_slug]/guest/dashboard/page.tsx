@@ -4,31 +4,8 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState } from "react";
 import { ServiceCard } from "@/components/ServiceCard";
-import {
-    Utensils,
-    Bell,
-    Droplets,
-    Zap,
-    Clock,
-    ChevronRight,
-    ArrowUpRight,
-    Search,
-    User,
-    Wifi,
-    Phone,
-    Wrench,
-    Shirt,
-    Wind,
-    Sparkles,
-    Coffee,
-    AlertCircle,
-    ChevronLeft,
-    Music,
-    MapPin,
-    ShoppingBag,
-    RefreshCw,
-    Receipt // Added Receipt icon
-} from "lucide-react";
+import { ArrowLeft, Trash2, Plus, RefreshCw, Utensils, Sparkles, Search, ArrowUpRight, Receipt, ChevronRight } from "lucide-react";
+import { ImpulseBottomSheet } from "@/components/ImpulseBottomSheet";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHotelBranding, useSupabaseRequests, addSupabaseRequest, useSpecialOffers, useCart, useSupabaseMenuItems } from "@/utils/store";
@@ -41,6 +18,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { FoodStory } from "@/components/FoodStory";
 import { CartOverlay } from "@/components/CartOverlay";
 import { SHARED_COMBOS } from "@/utils/constants";
+import { getTimeTheme } from "@/utils/themes";
 
 // Helper to safely render icons with className
 const renderIcon = (icon: React.ReactNode, className: string) => {
@@ -58,6 +36,7 @@ export default function GuestDashboard() {
     const { branding, loading } = useHotelBranding(hotelSlug);
     const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id);
     const requests = useSupabaseRequests(branding?.id, tableNumber, checkedInAt);
+    const timeTheme = getTimeTheme();
 
     const [scrolled, setScrolled] = useState(false);
     const [activeCategory, setActiveCategory] = useState("all");
@@ -178,6 +157,35 @@ export default function GuestDashboard() {
         }
     };
 
+    const triggerUpsell = (item: any) => {
+        // --- Smart Pairing Logic (Blueprint Phase) ---
+        if (item.upsell_ids && item.upsell_ids.length > 0) {
+            const potentialUpsell = menuItems.find(m => 
+                item.upsell_ids.includes(m.id) && 
+                !cart[m.id]
+            );
+
+            if (potentialUpsell) {
+                // 0.5s delay as per blueprint
+                setTimeout(() => {
+                    setUpsellItem(potentialUpsell);
+                }, 500);
+            }
+        }
+    };
+
+    const addToCart = (item: any, isUpsell = false) => {
+        const currentQty = cart[item.id] || 0;
+        updateQuantity(item.id, currentQty + 1);
+        
+        if (isUpsell) {
+            setUpsellItem(null);
+            return;
+        }
+
+        triggerUpsell(item);
+    };
+
     const handleQuickRequest = async (type: string, notes: string) => {
         if (!branding?.id || submittingType) return;
         setSubmittingType(type);
@@ -258,7 +266,7 @@ export default function GuestDashboard() {
                         transition={{ delay: 0.1 }}
                         className="text-4xl font-serif italic text-[#3E2723] leading-tight mb-2"
                     >
-                        Good Evening ☕
+                        {timeTheme.greeting}
                     </motion.h1>
                     <motion.p 
                         initial={{ y: 20, opacity: 0 }}
@@ -266,7 +274,7 @@ export default function GuestDashboard() {
                         transition={{ delay: 0.2 }}
                         className="text-slate-400 font-medium italic text-lg"
                     >
-                        What are you craving today?
+                        {timeTheme.subtext}
                     </motion.p>
                 </header>
 
@@ -284,29 +292,7 @@ export default function GuestDashboard() {
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                 </motion.button>
 
-                {/* 3. Quick Picks (Craving Chips) */}
-                <div className="space-y-6">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] px-2">Quick Picks</h3>
-                    <div className="flex flex-nowrap overflow-x-auto pb-4 gap-4 no-scrollbar -mx-2 px-2">
-                        {[
-                            { label: 'Coffee', icon: '☕', color: 'bg-amber-50' },
-                            { label: 'Burgers', icon: '🍔', color: 'bg-orange-50' },
-                            { label: 'Snacks', icon: '🍟', color: 'bg-yellow-50' },
-                            { label: 'Desserts', icon: '🍰', color: 'bg-rose-50' }
-                        ].map((chip) => (
-                            <button 
-                                key={chip.label}
-                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant?cat=${chip.label}`)}
-                                className={`flex-none px-8 py-4 rounded-full border border-[#3E2723]/5 shadow-sm active:scale-90 transition-all flex items-center space-x-3 group bg-white hover:bg-[#3E2723] hover:text-[#FFF8F2]`}
-                            >
-                                <span className="text-xl group-hover:scale-125 transition-transform">{chip.icon}</span>
-                                <span className="font-bold text-sm uppercase tracking-widest">{chip.label}</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* 4. Trending Now (Social Proof) */}
+                {/* 3. 🔥 Trending Now (Social Proof Hero) */}
                 <div className="space-y-6">
                     <div className="flex items-center justify-between px-2">
                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] flex items-center">
@@ -321,7 +307,7 @@ export default function GuestDashboard() {
                     >
                         <div className="aspect-[4/3] overflow-hidden relative">
                             <img 
-                                src="/artifacts/trending_combo_cafe.png" 
+                                src="/artifacts/trending_combo_cafe_1773727349008.png" 
                                 alt="Cold Coffee + Brownie Combo" 
                                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
                             />
@@ -333,9 +319,94 @@ export default function GuestDashboard() {
                         </div>
                     </motion.div>
                 </div>
+
+                {/* 4. ✨ Perfect Combos (AOV Engine) */}
+                <div className="space-y-6">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] px-2">✨ Perfect Combos</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                        {SHARED_COMBOS.map((combo) => (
+                            <button
+                                key={combo.id}
+                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
+                                className="bg-white p-6 rounded-[2rem] border border-[#3E2723]/5 shadow-xl shadow-[#3E2723]/5 flex items-center justify-between group active:scale-[0.98] transition-all text-left"
+                            >
+                                <div className="flex items-center">
+                                    <div className="w-14 h-14 bg-[#3E2723]/5 rounded-2xl flex items-center justify-center mr-4">
+                                        <Utensils className="w-6 h-6 text-[#3E2723]/20" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xl font-serif italic text-[#3E2723]">{combo.title}</h4>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">₹{combo.price} SAVE ₹50</p>
+                                    </div>
+                                </div>
+                                <Plus className="w-6 h-6 text-[#3E2723]/20 group-hover:text-[#3E2723] transition-colors" />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 5. ⚡ Quick Picks (Craving Chips) */}
+                <div className="space-y-6">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] px-2">⚡ Quick Picks</h3>
+                    <div className="flex flex-nowrap overflow-x-auto pb-4 gap-4 no-scrollbar -mx-2 px-2">
+                        {[
+                            { label: 'Coffee', icon: '☕', color: 'bg-amber-50' },
+                            { label: 'Burgers', icon: '🍔', color: 'bg-orange-50' },
+                            { label: 'Snacks', icon: '🍟', color: 'bg-yellow-50' },
+                            { label: 'Desserts', icon: '🍰', color: 'bg-rose-50' }
+                        ].map((chip) => (
+                            <button 
+                                key={chip.label}
+                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant?cat=${chip.label.toLowerCase()}`)}
+                                className={`flex-none px-8 py-4 rounded-full border border-[#3E2723]/5 shadow-sm active:scale-90 transition-all flex items-center space-x-3 group bg-white hover:bg-[#3E2723] hover:text-[#FFF8F2]`}
+                            >
+                                <span className="text-xl group-hover:scale-125 transition-transform">{chip.icon}</span>
+                                <span className="font-bold text-sm uppercase tracking-widest">{chip.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 6. 🍽 Categories */}
+                <div className="space-y-6">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] px-2">🍽 Categories</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        {categories.filter(c => c.id !== 'all').map((cat) => (
+                            <button
+                                key={cat.id}
+                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant?cat=${cat.id}`)}
+                                className="bg-white p-6 rounded-[2rem] border border-[#3E2723]/5 shadow-xl shadow-[#3E2723]/5 text-center group active:scale-[0.98] transition-all"
+                            >
+                                <span className="text-3xl block mb-2 group-hover:scale-110 transition-transform">{cat.icon}</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3E2723]">{cat.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             <BottomNav />
+            
+            <ImpulseBottomSheet 
+                item={upsellItem as any}
+                isVisible={!!upsellItem}
+                onAdd={() => upsellItem && addToCart(upsellItem, true)}
+                onClose={() => setUpsellItem(null)}
+            />
+
+            <CartOverlay 
+                isOpen={showCart}
+                onClose={() => setShowCart(false)}
+                cart={cart}
+                updateQuantity={updateQuantity}
+                cartTotal={cartTotal}
+                isOrdering={isOrdering}
+                onOrder={handleOrder}
+                hotelId={branding?.id}
+                menuItems={menuItems}
+            />
+
+            <Toast {...toast} onClose={() => setToast({ ...toast, isVisible: false })} />
         </div>
     );
 }

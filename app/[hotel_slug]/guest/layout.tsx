@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
 import { GlobalHeader } from "@/components/GlobalHeader";
-import { QuickActionFAB } from "@/components/QuickActionFAB";
 import { useEffect } from "react";
 import { initAudioContext } from "@/utils/audio";
 import { GuestAuthWrapper } from "./GuestAuthWrapper";
@@ -54,7 +53,6 @@ export default function GuestLayout({
                 </main>
 
                 <BottomNav />
-                <QuickActionFAB />
             </GuestAuthWrapper>
         </div>
     );

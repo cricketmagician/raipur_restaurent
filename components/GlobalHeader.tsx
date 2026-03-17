@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Utensils, ShoppingBag, User, Bell, Droplets, ArrowLeft } from "lucide-react";
+import { Utensils, ShoppingBag, User, Bell, Droplets, ArrowLeft, Menu, Sparkles, RefreshCw } from "lucide-react";
 import { useRouter, useParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHotelBranding, addSupabaseRequest } from "@/utils/store";
@@ -97,7 +97,7 @@ export function GlobalHeader() {
                                 showUtility ? "bg-[#1F2937] text-white" : "bg-white border border-slate-100 text-slate-400 shadow-sm"
                             } active:scale-95`}
                         >
-                            <User className="w-5 h-5" />
+                            <Menu className="w-5 h-5" />
                         </button>
 
                         <AnimatePresence>
@@ -108,6 +108,32 @@ export function GlobalHeader() {
                                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                     className="absolute top-12 right-0 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden py-2"
                                 >
+                                    <div className="px-4 py-2 border-b border-slate-50 mb-1">
+                                        <p className="text-[9px] font-black text-[#F59E0B] uppercase tracking-[0.2em]">Quick Actions</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleQuickRequest("Waiter Call", "Attendant requested from Header")}
+                                        disabled={!!requestLoading}
+                                        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors group"
+                                    >
+                                        <div className="flex items-center space-x-3">
+                                            <Bell className="w-4 h-4 text-amber-500" />
+                                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Call Attendant</span>
+                                        </div>
+                                        {requestLoading === "Waiter Call" && <RefreshCw className="w-3 h-3 animate-spin text-slate-300" />}
+                                    </button>
+                                    <button 
+                                        onClick={() => handleQuickRequest("Mineral Water", "Water requested from Header")}
+                                        disabled={!!requestLoading}
+                                        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors group"
+                                    >
+                                        <div className="flex items-center space-x-3">
+                                            <Droplets className="w-4 h-4 text-blue-500" />
+                                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Mineral Water</span>
+                                        </div>
+                                        {requestLoading === "Mineral Water" && <RefreshCw className="w-3 h-3 animate-spin text-slate-300" />}
+                                    </button>
+                                    <div className="h-px bg-slate-50 my-1" />
                                     <button 
                                         onClick={() => { router.push(`/${hotelSlug}/guest/profile`); setShowUtility(false); }}
                                         className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-slate-50 transition-colors"

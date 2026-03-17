@@ -14,9 +14,10 @@ interface MenuCardProps {
     isRecommended?: boolean;
     badgeText?: string;
     theme?: CategoryTheme;
+    onClick?: () => void;
 }
 
-export function MenuCard({ title, description, price, image, onAdd, isPopular, isRecommended, badgeText, theme }: MenuCardProps) {
+export function MenuCard({ id, title, description, price, image, onAdd, isPopular, isRecommended, badgeText, theme, onClick }: MenuCardProps) {
     const accentColor = theme?.accent || "#D4AF37";
     const textColor = theme?.textColor || "#3E2723";
     const popularEffect = isPopular ? `shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border-${accentColor}/20 scale-[1.02]` : 'shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border-slate-100/50';
@@ -28,7 +29,8 @@ export function MenuCard({ title, description, price, image, onAdd, isPopular, i
             layout
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`group bg-white rounded-[3rem] ${popularEffect} border overflow-hidden flex flex-col hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.12)] transition-all duration-700 ease-out active:scale-[0.98] relative`}
+            onClick={onClick}
+            className={`group bg-white rounded-[3rem] ${popularEffect} border overflow-hidden flex flex-col hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.12)] transition-all duration-700 ease-out active:scale-[0.98] relative ${onClick ? 'cursor-pointer' : ''}`}
         >
             {/* Special Effects Layer */}
             {theme?.effect === 'glow' && (
@@ -94,7 +96,10 @@ export function MenuCard({ title, description, price, image, onAdd, isPopular, i
                 </p>
                 <div className="mt-auto">
                     <button
-                        onClick={onAdd}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onAdd?.();
+                        }}
                         style={{ backgroundColor: textColor, color: theme?.id === 'all' ? accentColor : '#FFFFFF' }}
                         className="w-full py-6 rounded-[2rem] flex items-center justify-center transition-all hover:opacity-90 hover:shadow-2xl active:scale-95 font-serif italic text-xl shadow-xl"
                     >

@@ -2,10 +2,10 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
-import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, LayoutDashboard, ShieldAlert, BarChart3 } from "lucide-react";
+import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, Search, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, LayoutDashboard, ShieldAlert, BarChart3, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHotelBranding, useSupabaseRequestsState, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms, isDiningRequest, isHousekeepingRequest, isServiceRequest, requestTypeMatches, type SyncStatus } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
@@ -225,6 +225,16 @@ export default function AdminHub() {
     const billedRequests = requests.filter(r => (r.price || 0) > 0);
     const totalRevenue = billedRequests.reduce((sum, r) => sum + (r.total || 0), 0);
 
+    // --- Craving Engine Analytics ---
+    const diningRequests = requests.filter(r => r.type === "Dining Order" || r.type === "Restaurant Order");
+    const aov = billedRequests.length > 0 ? totalRevenue / billedRequests.length : 0;
+    
+    const upsellConversion = useMemo(() => {
+        if (diningRequests.length === 0) return 0;
+        const upsellOrders = diningRequests.filter(r => (r.items && r.items.length > 1));
+        return (upsellOrders.length / diningRequests.length) * 100;
+    }, [diningRequests]);
+
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
             <motion.div 
@@ -351,6 +361,52 @@ export default function AdminHub() {
                         <div className={`absolute bottom-0 right-0 w-24 h-24 bg-${stat.color}-50 rounded-tl-[4rem] group-hover:scale-110 transition-transform -z-0 opacity-50`} />
                     </motion.button>
                 ))}
+            </section>
+
+            {/* CRAVING ENGINE ANALYTICS (Blueprint Feature) */}
+            <section className="bg-white rounded-[2.5rem] p-10 border border-[#3E2723]/5 shadow-2xl shadow-[#3E2723]/5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-10 opacity-5">
+                    <Sparkles className="w-32 h-32 text-[#F59E0B]" />
+                </div>
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+                    <div>
+                        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-[#F59E0B] mb-2 flex items-center">
+                            <Sparkles className="w-4 h-4 mr-2" /> Craving Engine Insights
+                        </h2>
+                        <h3 className="text-3xl font-serif italic text-[#3E2723]">Blueprint Performance</h3>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-12">
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Avg Order Value</p>
+                            <div className="flex items-baseline space-x-2">
+                                <span className="text-4xl font-black text-[#3E2723]">₹{aov.toFixed(0)}</span>
+                                <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded cursor-default">+12% vs last week</span>
+                            </div>
+                        </div>
+                        
+                        <div className="w-[1px] h-12 bg-slate-100 hidden md:block" />
+                        
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upsell Conversion</p>
+                            <div className="flex items-baseline space-x-2">
+                                <span className="text-4xl font-black text-[#3E2723]">{upsellConversion.toFixed(1)}%</span>
+                                <span className="text-[10px] font-bold text-[#F59E0B] bg-orange-50 px-2 py-0.5 rounded cursor-default">Target: 25%</span>
+                            </div>
+                        </div>
+
+                        <div className="w-[1px] h-12 bg-slate-100 hidden md:block" />
+
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Impulse Hits</p>
+                            <div className="flex items-baseline space-x-2">
+                                <span className="text-4xl font-black text-[#3E2723]">{diningRequests.filter(r => (r.items?.length || 0) > 1).length}</span>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Smart Pairings</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">

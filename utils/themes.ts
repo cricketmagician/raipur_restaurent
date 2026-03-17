@@ -71,3 +71,33 @@ export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
         textColor: "#3E2723"
     }
 };
+
+export type TimeTheme = {
+    vibe: 'morning' | 'evening';
+    greeting: string;
+    subtext: string;
+    primaryCategory: string;
+};
+
+export const TIME_THEMES: Record<'morning' | 'evening', TimeTheme> = {
+    morning: {
+        vibe: 'morning',
+        greeting: "Good Morning ☀️",
+        subtext: "Freshly brewed coffee and breakfast awaits.",
+        primaryCategory: "coffee"
+    },
+    evening: {
+        vibe: 'evening',
+        greeting: "Good Evening ☕",
+        subtext: "What are you craving for dinner tonight?",
+        primaryCategory: "burgers"
+    }
+};
+
+export function getTimeTheme(): TimeTheme {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 16) {
+        return TIME_THEMES.morning;
+    }
+    return TIME_THEMES.evening;
+}

@@ -16,6 +16,7 @@ interface CartOverlayProps {
     isOrdering: boolean;
     onOrder: () => void;
     hotelId?: string;
+    menuItems: any[];
 }
 
 export function CartOverlay({
@@ -26,19 +27,12 @@ export function CartOverlay({
     cartTotal,
     isOrdering,
     onOrder,
-    hotelId
+    hotelId,
+    menuItems
 }: CartOverlayProps) {
     
     const cartItems = Object.entries(cart).map(([id, q]) => {
-        let item = SHARED_MENU_ITEMS.find(m => m.id === id);
-        
-        // Handle virtual combos
-        if (!item && (id.includes("combo") || id === "king_size")) {
-            const foundCombo = SHARED_COMBOS.find(c => c.id === id);
-            if (foundCombo) {
-                item = { ...foundCombo, category: "combos", description: "Special Combo Deal", image: "", isPopular: true, upsellIds: [] } as any;
-            }
-        }
+        let item = menuItems.find(m => m.id === id);
         
         if (!item) return null;
         return { ...item, quantity: q };
@@ -126,38 +120,47 @@ export function CartOverlay({
                                 )}
                             </div>
 
-                            {/* 4. Make it Better (Impulse Section) */}
+                            {/* 4. Complete your Order (Final Impulse) */}
                             {cartItems.length > 0 && (
                                 <div className="mb-12">
                                     <div className="flex items-center space-x-3 mb-6 px-1">
-                                        <span className="text-[10px] font-black text-[#F59E0B] uppercase tracking-[0.3em]">Make it better?</span>
+                                        <span className="text-[10px] font-black text-[#F59E0B] uppercase tracking-[0.3em]">Complete your Order</span>
                                         <div className="h-[1px] flex-1 bg-orange-100" />
                                     </div>
                                     <div className="grid grid-cols-1 gap-4">
-                                        <motion.div 
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={() => {
-                                                const brownie = SHARED_MENU_ITEMS.find(i => i.id === 'brownie') || { id: 'brownie', title: 'Warm Brownie', price: 129 };
-                                                addToCart(brownie);
-                                            }}
-                                            className="bg-[#3E2723] rounded-[2rem] p-8 shadow-2xl shadow-[#3E2723]/20 relative overflow-hidden group border border-white/10"
-                                        >
-                                            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-                                                <Sparkles className="w-20 h-20 text-white" />
-                                            </div>
-                                            <div className="relative z-10">
-                                                <div className="flex items-center space-x-2 text-[#F59E0B] text-[10px] font-black uppercase tracking-[0.2em] mb-3">
-                                                    <div className="w-1.5 h-1.5 bg-[#F59E0B] rounded-full animate-pulse" />
-                                                    <span>Perfect Pairing</span>
-                                                </div>
-                                                <h4 className="text-2xl font-serif italic text-white mb-1">Fries go best with this 🍟</h4>
-                                                <p className="text-white/60 text-sm font-medium italic mb-6">“Add a salty crunch to your experience.”</p>
-                                                <button className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest text-[#3E2723] bg-[#F59E0B] px-6 py-4 rounded-xl shadow-lg active:scale-95 transition-all">
-                                                    <Plus className="w-4 h-4" />
-                                                    <span>Add for ₹99</span>
-                                                </button>
-                                            </div>
-                                        </motion.div>
+                                        {(() => {
+                                            // Suggest a dessert if not already in cart, otherwise suggest a drink/side
+                                            const suggestion = menuItems.find(m => 
+                                                (m.category.toLowerCase() === 'desserts' || m.category.toLowerCase() === 'drinks') && 
+                                                !cart[m.id]
+                                            );
+                                            
+                                            if (!suggestion) return null;
+
+                                            return (
+                                                <motion.div 
+                                                    whileTap={{ scale: 0.98 }}
+                                                    onClick={() => addToCart(suggestion)}
+                                                    className="bg-[#3E2723] rounded-[2rem] p-8 shadow-2xl shadow-[#3E2723]/20 relative overflow-hidden group border border-white/10"
+                                                >
+                                                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
+                                                        <Sparkles className="w-20 h-20 text-white" />
+                                                    </div>
+                                                    <div className="relative z-10 text-left">
+                                                        <div className="flex items-center space-x-2 text-[#F59E0B] text-[10px] font-black uppercase tracking-[0.2em] mb-3">
+                                                            <div className="w-1.5 h-1.5 bg-[#F59E0B] rounded-full animate-pulse" />
+                                                            <span>Chef's Final Touch</span>
+                                                        </div>
+                                                        <h4 className="text-2xl font-serif italic text-white mb-1">“Add a {suggestion.title}?” 🍰</h4>
+                                                        <p className="text-white/60 text-sm font-medium italic mb-6">End your experience on a perfect note.</p>
+                                                        <button className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest text-[#3E2723] bg-[#F59E0B] px-6 py-4 rounded-xl shadow-lg active:scale-95 transition-all">
+                                                            <Plus className="w-4 h-4" />
+                                                            <span>Add for ₹{suggestion.price}</span>
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             )}

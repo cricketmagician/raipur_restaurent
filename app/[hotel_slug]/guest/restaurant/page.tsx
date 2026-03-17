@@ -12,6 +12,7 @@ import { CartOverlay } from "@/components/CartOverlay";
 import { UpsellToast } from "@/components/UpsellToast";
 import { SHARED_MENU_ITEMS, SHARED_COMBOS } from "@/utils/constants";
 import { CATEGORY_THEMES } from "@/utils/themes";
+import { ImpulseBottomSheet } from "@/components/ImpulseBottomSheet";
 
 export default function RestaurantPage() {
     const router = useRouter();
@@ -61,28 +62,21 @@ export default function RestaurantPage() {
             return;
         }
 
-        // --- Smart Pairing Logic (Premium Philosophy) ---
+        // --- Smart Pairing Logic (Blueprint Phase) ---
         if (item.upsell_ids && item.upsell_ids.length > 0) {
-            // Find a pairing that isn't already in cart and hasn't been suggested in this session
-             const potentialUpsell = menuItems.find(m => 
+            const potentialUpsell = menuItems.find(m => 
                 item.upsell_ids.includes(m.id) && 
                 !cart[m.id] && 
                 !suggestedIds.includes(m.id)
             );
 
             if (potentialUpsell) {
-                setUpsellItem({
-                    ...potentialUpsell,
-                    image: potentialUpsell.image_url
-                });
-                setSuggestedIds(prev => [...prev, potentialUpsell.id]);
-                
-                // Slightly delay for premium feel (Progressive Disclosure)
+                // 0.5s delay as per blueprint
                 setTimeout(() => {
+                    setUpsellItem(potentialUpsell);
                     setShowUpsell(true);
-                    // Hide after 6 seconds if no interaction
-                    setTimeout(() => setShowUpsell(false), 6000);
-                }, 800);
+                    setSuggestedIds(prev => [...prev, potentialUpsell.id]);
+                }, 500);
             }
         }
     };
@@ -155,16 +149,39 @@ export default function RestaurantPage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                 >
-                    <div className="w-24 h-24 bg-[#F55D2C]/10 text-[#F55D2C] rounded-full flex items-center justify-center mb-6 shadow-xl shadow-[#F55D2C]/10 mx-auto">
+                    <div className="w-24 h-24 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-emerald-500/5 mx-auto">
                         <CheckCircle className="w-12 h-12" />
                     </div>
-                    <h2 className="text-3xl font-black text-slate-900 mb-2">Order Received!</h2>
-                    <p className="text-slate-500 font-medium mb-8">Chef is starting your meal right now.</p>
+                    <h2 className="text-3xl font-serif italic text-[#3E2723] mb-2 tracking-tight">Order Received!</h2>
+                    <p className="text-slate-400 font-medium italic mb-12">“Chef is starting your meal right now.”</p>
+                    
+                    {/* Final Impulse: Dessert for later */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="bg-[#3E2723] rounded-[2rem] p-8 mb-10 text-left relative overflow-hidden group"
+                    >
+                        <div className="absolute top-0 right-0 p-8 opacity-10">
+                            <Sparkles className="w-16 h-16 text-white" />
+                        </div>
+                        <div className="relative z-10">
+                            <span className="text-[10px] font-black text-[#F59E0B] uppercase tracking-[0.3em] mb-3 block">Craving something sweet?</span>
+                            <h4 className="text-xl font-serif italic text-white mb-6 leading-tight">Dessert for later? <br/>We can schedule it.</h4>
+                            <button 
+                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant?cat=desserts`)}
+                                className="bg-white text-[#3E2723] px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                            >
+                                Browse Sweets
+                            </button>
+                        </div>
+                    </motion.div>
+
                     <button 
                         onClick={() => router.push(`/${hotelSlug}/guest/status`)} 
-                        className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold active:scale-95 transition-transform shadow-xl shadow-black/20 px-10"
+                        className="w-full bg-slate-900/5 text-[#3E2723] py-6 rounded-[2rem] font-black text-xs uppercase tracking-widest active:scale-95 transition-all border border-[#3E2723]/5"
                     >
-                        View Progress
+                        View Order Progress
                     </button>
                 </motion.div>
             </div>
@@ -252,6 +269,7 @@ export default function RestaurantPage() {
                             isPopular={item.is_popular}
                             isRecommended={item.is_recommended}
                             theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
+                            onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
                             onAdd={() => addToCart(item)}
                         />
                     ))}
@@ -288,6 +306,7 @@ export default function RestaurantPage() {
                                     isPopular={item.is_popular}
                                     isRecommended={item.is_recommended}
                                     theme={CATEGORY_THEMES[item.category.toLowerCase()] || CATEGORY_THEMES.all}
+                                    onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
                                     onAdd={() => addToCart(item)}
                                 />
                             ))}
@@ -334,9 +353,10 @@ export default function RestaurantPage() {
                 isOrdering={isOrdering}
                 onOrder={handleOrder}
                 hotelId={branding?.id}
+                menuItems={menuItems}
             />
-            <UpsellToast 
-                item={upsellItem}
+            <ImpulseBottomSheet 
+                item={upsellItem as any}
                 isVisible={showUpsell}
                 onAdd={() => addToCart(upsellItem, true)}
                 onClose={() => setShowUpsell(false)}

@@ -177,14 +177,18 @@ export function GlobalHeader() {
 
                 {/* Row 2: Segmented Toggle */}
                 <div className="px-6">
-                    <div className="max-w-[200px] mx-auto bg-white p-1 rounded-full flex text-[10px] font-black uppercase tracking-widest relative overflow-hidden border border-[#00704A]/10 shadow-sm">
+                    <div className="max-w-[200px] mx-auto p-1 rounded-full flex text-[10px] font-black uppercase tracking-widest relative overflow-hidden border shadow-sm transition-colors duration-500"
+                         style={{ 
+                             backgroundColor: `${theme.primary}08`, 
+                             borderColor: `${theme.primary}10` 
+                         }}>
                         <motion.div 
                             initial={false}
                             animate={{ 
-                                x: (tableNumber?.toLowerCase() === 'takeaway' || tableNumber?.toLowerCase() === 'takeout') ? '100.5%' : '0%',
+                                x: (tableNumber?.toLowerCase() === 'takeaway' || tableNumber?.toLowerCase() === 'takeout') ? '100%' : '0%',
                             }}
-                            transition={{ type: "spring", stiffness: 400, damping: 40 }}
-                            className="absolute inset-y-1 left-1 w-[calc(50%-2px)] rounded-full shadow-lg"
+                            transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                            className="absolute inset-y-1 left-1 w-[calc(50%-2px)] rounded-full shadow-md z-0"
                             style={{ backgroundColor: theme.primary }}
                         />
                         
@@ -196,9 +200,14 @@ export function GlobalHeader() {
                                     window.location.href = window.location.pathname;
                                 }
                             }}
-                            className={`relative z-10 flex-1 py-1.5 flex items-center justify-center transition-all duration-500 ${
-                                (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") ? "text-white" : "text-[#00704A]/40"
+                            className={`relative z-10 flex-1 py-2 flex items-center justify-center transition-colors duration-300 ${
+                                (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") ? "text-white" : ""
                             }`}
+                            style={{ 
+                                color: (tableNumber?.toLowerCase() !== "takeaway" && tableNumber?.toLowerCase() !== "takeout") 
+                                    ? "white" 
+                                    : `${theme.text}44` 
+                            }}
                         >
                             In-Store
                         </button>
@@ -211,10 +220,14 @@ export function GlobalHeader() {
                                     window.location.href = window.location.pathname + "?room=Takeaway";
                                 }
                             }}
-                            className={`relative z-10 flex-1 py-1.5 flex items-center justify-center transition-all duration-500 ${
+                            className={`relative z-10 flex-1 py-2 flex items-center justify-center transition-colors duration-300 ${
                                 (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? "text-white" : ""
                             }`}
-                            style={{ color: (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") ? "white" : `${theme.primary}66` }}
+                            style={{ 
+                                color: (tableNumber?.toLowerCase() === "takeaway" || tableNumber?.toLowerCase() === "takeout") 
+                                    ? "white" 
+                                    : `${theme.text}44` 
+                            }}
                         >
                             Takeout
                         </button>

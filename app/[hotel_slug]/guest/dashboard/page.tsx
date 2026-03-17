@@ -343,56 +343,63 @@ export default function GuestDashboard() {
                     </motion.div>
                 </div>
 
-                {/* Starbucks Aesthetic Rewards Section */}
+                {/* Glassy & Thin Rewards Section */}
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     onClick={() => !loyaltyProfile && setIsLoyaltyOpen(true)}
-                    className={`rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group transition-all duration-500 ${!loyaltyProfile ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
+                    className={`rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden group transition-all duration-500 backdrop-blur-3xl border ${!loyaltyProfile ? 'cursor-pointer hover:scale-[1.01]' : ''}`}
                     style={{ 
-                        backgroundColor: theme.primary,
+                        backgroundColor: `${theme.primary}05`, // Ultra-light tint
+                        borderColor: `${theme.primary}20`,
                         borderRadius: theme.radius
                     }}
                 >
-                    <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-6">
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">
-                                {loyaltyProfile ? `Welcome, ${loyaltyProfile.name}` : "Guest Rewards"}
-                            </span>
-                            <Sparkles className="w-5 h-5 text-[#D4E9E2]" />
-                        </div>
-                        
-                        {loyaltyProfile ? (
-                            <>
-                                <div className="flex items-baseline space-x-2 mb-2">
-                                    <span className="text-5xl font-black">{currentPoints}</span>
-                                    <span className="text-lg font-bold opacity-60 italic">vibe points</span>
+                    <div className="relative z-10 flex items-center justify-between">
+                        <div>
+                            <div className="flex items-center space-x-2 mb-1">
+                                <Sparkles className="w-3 h-3 text-amber-500" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
+                                    {loyaltyProfile ? `Welcome, ${loyaltyProfile.name}` : "Member Lounge"}
+                                </span>
+                            </div>
+                            
+                            {loyaltyProfile ? (
+                                <div className="flex items-baseline space-x-2">
+                                    <span className="text-3xl font-black" style={{ color: theme.primary }}>{currentPoints}</span>
+                                    <span className="text-xs font-bold opacity-40 tracking-tight uppercase">vibe points</span>
                                 </div>
-                                <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mt-6">
+                            ) : (
+                                <div>
+                                    <h3 className="text-xl font-black italic tracking-tighter" style={{ color: theme.primary }}>Join the Vibe.</h3>
+                                    <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-0.5">Earn points on every bite</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {!loyaltyProfile && (
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center transition-all border"
+                                 style={{ backgroundColor: `${theme.primary}10`, borderColor: `${theme.primary}20`, color: theme.primary }}>
+                                <ArrowRight className="w-5 h-5" />
+                            </div>
+                        )}
+
+                        {loyaltyProfile && (
+                            <div className="text-right">
+                                <div className="w-24 bg-black/5 h-1 rounded-full overflow-hidden mb-1">
                                     <motion.div 
                                         initial={{ width: 0 }}
                                         animate={{ width: `${progressPercent}%` }}
                                         className="h-full" 
-                                        style={{ backgroundColor: theme.secondary }}
+                                        style={{ backgroundColor: theme.primary }}
                                     />
                                 </div>
-                                <p className="text-[10px] font-bold mt-4 opacity-70 tracking-widest uppercase" style={{ color: theme.secondary }}>
-                                    {pointsToNextTreat} POINTS UNTIL YOUR NEXT TREAT
+                                <p className="text-[8px] font-black opacity-30 tracking-widest uppercase">
+                                    {pointsToNextTreat} TO GO
                                 </p>
-                            </>
-                        ) : (
-                            <div className="py-2">
-                                <h3 className="text-2xl font-black italic tracking-tight mb-2">Join the Vibe.</h3>
-                                <p className="text-sm font-bold opacity-60">Tap to sign in and earn points on every order.</p>
-                                <div className="mt-6 flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest text-[#D4E9E2]">
-                                    <span>Get Started</span>
-                                    <ArrowRight className="w-3 h-3" />
-                                </div>
                             </div>
                         )}
                     </div>
-                    {/* Abstract Siren Shape Background */}
-                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors" />
                 </motion.div>
             </header>
 
@@ -475,44 +482,6 @@ export default function GuestDashboard() {
                     </motion.button>
                 </div>
 
-                {/* 7. 🧾 Current Tab (Discovery First, Bill Last) */}
-                <AnimatePresence>
-                    {requests.some(r => (r.total || 0) > 0) && (
-                        <div className="space-y-6">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] px-2" style={{ color: theme.primary }}>🧾 Current Tab</h3>
-                            <button 
-                                onClick={() => router.push(`/${hotelSlug}/guest/bill`)}
-                                className="w-full rounded-[2rem] p-8 border flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative"
-                                style={{ 
-                                    backgroundColor: `${theme.primary}10`, // 10% opacity
-                                    borderColor: `${theme.primary}20`,
-                                    borderRadius: theme.radius
-                                }}
-                            >
-                                <div className="flex items-center relative z-10">
-                                    <div 
-                                        className="w-14 h-14 flex items-center justify-center mr-6 shadow-sm border" 
-                                        style={{ 
-                                            borderRadius: `calc(${theme.radius} * 0.6)`,
-                                            backgroundColor: theme.surface,
-                                            borderColor: `${theme.primary}10`
-                                        }}
-                                    >
-                                        <Receipt className="w-6 h-6" style={{ color: theme.primary }} />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: theme.primary }}>Total Bill</p>
-                                        <span className="text-3xl font-black tracking-tighter" style={{ color: theme.text }}>
-                                            ₹{requests.reduce((sum, r) => sum + (r.total || 0), 0).toLocaleString()}
-                                        </span>
-                                    </div>
-                                </div>
-                                <ChevronRight className="w-8 h-8 opacity-20 group-hover:opacity-100 transition-all relative z-10" style={{ color: theme.text }} />
-                                <div className="absolute bottom-0 right-0 w-40 h-40 opacity-5 rounded-full blur-2xl translate-y-1/4 translate-x-1/4" style={{ backgroundColor: theme.primary }} />
-                            </button>
-                        </div>
-                    )}
-                </AnimatePresence>
 
                 {/* Seasonal Collection (Optionalized at bottom or integrated elsewhere) */}
                 <div className="space-y-6 pt-10 border-t" style={{ borderColor: `${theme.primary}10` }}>

@@ -290,7 +290,7 @@ export default function GuestDashboard() {
                                                 >
                                                     <motion.button 
                                                         whileTap={{ scale: 0.8 }}
-                                                        onClick={() => removeFromCart(heroItem)}
+                                                        onClick={(e) => { e.stopPropagation(); removeFromCart(heroItem); }}
                                                         className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent"
                                                     >
                                                         <Minus className="w-5 h-5" />
@@ -298,7 +298,7 @@ export default function GuestDashboard() {
                                                     <span className="text-lg font-black text-white min-w-[1.5rem] text-center">{cart[heroItem.id]}</span>
                                                     <motion.button 
                                                         whileTap={{ scale: 0.8 }}
-                                                        onClick={(e) => addToCart(heroItem, e as any)}
+                                                        onClick={(e) => { e.stopPropagation(); addToCart(heroItem, e as any); }}
                                                         className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-primary"
                                                     >
                                                         <Plus className="w-5 h-5" />
@@ -380,7 +380,7 @@ export default function GuestDashboard() {
                                             >
                                                 <motion.button 
                                                     whileTap={{ scale: 0.8 }}
-                                                    onClick={() => removeFromCart(item)}
+                                                    onClick={(e) => { e.stopPropagation(); removeFromCart(item); }}
                                                     className="w-8 h-8 rounded-full flex items-center justify-center text-accent"
                                                 >
                                                     <Minus className="w-4 h-4" />
@@ -388,7 +388,7 @@ export default function GuestDashboard() {
                                                 <span className="px-2 text-sm font-black text-accent">{cart[item.id]}</span>
                                                 <motion.button 
                                                     whileTap={{ scale: 0.8 }}
-                                                    onClick={(e) => addToCart(item, e as any)}
+                                                    onClick={(e) => { e.stopPropagation(); addToCart(item, e as any); }}
                                                     className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-primary"
                                                 >
                                                     <Plus className="w-4 h-4" />
@@ -444,9 +444,19 @@ export default function GuestDashboard() {
                                                         animate={{ scale: 1, opacity: 1 }}
                                                         className="flex items-center bg-white rounded-xl p-1 shadow-2xl border border-accent/20"
                                                     >
-                                                        <button onClick={() => removeFromCart(item)} className="p-2 text-primary hover:text-accent transition-colors"><Minus className="w-4 h-4" /></button>
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); removeFromCart(item); }} 
+                                                            className="p-2 text-primary hover:text-accent transition-colors"
+                                                        >
+                                                            <Minus className="w-4 h-4" />
+                                                        </button>
                                                         <span className="px-3 text-sm font-black text-primary">{cart[item.id]}</span>
-                                                        <button onClick={(e) => addToCart(item, e as any)} className="p-2 bg-accent text-primary rounded-lg shadow-lg"><Plus className="w-4 h-4" /></button>
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); addToCart(item, e as any); }} 
+                                                            className="p-2 bg-accent text-primary rounded-lg shadow-lg"
+                                                        >
+                                                            <Plus className="w-4 h-4" />
+                                                        </button>
                                                     </motion.div>
                                                 ) : (
                                                     <div className="bg-accent text-primary px-4 py-2 rounded-xl font-black text-xs shadow-xl">

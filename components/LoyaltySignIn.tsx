@@ -11,17 +11,39 @@ interface LoyaltySignInProps {
     isOpen: boolean;
     onClose: () => void;
     onSignIn: (phone: string, name: string) => void;
+    lastVisitAt?: string | null;
+    guestName?: string | null;
+    guestPhone?: string | null;
 }
 
-export function LoyaltySignIn({ isOpen, onClose, onSignIn }: LoyaltySignInProps) {
+const formatLastVisit = (value?: string | null) => {
+    if (!value) return "No previous visits yet";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "No previous visits yet";
+
+    return date.toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+    });
+};
+
+export function LoyaltySignIn({ isOpen, onClose, onSignIn, lastVisitAt, guestName, guestPhone }: LoyaltySignInProps) {
     const params = useParams();
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
     const theme = useTheme(branding);
 
-    const [phone, setPhone] = useState("");
-    const [name, setName] = useState("");
+    const [phone, setPhone] = useState(guestPhone || "");
+    const [name, setName] = useState(guestName || "");
     const [step, setStep] = useState(1);
+
+    React.useEffect(() => {
+        if (!isOpen) return;
+        setPhone(guestPhone || "");
+        setName(guestName || "");
+        setStep(guestPhone ? 2 : 1);
+    }, [isOpen, guestPhone, guestName]);
 
     const handleContinue = () => {
         if (step === 1 && phone.length >= 10) {
@@ -78,6 +100,16 @@ export function LoyaltySignIn({ isOpen, onClose, onSignIn }: LoyaltySignInProps)
                             <p className="text-xs font-bold uppercase tracking-widest opacity-40" style={{ color: theme.text }}>
                                 {step === 1 ? "Enter phone to track rewards" : "Give your vibe a name"}
                             </p>
+                            {lastVisitAt && (
+                                <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded-full bg-black/[0.03] border border-black/[0.04]">
+                                    <span className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: theme.primary }}>
+                                        Last Visit
+                                    </span>
+                                    <span className="text-[10px] font-bold" style={{ color: theme.text }}>
+                                        {formatLastVisit(lastVisitAt)}
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-6">

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MenuCard } from "@/components/MenuCard";
 import { CheckCircle, Search, Sparkles, TrendingUp, Gift } from "lucide-react";
-import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName } from "@/utils/store";
+import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, useGuestLoyalty, saveGuestLoyaltySession, addLoyaltyPoints } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
@@ -16,6 +16,7 @@ import { CategoryDiscoveryGrid } from "@/components/CategoryDiscoveryGrid";
 import { CategoryHeroHeader } from "@/components/CategoryHeroHeader";
 import { ChefRecommendCard } from "@/components/ChefRecommendCard";
 import { CategoryScroll } from "@/components/CategoryScroll";
+import { LoyaltySignIn } from "@/components/LoyaltySignIn";
 
 const MOCK_FOOD_ITEMS = [
     {
@@ -108,12 +109,13 @@ export default function RestaurantPage() {
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
     const { categories: menuCategories } = useMenuCategories(branding?.id);
-    const { roomNumber } = useGuestRoom();
+    const { roomNumber, orderMode } = useGuestRoom();
     const { cart, updateQuantity, clearCart } = useCart(branding?.id);
     const theme = useTheme(branding);
     const [isOrdering, setIsOrdering] = useState(false);
     const [orderComplete, setOrderComplete] = useState(false);
     const [showCart, setShowCart] = useState(false);
+    const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
 
     // View State: 'discovery' or 'detail'
     const [view, setView] = useState<'discovery' | 'detail'>('discovery');
@@ -126,6 +128,12 @@ export default function RestaurantPage() {
     const [upsellItem, setUpsellItem] = useState<any>(null);
     const [showUpsell, setShowUpsell] = useState(false);
     const [suggestedIds, setSuggestedIds] = useState<string[]>([]);
+    const [loyaltyProfile, setLoyaltyProfile] = useState<{ phone: string; name: string; lastVisitAt?: string | null } | null>(() => {
+        if (typeof window === "undefined") return null;
+        const stored = localStorage.getItem(`guest_loyalty_${hotelSlug}`);
+        return stored ? JSON.parse(stored) : null;
+    });
+    const { loyalty: realLoyalty } = useGuestLoyalty(branding?.id, loyaltyProfile?.phone || null);
 
     const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
 
@@ -226,8 +234,35 @@ export default function RestaurantPage() {
     const cartTotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
     const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);
 
+    const handleLoyaltySignIn = async (phone: string, name: string) => {
+        const profile = { phone, name, lastVisitAt: new Date().toISOString() };
+        localStorage.setItem(`guest_loyalty_${hotelSlug}`, JSON.stringify(profile));
+        setLoyaltyProfile(profile);
+
+        if (branding?.id) {
+            await saveGuestLoyaltySession(branding.id, phone, name, { lastVisitAt: profile.lastVisitAt });
+        }
+    };
+
     const handleOrder = async () => {
         if (!branding?.id) return;
+        if (orderMode === "takeaway" && !loyaltyProfile) {
+            setIsLoyaltyOpen(true);
+            return;
+        }
+
+        if (loyaltyProfile?.phone) {
+            const now = new Date().toISOString();
+            await saveGuestLoyaltySession(branding.id, loyaltyProfile.phone, loyaltyProfile.name, {
+                lastVisitAt: loyaltyProfile.lastVisitAt || now,
+                lastOrderAt: now,
+                lastOrderMode: orderMode,
+            });
+            if (cartTotal > 0) {
+                await addLoyaltyPoints(branding.id, loyaltyProfile.phone, Math.floor(cartTotal / 10));
+            }
+        }
+
         setIsOrdering(true);
         await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -501,6 +536,14 @@ export default function RestaurantPage() {
                     onOrder={handleOrder}
                     hotelId={branding?.id}
                     menuItems={menuItems}
+                />
+                <LoyaltySignIn
+                    isOpen={isLoyaltyOpen}
+                    onClose={() => setIsLoyaltyOpen(false)}
+                    onSignIn={handleLoyaltySignIn}
+                    guestName={loyaltyProfile?.name || ""}
+                    guestPhone={loyaltyProfile?.phone || ""}
+                    lastVisitAt={loyaltyProfile?.lastVisitAt || realLoyalty?.last_visit_at || null}
                 />
                 <ImpulseBottomSheet 
                     item={upsellItem as any}

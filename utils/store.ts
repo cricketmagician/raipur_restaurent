@@ -1298,7 +1298,10 @@ export async function addLoyaltyPoints(hotelId: string, phone: string, points: n
             // Update existing
             const { error: updateError } = await supabase
                 .from('guest_loyalty')
-                .update({ points: data.points + points })
+                .update({
+                    points: data.points + points,
+                    last_visit_at: new Date().toISOString(),
+                })
                 .eq('id', data.id);
             return { error: updateError };
         } else {
@@ -1308,7 +1311,8 @@ export async function addLoyaltyPoints(hotelId: string, phone: string, points: n
                 .insert([{
                     hotel_id: hotelId,
                     phone: phone,
-                    points: points
+                    points: points,
+                    last_visit_at: new Date().toISOString(),
                 }]);
             return { error: insertError };
         }
@@ -1316,6 +1320,37 @@ export async function addLoyaltyPoints(hotelId: string, phone: string, points: n
         console.error("Error in addLoyaltyPoints:", err);
         return { error: err };
     }
+}
+
+export async function saveGuestLoyaltySession(
+    hotelId: string,
+    phone: string,
+    name: string,
+    options?: {
+        lastVisitAt?: string;
+        lastOrderAt?: string;
+        lastOrderMode?: "dine-in" | "takeaway";
+    }
+) {
+    if (!hotelId || !phone) return { error: "Missing hotel ID or phone" };
+
+    const lastVisitAt = options?.lastVisitAt || new Date().toISOString();
+    const payload = {
+        hotel_id: hotelId,
+        phone,
+        name,
+        last_visit_at: lastVisitAt,
+        last_order_at: options?.lastOrderAt || null,
+        last_order_mode: options?.lastOrderMode || null,
+    };
+
+    const { data, error } = await supabase
+        .from('guest_loyalty')
+        .upsert(payload, { onConflict: 'hotel_id,phone' })
+        .select('*')
+        .single();
+
+    return { data, error };
 }
 
 export async function getGuestLoyalty(hotelId: string, phone: string) {

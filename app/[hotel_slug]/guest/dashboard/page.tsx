@@ -26,7 +26,7 @@ import { PerfectPairs } from "@/components/PerfectPairs";
 import { MoodSection } from "@/components/MoodSection";
 import { useAddEffectTrigger } from "@/components/AddEffect";
 import { LoyaltySignIn } from "@/components/LoyaltySignIn";
-import { useGuestLoyalty, addLoyaltyPoints } from "@/utils/store";
+import { useGuestLoyalty, addLoyaltyPoints, saveGuestLoyaltySession } from "@/utils/store";
 
 
 // Helper to safely render icons with className
@@ -41,7 +41,7 @@ export default function GuestDashboard() {
     const params = useParams();
     const hotelSlug = params?.hotel_slug as string;
 
-    const { roomNumber: tableNumber, checkedInAt, numGuests } = useGuestRoom();
+    const { roomNumber: tableNumber, checkedInAt, numGuests, orderMode } = useGuestRoom();
     const { branding, loading } = useHotelBranding(hotelSlug);
     const { categories: menuCategories } = useMenuCategories(branding?.id);
     const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id);
@@ -58,7 +58,7 @@ export default function GuestDashboard() {
     const [isOrdering, setIsOrdering] = useState(false);
     const [orderComplete, setOrderComplete] = React.useState(false);
     // Loyalty State
-    const [loyaltyProfile, setLoyaltyProfile] = useState<{ phone: string; name: string } | null>(() => {
+    const [loyaltyProfile, setLoyaltyProfile] = useState<{ phone: string; name: string; lastVisitAt?: string | null } | null>(() => {
         if (typeof window === 'undefined') return null;
         const stored = localStorage.getItem(`guest_loyalty_${hotelSlug}`);
         return stored ? JSON.parse(stored) : null;
@@ -66,10 +66,13 @@ export default function GuestDashboard() {
     const { loyalty: realLoyalty } = useGuestLoyalty(branding?.id, loyaltyProfile?.phone || null);
     const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
 
-    const handleLoyaltySignIn = (phone: string, name: string) => {
-        const profile = { phone, name };
+    const handleLoyaltySignIn = async (phone: string, name: string) => {
+        const profile = { phone, name, lastVisitAt: new Date().toISOString() };
         localStorage.setItem(`guest_loyalty_${hotelSlug}`, JSON.stringify(profile));
         setLoyaltyProfile(profile);
+        if (branding?.id) {
+            await saveGuestLoyaltySession(branding.id, phone, name, { lastVisitAt: profile.lastVisitAt });
+        }
         // Points will auto-fetch via useGuestLoyalty
     };
 
@@ -225,6 +228,20 @@ export default function GuestDashboard() {
 
     const handleOrder = async () => {
         if (!branding?.id) return;
+        if (orderMode === "takeaway" && !loyaltyProfile) {
+            setIsLoyaltyOpen(true);
+            return;
+        }
+
+        if (loyaltyProfile?.phone) {
+            const now = new Date().toISOString();
+            await saveGuestLoyaltySession(branding.id, loyaltyProfile.phone, loyaltyProfile.name, {
+                lastVisitAt: loyaltyProfile.lastVisitAt || now,
+                lastOrderAt: now,
+                lastOrderMode: orderMode,
+            });
+        }
+
         setIsOrdering(true);
         await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -596,6 +613,15 @@ export default function GuestDashboard() {
 
 
             </div>
+
+            <LoyaltySignIn
+                isOpen={isLoyaltyOpen}
+                onClose={() => setIsLoyaltyOpen(false)}
+                onSignIn={handleLoyaltySignIn}
+                guestName={loyaltyProfile?.name || ""}
+                guestPhone={loyaltyProfile?.phone || ""}
+                lastVisitAt={loyaltyProfile?.lastVisitAt || realLoyalty?.last_visit_at || null}
+            />
 
             <BottomNav />
             

@@ -5,6 +5,9 @@ CREATE TABLE IF NOT EXISTS guest_loyalty (
     phone TEXT NOT NULL,
     name TEXT,
     points INTEGER DEFAULT 0,
+    last_visit_at TIMESTAMP WITH TIME ZONE,
+    last_order_at TIMESTAMP WITH TIME ZONE,
+    last_order_mode TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     UNIQUE(hotel_id, phone)
 );

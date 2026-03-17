@@ -38,32 +38,6 @@ export function BottomNav() {
 
     return (
         <div className={`fixed bottom-0 left-0 right-0 z-[100] transition-transform duration-500 ${isHidden ? "translate-y-full" : "translate-y-0"}`}>
-            {/* [Fix #5] Sticky Cart CTA (High-Conversion Bar) */}
-            <AnimatePresence>
-                {cartCount > 0 && pathname !== `/${hotelSlug}/guest/checkout` && (
-                    <motion.div 
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 20, opacity: 0 }}
-                        className="mx-4 mb-4"
-                    >
-                        <button 
-                            onClick={() => window.dispatchEvent(new CustomEvent("open_cart"))}
-                            className="w-full h-14 bg-[#00704A] text-white rounded-[1.25rem] shadow-2xl flex items-center justify-between px-6 active:scale-[0.98] transition-all border border-white/20"
-                        >
-                            <div className="flex flex-col items-start">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">View Bag</span>
-                                <span className="text-sm font-black tracking-tight">{cartCount} {cartCount === 1 ? 'Item' : 'Items'} • ₹{cartTotal}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Review Bag</span>
-                                <ChevronRight className="w-4 h-4" />
-                            </div>
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
             {/* Navigation Bar */}
             <div 
                 className="w-full px-4 pb-safe pt-2 backdrop-blur-3xl border-t flex items-center justify-around shadow-[0_-20px_50px_rgba(0,0,0,0.1)]"

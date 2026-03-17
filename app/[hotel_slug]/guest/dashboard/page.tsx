@@ -358,11 +358,6 @@ export default function GuestDashboard() {
                     className="w-full h-full object-cover opacity-80 scale-105" // Increased opacity
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
-                
-                {/* Guest Portal Badge */}
-                <div className="absolute top-12 left-1/2 -translate-x-1/2 flex items-center px-10 py-3 rounded-full backdrop-blur-3xl border border-white/20 bg-white/5">
-                    <span className="text-[10px] font-black text-white uppercase tracking-[0.4em] drop-shadow-lg">GUEST PORTAL</span>
-                </div>
             </div>
 
             {/* 2. Floating Hotel Information Card (Glassmorphism) */}

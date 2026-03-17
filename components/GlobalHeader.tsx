@@ -125,29 +125,8 @@ export function GlobalHeader() {
                         </AnimatePresence>
                     </div>
 
-                    {/* Center: Branding & Logo */}
-                    <div 
-                        className="flex-1 flex flex-col items-center justify-center cursor-pointer"
-                        onClick={() => router.push(`/${hotelSlug}/guest/dashboard`)}
-                    >
-                        <div className="flex items-center space-x-2">
-                            {branding?.logoImage || branding?.logo ? (
-                                <div className="w-8 h-8 rounded-full overflow-hidden shadow-md border-2 border-white">
-                                    <img src={branding.logoImage || branding.logo} alt="Logo" className="w-full h-full object-cover" />
-                                </div>
-                            ) : (
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-md" style={{ backgroundColor: theme.primary }}>
-                                    <div className="text-white font-serif italic text-sm">{branding?.name?.charAt(0) || "S"}</div>
-                                </div>
-                            )}
-                            <h1 className="text-base font-black leading-tight tracking-tight" style={{ color: theme.text }}>
-                                {branding?.name || "Starbucks"}
-                            </h1>
-                        </div>
-                        <p className="text-[8px] font-bold uppercase tracking-[0.2em] truncate mt-0.5" style={{ color: `${theme.primary}99` }}>
-                            {branding?.address || "Experience the Modern Dining"}
-                        </p>
-                    </div>
+                    {/* Center: Empty Space (Branding Removed) */}
+                    <div className="flex-1" />
 
                     {/* Right: Shopping Bag / Cart */}
                     <div className="flex-shrink-0">

@@ -45,12 +45,12 @@ export function SeasonalStories({ stories, onStoryClick, loading }: SeasonalStor
                 </span>
             </div>
 
-            <div className="flex gap-4 overflow-x-auto no-scrollbar px-4 pb-1 snap-x snap-mandatory">
+            <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1 snap-x snap-mandatory">
                 {stories.map((story) => (
                     <button
                         key={story.id}
                         onClick={() => onStoryClick(story)}
-                        className="min-w-[220px] snap-center overflow-hidden rounded-[1.8rem] bg-white shadow-[0_18px_40px_rgba(0,0,0,0.08)] border border-black/5 text-left group active:scale-[0.98] transition-transform"
+                        className="min-w-[220px] snap-start overflow-hidden rounded-[1.8rem] bg-white shadow-[0_18px_40px_rgba(0,0,0,0.08)] border border-black/5 text-left group active:scale-[0.98] transition-transform"
                     >
                         <div className="relative h-[250px] overflow-hidden">
                             <img

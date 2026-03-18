@@ -21,18 +21,18 @@ export function ChefPicksSnapRail({ items, cart, onAdd, onRemove, onItemClick }:
 
     return (
         <section className="space-y-6 py-6">
-            <div className="flex items-center justify-between px-6">
-                <h4 className="text-xl font-semibold tracking-tight text-[#0F3D2E]">Chef's Picks</h4>
+            <div className="flex items-center justify-between px-4">
+                <h4 className="text-xl font-black tracking-tight text-[#0F3D2E]">Chef's Picks</h4>
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#C8A96A]">For You</span>
             </div>
 
-            <div className="flex gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory -mx-6 px-6 pb-6">
+            <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory px-4 pb-6">
                 {items.map((item) => (
                     <motion.div 
                         key={item.id}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onItemClick?.(item)}
-                        className="min-w-[85%] aspect-[3/4] snap-center rounded-[2.5rem] overflow-hidden relative shadow-2xl group border border-black/5 cursor-pointer"
+                        className="min-w-[280px] aspect-[4/5] snap-start rounded-[2.5rem] overflow-hidden relative shadow-2xl group border border-black/5 cursor-pointer"
                     >
                         <img 
                             src={getDirectImageUrl(item.image_url)} 

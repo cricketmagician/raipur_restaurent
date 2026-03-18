@@ -156,11 +156,7 @@ export default function GuestDashboard() {
             return;
         }
 
-        const interval = window.setInterval(() => {
-            setActiveHeroIndex((current) => (current + 1) % activeHeroes.length);
-        }, 5000);
-
-        return () => window.clearInterval(interval);
+        // Auto-slide removed per user request for manual scroll feel
     }, [activeHeroes.length]);
 
     React.useEffect(() => {
@@ -367,63 +363,52 @@ export default function GuestDashboard() {
                         transition={{ delay: 0.04 }}
                         className="relative overflow-hidden"
                     >
-                        <div className="relative min-h-[70svh]">
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={currentHero?.id || activeHeroIndex}
-                                    initial={{ x: "100%", opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    exit={{ x: "-100%", opacity: 0 }}
-                                    transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                                    className="absolute inset-0"
+                        <div className="relative min-h-[60svh] overflow-x-auto no-scrollbar snap-x snap-mandatory flex">
+                            {activeHeroes.map((hero, index) => (
+                                <div 
+                                    key={hero.id} 
+                                    className="min-w-full h-full relative snap-start shrink-0"
                                 >
-                                    <img
-                                        src={getDirectImageUrl(currentHero?.image_url) || getDirectImageUrl(branding.heroImage)}
-                                        alt={currentHero?.title || branding.name}
-                                        className="h-full w-full object-cover"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/30 to-black/80" />
-                                </motion.div>
-                            </AnimatePresence>
-
-                            <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-9 pt-24">
-                                <h1 className="max-w-[11ch] text-[2rem] font-semibold tracking-[-0.05em] leading-[0.96] text-white sm:text-[2.35rem]">
-                                    {currentHero?.title || `${branding.name} Specials`}
-                                </h1>
-                                <p className="mt-3 max-w-[30ch] text-sm font-medium leading-6 text-white/78">
-                                    {currentHero?.subtext || "Fresh picks curated today."}
-                                </p>
-                                <button
-                                    onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                                    className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/12 px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.2em] text-white backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.18)] transition-all active:scale-95"
-                                >
-                                    {currentHero?.cta_text || "Explore Menu"}
-                                    <ArrowRight className="h-3.5 w-3.5" />
-                                </button>
-                            </div>
-
-                            {activeHeroes.length > 1 && (
-                                <div className="absolute bottom-10 right-5 z-10 flex items-center gap-1.5">
-                                    {activeHeroes.map((hero, index) => (
-                                        <button
-                                            key={hero.id}
-                                            onClick={() => setActiveHeroIndex(index)}
-                                            className={`h-2 rounded-full transition-all ${index === activeHeroIndex ? "w-6 bg-white/90" : "w-2 bg-white/40"}`}
+                                    <div className="absolute inset-0">
+                                        <img
+                                            src={getDirectImageUrl(hero.image_url) || getDirectImageUrl(branding.heroImage)}
+                                            alt={hero.title || branding.name}
+                                            className="h-full w-full object-cover"
                                         />
-                                    ))}
+                                        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                                    </div>
+                                    
+                                    <div className="absolute inset-x-0 bottom-0 z-10 px-6 pb-12 pt-28">
+                                        <h1 className="max-w-[12ch] text-[2.2rem] font-bold tracking-[-0.04em] leading-[0.94] text-white sm:text-[2.6rem]">
+                                            {hero.title || `${branding.name} Specials`}
+                                        </h1>
+                                        <p className="mt-4 max-w-[32ch] text-[15px] font-medium leading-relaxed text-white/85">
+                                            {hero.subtext || "Fresh picks curated today."}
+                                        </p>
+                                        <button
+                                            onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
+                                            className="mt-7 inline-flex items-center gap-2.5 rounded-full border border-white/20 bg-white/10 px-6 py-3.5 text-[11px] font-black uppercase tracking-[0.22em] text-white backdrop-blur-xl shadow-2xl transition-all active:scale-95"
+                                        >
+                                            {hero.cta_text || "Explore Menu"}
+                                            <ArrowRight className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 </div>
-                            )}
+                            ))}
                         </div>
                     </motion.section>
                 )}
 
-                <div className="space-y-8 px-3.5 pt-5">
+                <div className="space-y-12">
                     <motion.section
                         initial={{ opacity: 0, y: 18 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.06 }}
                         className="pt-1"
                     >
+                        <div className="px-4 mb-2 flex items-baseline justify-between">
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Today's Stories</h2>
+                        </div>
                         <SeasonalStories
                             stories={activeStories}
                             loading={storiesLoading}

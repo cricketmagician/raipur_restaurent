@@ -16,12 +16,12 @@ export type GuestTheme = {
 export const GUEST_THEMES: Record<GuestTheme['id'], GuestTheme> = {
     ELITE_CAFE: {
         id: 'ELITE_CAFE',
-        primary: "#00704A", // Starbucks Deep Green
+        primary: "#0F3D2E", // Deep Forest Green
         secondary: "#1E3932", // Starbucks Dark Forest
-        accent: "#D4E9E2", // Soft Mint / Cream
-        background: "#FFFFFF",
-        surface: "#F1F8F5", // Very light green-tinted surface
-        text: "#1E3932",
+        accent: "#C8A96A", // Muted Gold (STRICTLY CTA)
+        background: "#F5F1E8", // Warm Off-white (Luxury parchment)
+        surface: "#FFFFFF",
+        text: "#0F3D2E",
         textMuted: "#6B7280",
         fontSans: "Outfit, Inter, sans-serif",
         fontSerif: "Playfair Display, serif",

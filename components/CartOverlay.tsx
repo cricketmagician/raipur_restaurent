@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Trash2, Plus, Minus, X, RefreshCw, ShoppingBag, Sparkles, ArrowUpRight } from "lucide-react";
+import { Trash2, Plus, Minus, X, RefreshCw, ShoppingBag, Sparkles, ArrowUpRight, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/utils/themes";
 import { useHotelBranding } from "@/utils/store";
@@ -64,81 +64,68 @@ export function CartOverlay({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 backdrop-blur-md z-[120]"
-                        style={{ backgroundColor: `${theme.primary}CC` }}
+                        className="fixed inset-0 backdrop-blur-xl z-[120] bg-[#0F3D2E]/40"
                     />
                     <motion.div
                         initial={{ y: "100%" }}
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
-                        transition={{ type: "spring", damping: 35, stiffness: 350, mass: 0.8 }}
-                        className="fixed bottom-0 left-0 right-0 z-[130] flex flex-col max-h-[95vh] border-t shadow-2xl"
+                        transition={{ type: "spring", damping: 40, stiffness: 400, mass: 0.8 }}
+                        className="fixed bottom-0 left-0 right-0 z-[130] flex flex-col max-h-[95vh] border-t shadow-[0_-20px_80px_rgba(0,0,0,0.15)] bg-[#F5F1E8]"
                         style={{ 
-                            backgroundColor: theme.background,
-                            borderRadius: `${theme.radius} ${theme.radius} 0 0`,
-                            borderColor: `${theme.primary}10`
+                            borderRadius: `3rem 3rem 0 0`,
+                            borderColor: `rgba(15, 61, 46, 0.05)`
                         }}
                     >
                         {/* Native Handle Bar */}
                         <div className="flex justify-center pt-4 pb-2">
-                            <div className="w-16 h-1.5 opacity-10 rounded-full" style={{ backgroundColor: theme.primary }} />
+                            <div className="w-16 h-1.5 bg-[#0F3D2E]/10 rounded-full" />
                         </div>
 
-                        <div className="p-5 pt-4 overflow-y-auto no-scrollbar pb-safe">
-                            <div className="flex items-center justify-between mb-7 gap-4">
+                        <div className="p-8 pt-4 overflow-y-auto no-scrollbar pb-safe">
+                            <div className="flex items-center justify-between mb-10 gap-4">
                                 <div>
-                                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">{isConfirming ? "Confirm Order" : "Cart Summary"}</h2>
-                                    <h2 className="text-3xl font-black italic tracking-tighter leading-none" style={{ color: theme.primary }}>
+                                    <h2 className="text-[10px] font-black text-[#0F3D2E]/40 uppercase tracking-[0.4em] mb-2">{isConfirming ? "Confirm Journey" : "Your Selection"}</h2>
+                                    <h2 className="text-3xl font-black italic tracking-tighter leading-none text-[#0F3D2E]">
                                         {isConfirming ? "Final Check" : "Premium Bag"}
                                     </h2>
-                                    <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">
-                                        {isConfirming ? "Review before we start cooking" : `${cartItems.length} item${cartItems.length === 1 ? "" : "s"} ready`}
+                                    <p className="mt-2 text-[11px] font-black uppercase tracking-[0.22em] text-[#C8A96A]">
+                                        {isConfirming ? "Ready for your experience?" : `${cartItems.length} curated item${cartItems.length === 1 ? "" : "s"}`}
                                     </p>
                                 </div>
                                 <motion.button
                                     whileTap={{ scale: 0.9 }}
                                     onClick={isConfirming ? () => setIsConfirming(false) : onClose}
-                                    className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl border shrink-0"
-                                    style={{ 
-                                        backgroundColor: theme.surface,
-                                        color: theme.primary, 
-                                        borderRadius: `calc(${theme.radius} * 0.5)`,
-                                        borderColor: `${theme.primary}10`
-                                    }}
+                                    className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl border shrink-0 bg-white border-black/5 text-[#0F3D2E]"
                                 >
-                                    {isConfirming ? <div className="text-xs font-black">BACK</div> : <X className="w-5 h-5" />}
+                                    {isConfirming ? <ChevronLeft className="w-5 h-5" /> : <X className="w-5 h-5" />}
                                 </motion.button>
                             </div>
 
                             {!isConfirming ? (
                                 <>
-                                    <div className="space-y-3 mb-8">
+                                    <div className="space-y-4 mb-10">
                                         {cartItems.length > 0 ? (
                                             cartItems.map((item) => (
                                                 <div
                                                     key={item.id} 
-                                                    className="flex items-center justify-between p-4 shadow-xl border group transition-all gap-3"
-                                                    style={{ 
-                                                        borderRadius: theme.radius,
-                                                        backgroundColor: theme.surface,
-                                                        borderColor: `${theme.primary}10`
-                                                    }}
+                                                    className="flex items-center justify-between p-5 shadow-sm border border-black/5 bg-white rounded-[2rem] gap-4"
                                                 >
-                                                    <div className="flex items-center space-x-3 min-w-0">
-                                                        <div className="w-12 h-12 rounded-[1rem] overflow-hidden border border-black/5 bg-slate-100 shrink-0">
+                                                    <div className="flex items-center space-x-4 min-w-0">
+                                                        <div className="w-14 h-14 rounded-2xl overflow-hidden border border-black/5 shrink-0">
                                                             {item.image_url ? (
                                                                 <img src={getDirectImageUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover" />
                                                             ) : (
-                                                                <div className="w-full h-full flex items-center justify-center font-bold" style={{ backgroundColor: `${theme.primary}10`, color: theme.primary }}>
+                                                                <div className="w-full h-full flex items-center justify-center font-bold bg-[#0F3D2E]/5 text-[#0F3D2E]">
                                                                     {item.quantity}x
                                                                 </div>
                                                             )}
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <p className="font-black italic text-base line-clamp-1" style={{ color: theme.text }}>{item.title}</p>
-                                                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                                                <p className="text-xs font-bold tracking-widest uppercase" style={{ color: theme.accent }}>
-                                                                    Rs {((item.price || 0) * item.quantity).toFixed(0)}
+                                                            <p className="font-black italic text-lg tracking-tight text-[#0F3D2E] truncate">{item.title}</p>
+                                                            <div className="flex items-center gap-2 mt-0.5">
+                                                                <p className="text-xs font-black tracking-widest uppercase text-[#C8A96A]">
+                                                                    ₹{((item.price || 0) * item.quantity).toFixed(0)}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -146,16 +133,14 @@ export function CartOverlay({
                                                     <div className="flex items-center space-x-3 shrink-0">
                                                         <button 
                                                             onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                                                            className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
-                                                            style={{ backgroundColor: `${theme.text}0a`, borderColor: `${theme.text}10`, color: theme.text }}
+                                                            className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-all border border-black/5 bg-[#F5F1E8] text-[#0F3D2E]"
                                                         >
                                                             <Minus className="w-4 h-4" />
                                                         </button>
-                                                        <span className="text-sm font-black w-4 text-center" style={{ color: theme.text }}>{item.quantity}</span>
+                                                        <span className="text-sm font-black w-4 text-center text-[#0F3D2E]">{item.quantity}</span>
                                                         <button 
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-all border"
-                                                            style={{ backgroundColor: `${theme.primary}10`, borderColor: `${theme.primary}20`, color: theme.primary }}
+                                                            className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-all bg-[#0F3D2E] text-white shadow-lg shadow-[#0F3D2E]/20"
                                                         >
                                                             <Plus className="w-4 h-4" />
                                                         </button>
@@ -163,25 +148,24 @@ export function CartOverlay({
                                                 </div>
                                             ))
                                         ) : (
-                                            <div className="py-20 text-center space-y-4">
-                                                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto" style={{ backgroundColor: `${theme.primary}0a` }}>
-                                                    <ShoppingBag className="w-8 h-8 opacity-20" style={{ color: theme.primary }} />
+                                            <div className="py-24 text-center space-y-4">
+                                                <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto bg-[#0F3D2E]/5">
+                                                    <ShoppingBag className="w-10 h-10 text-[#0F3D2E] opacity-20" />
                                                 </div>
-                                                <p className="font-serif italic text-xl opacity-40" style={{ color: theme.text }}>Your bag is empty</p>
+                                                <p className="italic text-xl font-medium text-[#0F3D2E]/40">Your bag is empty</p>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* 4. Complete your Order (Final Impulse) */}
                                     {cartItems.length > 0 && (
-                                        <div className="mb-8">
-                                            <div className="flex items-center space-x-3 mb-6 px-1">
-                                                <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: theme.accent }}>Complete your Order</span>
-                                                <div className="h-[1px] flex-1 opacity-10" style={{ backgroundColor: theme.accent }} />
+                                        <div className="mb-12">
+                                            <div className="flex items-center space-x-3 mb-8 px-1">
+                                                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C8A96A]">Taste More</span>
+                                                <div className="h-[1px] flex-1 bg-[#C8A96A]/20" />
                                             </div>
-                                            <div className="grid grid-cols-1 gap-4">
+                                            <div className="grid grid-cols-1 gap-6">
                                                 {(() => {
-                                                    // Suggest a dessert if not already in cart, otherwise suggest a drink/side
                                                     const suggestion = menuItems.find(m => 
                                                         (m.category.toLowerCase() === 'desserts' || m.category.toLowerCase() === 'drinks') && 
                                                         !cart[m.id]
@@ -193,25 +177,22 @@ export function CartOverlay({
                                                         <motion.div 
                                                             whileTap={{ scale: 0.98 }}
                                                             onClick={() => addToCart(suggestion)}
-                                                            className="rounded-[2rem] p-6 shadow-2xl relative overflow-hidden group border border-white/10"
-                                                            style={{ 
-                                                                backgroundColor: theme.primary,
-                                                                borderRadius: theme.radius
-                                                            }}
+                                                            className="rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group bg-[#0F3D2E]"
                                                         >
-                                                            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform text-white">
-                                                                <Sparkles className="w-20 h-20" />
+                                                            <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-110 transition-transform text-white">
+                                                                <Sparkles className="w-24 h-24" />
                                                             </div>
-                                                            <div className="relative z-10 text-left">
-                                                                <div className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.2em] mb-3" style={{ color: theme.secondary }}>
-                                                                    <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: theme.secondary }} />
-                                                                    <span>Chef's Final Touch</span>
+                                                            <div className="relative z-10 text-left space-y-4">
+                                                                <div className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#C8A96A]">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-[#C8A96A] animate-pulse" />
+                                                                    <span>Chef's Choice</span>
                                                                 </div>
-                                                                <h4 className="text-xl font-black italic text-white mb-1">“Add a {suggestion.title}?” 🍰</h4>
-                                                                <p className="text-white/60 text-sm font-medium italic mb-6">End your experience on a perfect note.</p>
+                                                                <div>
+                                                                    <h4 className="text-2xl font-black italic text-white leading-tight">“Add a {suggestion.title}?”</h4>
+                                                                    <p className="text-white/60 text-sm font-medium italic mt-1">The perfect finale to your journey.</p>
+                                                                </div>
                                                                 <button 
-                                                                    className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest px-6 py-4 rounded-xl shadow-lg active:scale-95 transition-all text-white"
-                                                                    style={{ backgroundColor: theme.accent }}
+                                                                    className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest px-8 py-5 rounded-2xl shadow-2xl active:scale-95 transition-all text-white bg-[#C8A96A]"
                                                                 >
                                                                     <Plus className="w-4 h-4" />
                                                                     <span>Add for ₹{suggestion.price}</span>
@@ -225,55 +206,51 @@ export function CartOverlay({
                                     )}
                                 </>
                             ) : (
-                                <div className="mb-10 p-6 rounded-[2.5rem] bg-slate-50 border border-slate-100">
-                                    <div className="space-y-4">
+                                <div className="mb-12 p-8 rounded-[2.5rem] bg-white border border-[#0F3D2E]/5 shadow-sm">
+                                    <div className="space-y-6">
                                         {cartItems.map(item => (
                                             <div key={item.id} className="flex justify-between items-center">
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm font-black text-slate-900">{item.quantity}x {item.title}</span>
-                                                    <span className="text-[10px] font-bold text-slate-400">₹{item.price} each</span>
+                                                    <span className="text-base font-black text-[#0F3D2E] tracking-tight">{item.quantity}x {item.title}</span>
+                                                    <span className="text-[10px] font-black text-[#0F3D2E]/40 uppercase tracking-widest">₹{item.price} each</span>
                                                 </div>
-                                                <span className="text-sm font-black text-slate-900">₹{(item.price * item.quantity).toFixed(0)}</span>
+                                                <span className="text-base font-black text-[#0F3D2E]">₹{(item.price * item.quantity).toFixed(0)}</span>
                                             </div>
                                         ))}
-                                        <div className="h-[1px] bg-slate-200 mt-4 divider" />
+                                        <div className="h-[1px] bg-[#0F3D2E]/5 mt-4" />
                                         <div className="flex justify-between items-center pt-2">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Order Value</span>
-                                            <span className="text-xl font-black text-slate-900">₹{cartTotal.toFixed(0)}</span>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0F3D2E]/40">Order Value</span>
+                                            <span className="text-2xl font-black italic text-[#0F3D2E]">₹{cartTotal.toFixed(0)}</span>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
                             {/* 5. Checkout Action */}
-                            <div className="rounded-[2.2rem] p-6 shadow-2xl border" style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}>
+                            <div className="rounded-[3rem] p-8 shadow-2xl border bg-white border-[#0F3D2E]/5">
                                 {!isConfirming && (
-                                    <div className="flex justify-between items-center mb-6">
-                                        <span className="font-black uppercase text-[10px] tracking-widest opacity-40" style={{ color: theme.text }}>Grand Total</span>
-                                        <span className="text-3xl font-black italic" style={{ color: theme.text }}>₹{cartTotal.toFixed(0)}</span>
+                                    <div className="flex justify-between items-center mb-8">
+                                        <span className="font-black uppercase text-[10px] tracking-[0.4em] text-[#0F3D2E]/40">Total</span>
+                                        <span className="text-4xl font-black italic text-[#0F3D2E]">₹{cartTotal.toFixed(0)}</span>
                                     </div>
                                 )}
                                 <button
                                     onClick={isConfirming ? onOrder : () => setIsConfirming(true)}
                                     disabled={isOrdering || cartItems.length === 0}
-                                    className="w-full py-6 font-black text-lg uppercase tracking-[0.16em] shadow-2xl disabled:opacity-40 active:scale-95 transition-all flex items-center justify-center text-white"
-                                    style={{ 
-                                        backgroundColor: theme.primary,
-                                        borderRadius: `calc(${theme.radius} * 0.75)`
-                                    }}
+                                    className="w-full py-6 font-black text-xs uppercase tracking-[0.3em] shadow-2xl disabled:opacity-40 active:scale-[0.98] transition-all flex items-center justify-center text-white bg-[#0F3D2E] rounded-[2rem]"
                                 >
                                     {isOrdering ? (
-                                        <RefreshCw className="w-8 h-8 animate-spin" />
+                                        <RefreshCw className="w-6 h-6 animate-spin text-[#C8A96A]" />
                                     ) : (
                                         <span className="flex items-center space-x-3">
-                                            <span>{isConfirming ? "Confirm & Place Order" : "Checkout Bag"}</span>
-                                            <ArrowUpRight className="w-6 h-6 mt-1" />
+                                            <span>{isConfirming ? "Initiate Experience" : "Checkout Bag"}</span>
+                                            <ArrowUpRight className="w-5 h-5" />
                                         </span>
                                     )}
                                 </button>
                                 {isConfirming && (
-                                    <p className="text-center mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                        Clicking confirm will send your order to the kitchen
+                                    <p className="text-center mt-6 text-[10px] font-black text-[#0F3D2E]/30 uppercase tracking-[0.2em] leading-relaxed">
+                                        Your selection is about to be handcrafted with care
                                     </p>
                                 )}
                             </div>

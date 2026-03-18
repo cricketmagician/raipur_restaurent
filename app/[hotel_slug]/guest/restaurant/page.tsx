@@ -169,9 +169,9 @@ export default function RestaurantPage() {
                 scrolled={scrolled || activeCategory !== 'all'} 
             />
 
-            <main className="max-w-md mx-auto px-6 pt-28">
+            <main className="max-w-md mx-auto px-6 pt-36">
                 {/* 3. SUB-HEADER (Back & Search) */}
-                <div className="flex items-center gap-4 mb-8">
+                <div className="flex items-center gap-4 mb-6">
                     {activeCategory !== 'all' ? (
                         <motion.button 
                             initial={{ x: -10, opacity: 0 }}
@@ -235,7 +235,7 @@ export default function RestaurantPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="space-y-10"
+                            className="space-y-6"
                         >
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">

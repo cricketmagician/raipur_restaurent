@@ -27,12 +27,12 @@ export function SeasonalStories({ stories, onStoryClick, loading }: SeasonalStor
     if (!stories || stories.length === 0) return null;
 
     return (
-        <div className="py-6 space-y-4">
-            <div className="px-6">
+        <div className="py-4 space-y-4">
+            <div className="px-4">
                 <h3 className="text-xl font-black text-[#0F3D2E] tracking-tight">Today's Specials</h3>
             </div>
             
-            <div className="flex gap-6 overflow-x-auto no-scrollbar px-6">
+            <div className="flex gap-3 overflow-x-auto no-scrollbar px-4">
                 {stories.map((story) => (
                     <button
                         key={story.id}

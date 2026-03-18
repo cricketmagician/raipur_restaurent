@@ -32,17 +32,17 @@ export function CategoryScrollNav({ categories, activeCategory, onCategoryClick,
 
     return (
         <div 
-            className={`sticky top-[0px] z-[90] transition-all duration-500 py-6 ${
-                scrolled ? "bg-white/90 backdrop-blur-xl shadow-md" : "bg-transparent"
+            className={`sticky top-[0px] z-[90] transition-all duration-500 pt-4 pb-6 ${
+                scrolled ? "bg-white/90 backdrop-blur-xl shadow-md border-b border-black/5" : "bg-transparent"
             }`}
         >
-            <div className="px-6 mb-4">
+            <div className="px-4 mb-4">
                 <h3 className="text-xl font-black text-[#0F3D2E] tracking-tight">What's on your mind?</h3>
             </div>
             
             <div 
                 ref={scrollRef}
-                className="flex gap-6 overflow-x-auto no-scrollbar px-6"
+                className="flex gap-3 overflow-x-auto no-scrollbar px-4"
             >
                 {categories.map((cat) => {
                     const isActive = activeCategory === cat.id;

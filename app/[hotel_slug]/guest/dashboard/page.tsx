@@ -291,7 +291,7 @@ export default function GuestDashboard() {
                 }}
             />
 
-            <main className="max-w-md mx-auto px-6 space-y-12 pt-12 relative z-10">
+            <main className="max-w-md mx-auto px-6 space-y-8 pt-2 relative z-10">
                 {activeCategory === 'all' && mostOrderedItems.length > 0 && (
                     <section className="space-y-6">
                         <h3 className="text-2xl font-black italic tracking-tight text-[#0F3D2E]">Chef's Handcrafted Picks</h3>

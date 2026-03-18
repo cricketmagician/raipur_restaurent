@@ -98,15 +98,26 @@ export default function GuestDashboard() {
 
     const categories = useMemo(() => {
         const derived = deriveMenuCategories(menuItems);
+        
+        // Merge with official menuCategories from DB to get images/icons
         return [
-            { id: "all", name: "All", icon: "🍱" },
-            ...derived.map(cat => ({
-                id: normalizeCategoryKey(cat.slug || cat.name),
-                name: cat.name,
-                icon: cat.icon_emoji || "🍽️"
-            }))
+            { 
+                id: "all", 
+                name: "All", 
+                icon: "🍱", 
+                image_url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=256&auto=format" 
+            },
+            ...derived.map(cat => {
+                const official = menuCategories.find(mc => normalizeCategoryKey(mc.name) === cat.slug);
+                return {
+                    id: cat.slug,
+                    name: cat.name,
+                    icon: official?.icon_emoji || cat.icon_emoji || "🍽️",
+                    image_url: official?.image_url || undefined
+                };
+            })
         ];
-    }, [menuItems]);
+    }, [menuItems, menuCategories]);
 
     const heroItems = useMemo(() => {
         const activeHeroes = (heroes || []).filter(h => h.is_active);

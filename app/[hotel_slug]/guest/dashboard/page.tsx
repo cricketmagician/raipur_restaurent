@@ -7,7 +7,6 @@ import { useParams, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
     ArrowRight,
-    PlayCircle,
     RefreshCw,
 } from "lucide-react";
 import { CartOverlay } from "@/components/CartOverlay";
@@ -292,14 +291,13 @@ export default function GuestDashboard() {
                 <div className="absolute top-44 -left-10 h-44 w-44 rounded-full blur-[90px]" style={{ backgroundColor: `${theme.primary}18` }} />
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-8">
                 {activeHeroes.length > 0 && (
                     <motion.section
                         initial={{ opacity: 0, y: 18 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.04 }}
-                        className="rounded-[2rem] border overflow-hidden shadow-[0_22px_70px_-34px_rgba(0,0,0,0.25)]"
-                        style={{ borderColor: `${theme.primary}10` }}
+                        className="rounded-[2rem] overflow-hidden shadow-[0_22px_70px_-34px_rgba(0,0,0,0.25)]"
                     >
                         <div className="relative aspect-[16/8]">
                             <AnimatePresence mode="wait">
@@ -321,15 +319,11 @@ export default function GuestDashboard() {
                             </AnimatePresence>
 
                             <div className="absolute left-4 right-4 bottom-4 z-10">
-                                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-3 py-1.5 mb-3">
-                                    <PlayCircle className="w-3.5 h-3.5 text-white" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/95">Live Ads</span>
-                                </div>
                                 <h3 className="text-2xl font-black tracking-tight text-white leading-none">
                                     {activeHeroes[activeHeroIndex]?.title || `${branding.name} Specials`}
                                 </h3>
                                 <p className="text-xs font-semibold text-white/80 mt-2 max-w-[30ch]">
-                                    {activeHeroes[activeHeroIndex]?.subtext || "New recommendations from the kitchen this hour."}
+                                    {activeHeroes[activeHeroIndex]?.subtext || "Fresh picks curated today."}
                                 </p>
                             </div>
 
@@ -352,17 +346,8 @@ export default function GuestDashboard() {
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.06 }}
-                    className="rounded-[2rem] border bg-white/80 backdrop-blur-xl shadow-[0_20px_60px_-30px_rgba(0,0,0,0.18)] overflow-hidden"
-                    style={{ borderColor: `${theme.primary}10` }}
+                    className="pt-1"
                 >
-                    <div className="px-5 pt-5">
-                        <p className="text-[10px] font-black uppercase tracking-[0.24em] opacity-35 mb-2" style={{ color: theme.primary }}>
-                            Status Stories
-                        </p>
-                        <h3 className="text-xl font-black tracking-tight" style={{ color: theme.primary }}>
-                            Updates set from admin seasonal stories
-                        </h3>
-                    </div>
                     <SeasonalStories
                         stories={activeStories}
                         loading={storiesLoading}
@@ -375,7 +360,7 @@ export default function GuestDashboard() {
                         }}
                     />
                     {!storiesLoading && activeStories.length === 0 && (
-                        <div className="px-5 pb-5 text-sm font-semibold opacity-60" style={{ color: theme.primary }}>
+                        <div className="px-4 text-sm font-semibold opacity-60" style={{ color: theme.primary }}>
                             No seasonal stories added yet from admin.
                         </div>
                     )}
@@ -385,17 +370,8 @@ export default function GuestDashboard() {
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.08 }}
-                    className="rounded-[2rem] border bg-white/80 backdrop-blur-xl shadow-[0_20px_60px_-30px_rgba(0,0,0,0.18)] overflow-hidden"
-                    style={{ borderColor: `${theme.primary}10` }}
+                    className="pt-1"
                 >
-                    <div className="px-5 pt-5">
-                        <p className="text-[10px] font-black uppercase tracking-[0.24em] opacity-35 mb-2" style={{ color: theme.primary }}>
-                            Chef Pick
-                        </p>
-                        <h3 className="text-xl font-black tracking-tight" style={{ color: theme.primary }}>
-                            Kitchen favourites you can add in one tap
-                        </h3>
-                    </div>
                     <ChefPicksSnapRail
                         items={chefPickItems}
                         cart={cart}
@@ -403,7 +379,7 @@ export default function GuestDashboard() {
                         onRemove={(item) => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))}
                     />
                     {chefPickItems.length === 0 && (
-                        <div className="px-5 pb-5 text-sm font-semibold opacity-60" style={{ color: theme.primary }}>
+                        <div className="px-4 text-sm font-semibold opacity-60" style={{ color: theme.primary }}>
                             Add recommended or popular menu items in admin to power this section.
                         </div>
                     )}
@@ -413,16 +389,15 @@ export default function GuestDashboard() {
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.08 }}
-                    className="rounded-[2rem] p-5 border shadow-[0_20px_60px_-30px_rgba(0,0,0,0.18)]"
-                    style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}
+                    className="px-1"
                 >
-                    <div className="flex items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center justify-between gap-3 mb-3 px-4">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.24em] opacity-35 mb-2" style={{ color: theme.primary }}>
+                            <p className="text-[10px] font-black uppercase tracking-[0.24em] opacity-45 mb-1" style={{ color: theme.primary }}>
                                 Eat by mood
                             </p>
-                            <h3 className="text-xl font-black tracking-tight" style={{ color: theme.primary }}>
-                                Start with how you feel, not the full menu.
+                            <h3 className="text-lg font-black tracking-tight" style={{ color: theme.primary }}>
+                                Pick your vibe and jump to menu.
                             </h3>
                         </div>
                         <button
@@ -445,7 +420,7 @@ export default function GuestDashboard() {
                         }}
                     />
                     {moods.filter((mood) => mood.is_active !== false).length === 0 && (
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-3 px-4">
                             {DISCOVERY_MOODS.map((mood, index) => (
                                 <motion.button
                                     key={mood.id}

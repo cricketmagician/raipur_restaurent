@@ -100,7 +100,7 @@ export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
         emotion: "discovery",
         textColor: "#3C2A21",
         tagline: "Explore our full collection",
-        image: "/images/categories/all.png"
+        image: "/images/food/margherita_pizza.png"
     },
     coffee: {
         id: "coffee",
@@ -110,7 +110,7 @@ export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
         textColor: "#FFFFFF",
         effect: "none",
         tagline: "Warm, aromatic & handcrafted",
-        image: "/images/categories/coffee.png"
+        image: "/images/food/cappuccino.png"
     },
     burgers: {
         id: "burgers",
@@ -119,7 +119,7 @@ export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
         emotion: "satisfaction",
         textColor: "#FFFFFF",
         tagline: "Juicy, bold & heavy shadows",
-        image: "/images/categories/burgers.png"
+        image: "/images/food/cheese_burger.png"
     },
     pizzas: {
         id: "pizzas",
@@ -130,7 +130,7 @@ export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
         emotion: "sharing",
         textColor: "#FFFFFF",
         tagline: "Cheesy, oven-fresh & irresistible",
-        image: "/images/categories/pizzas.png"
+        image: "/images/food/margherita_pizza.png"
     },
     fries: {
         id: "fries",
@@ -139,7 +139,7 @@ export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
         emotion: "fun",
         textColor: "#3C2A21",
         tagline: "Crispy, golden & perfectly salted",
-        image: "/images/categories/fries.png"
+        image: "/images/food/cheese_burger.png"
     },
     desserts: {
         id: "desserts",
@@ -149,7 +149,7 @@ export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
         emotion: "indulgence",
         textColor: "#831843",
         tagline: "Sweet, soft & heavenly",
-        image: "/images/categories/desserts.png"
+        image: "/images/food/chocolate_cake.png"
     },
     drinks: {
         id: "drinks",
@@ -159,7 +159,7 @@ export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
         emotion: "refreshment",
         textColor: "#0C4A6E",
         tagline: "Chilled, bubbly & revitalizing",
-        image: "/images/categories/drinks.png"
+        image: "/images/food/cappuccino.png"
     },
     sides: {
         id: "sides",
@@ -168,7 +168,7 @@ export const CATEGORY_THEMES: Record<string, CategoryTheme> = {
         emotion: "extra",
         textColor: "#3C2A21",
         tagline: "The perfect companions",
-        image: "/images/categories/sides.png"
+        image: "/images/food/cheese_burger.png"
     }
 };
 

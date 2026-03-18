@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Search, Flame, ArrowUpRight } from "lucide-react";
 import type { DiscoveryMood } from "@/utils/guestDiscovery";
+import { CATEGORY_THEMES } from "@/utils/themes";
 
 interface Category {
     id: string;
@@ -37,6 +38,23 @@ export function CategoryDiscoveryGrid({
     mood,
     onClearMood,
 }: CategoryDiscoveryGridProps) {
+    const resolveFallbackImage = (categoryId?: string) =>
+        CATEGORY_THEMES[categoryId || "all"]?.image || CATEGORY_THEMES.all.image || "/images/food/chocolate_cake.png";
+
+    const handleImageError = (event: React.SyntheticEvent<HTMLImageElement>, categoryId?: string) => {
+        const image = event.currentTarget;
+        const finalFallback = "/images/food/chocolate_cake.png";
+        const firstFallback = resolveFallbackImage(categoryId);
+
+        if (image.dataset.fallbackApplied === "1") {
+            image.src = finalFallback;
+            return;
+        }
+
+        image.dataset.fallbackApplied = "1";
+        image.src = firstFallback;
+    };
+
     return (
         <div className="space-y-6 mt-6">
             {mood && (
@@ -105,6 +123,7 @@ export function CategoryDiscoveryGrid({
                         src={trendingCategory.imageUrl}
                         alt={trendingCategory.name}
                         className="absolute inset-0 w-full h-full object-cover"
+                        onError={(event) => handleImageError(event, trendingCategory.id)}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
 
@@ -164,6 +183,7 @@ export function CategoryDiscoveryGrid({
                                     src={category.imageUrl}
                                     alt={category.name}
                                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                    onError={(event) => handleImageError(event, category.id)}
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/5" />
                                 <div className="absolute top-4 right-4 text-2xl z-10 drop-shadow-lg">

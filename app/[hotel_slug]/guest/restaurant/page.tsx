@@ -236,7 +236,7 @@ export default function RestaurantPage() {
 
                 return {
                     ...category,
-                    imageUrl: category.imageUrl || getDirectImageUrl(heroItem?.image_url) || CATEGORY_THEMES[category.id]?.image || CATEGORY_THEMES.all.image,
+                    imageUrl: getDirectImageUrl(category.imageUrl) || getDirectImageUrl(heroItem?.image_url) || CATEGORY_THEMES[category.id]?.image || CATEGORY_THEMES.all.image,
                     tagline: category.tagline || heroItem?.description || CATEGORY_THEMES[category.id]?.tagline || "Freshly curated favourites",
                     itemCount: categoryItems.length,
                     popularity: categoryItems.filter((item) => item.is_popular || item.is_recommended).length,

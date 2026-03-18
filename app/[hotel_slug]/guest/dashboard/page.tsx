@@ -262,7 +262,7 @@ export default function GuestDashboard() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.96 }}
                                 className="bg-white/15 backdrop-blur-xl border border-white/20 px-8 py-4 rounded-full text-white text-[10px] font-black uppercase tracking-[0.3em] shadow-2xl transition-all"
-                                onClick={() => window.scrollTo({ top: window.innerHeight * 0.8, behavior: 'smooth' })}
+                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
                             >
                                 Explore Menu →
                             </motion.button>

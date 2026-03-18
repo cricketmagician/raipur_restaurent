@@ -17,50 +17,40 @@ interface CategoryCardProps {
 export const CategoryCard = ({ category, onClick }: CategoryCardProps) => {
     return (
         <motion.div
-            whileHover={{ y: -8, scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ y: -4, scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={onClick}
-            className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden group cursor-pointer shadow-2xl border border-black/5"
+            className="group flex flex-col items-center gap-3 cursor-pointer"
         >
-            {/* Background Image with Zoom Effect */}
-            <motion.img
-                src={getDirectImageUrl(category.imageUrl)}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110"
-                alt={category.name}
-            />
-            
-            {/* Premium Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-            
-            {/* Content Container */}
-            <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                {/* Floating Icon/Badge */}
-                <div className="mb-4 w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-2xl shadow-inner">
-                    {category.icon}
+            {/* Circular Image Container with Premium Glow */}
+            <div className="relative w-28 h-28 rounded-full p-[3px] bg-gradient-to-tr from-[#C8A96A] via-white/20 to-[#C8A96A]/30 shadow-xl group-hover:shadow-[#C8A96A]/20 transition-all duration-500">
+                <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white/50 bg-[#F5F1E8]">
+                    <motion.img
+                        src={getDirectImageUrl(category.imageUrl)}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110"
+                        alt={category.name}
+                    />
+                    
+                    {/* Subtle Overlay to make icon pop */}
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all duration-500" />
                 </div>
-                
-                {/* Title and Tagline */}
-                <div className="space-y-1">
-                    <h3 className="text-3xl font-black text-white italic tracking-tighter leading-none">
-                        {category.name}
-                    </h3>
-                    <p className="text-white/60 text-[11px] font-medium leading-relaxed italic opacity-80 group-hover:opacity-100 transition-opacity">
-                        "{category.tagline || 'Experience the finest flavors.'}"
-                    </p>
-                </div>
-                
-                {/* Action Indicator */}
-                <div className="mt-6 flex items-center gap-3">
-                    <div className="h-[1px] w-8 bg-[#C8A96A]" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#C8A96A]">
-                        Explore Now
-                    </span>
-                </div>
-            </div>
 
-            {/* Glass Shine Effect on Hover */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
-                <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-to-br from-white/10 via-transparent to-transparent rotate-45 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                {/* Floating Icon Badge */}
+                <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-white shadow-lg flex items-center justify-center text-lg border border-[#C8A96A]/20 z-10"
+                >
+                    {category.icon}
+                </motion.div>
+            </div>
+            
+            {/* Title - Elegant & Minimal */}
+            <div className="text-center">
+                <h3 className="text-[11px] font-black text-[#0F3D2E] uppercase tracking-[0.2em] leading-tight group-hover:text-[#C8A96A] transition-colors">
+                    {category.name}
+                </h3>
+                <div className="mt-1 h-[2px] w-0 bg-[#C8A96A] mx-auto group-hover:w-4 transition-all duration-300" />
             </div>
         </motion.div>
     );

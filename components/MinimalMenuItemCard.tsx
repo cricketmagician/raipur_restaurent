@@ -10,14 +10,16 @@ interface MinimalMenuItemCardProps {
     quantity: number;
     onAdd: () => void;
     onRemove: () => void;
+    onClick?: () => void;
     theme?: any;
 }
 
-export function MinimalMenuItemCard({ item, quantity, onAdd, onRemove, theme }: MinimalMenuItemCardProps) {
+export function MinimalMenuItemCard({ item, quantity, onAdd, onRemove, onClick, theme }: MinimalMenuItemCardProps) {
     return (
         <motion.div 
             layout
-            className="bg-white rounded-[2rem] p-4 flex items-center gap-4 shadow-sm border border-black/5 active:scale-[0.98] transition-all"
+            onClick={onClick}
+            className="bg-white rounded-[2rem] p-4 flex items-center gap-4 shadow-sm border border-black/5 active:scale-[0.98] transition-all cursor-pointer"
         >
             <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-black/5">
                 <img 

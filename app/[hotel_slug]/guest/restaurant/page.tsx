@@ -23,7 +23,8 @@ import { CategorySectionHeader } from "@/components/CategorySectionHeader";
 import { MinimalMenuItemCard } from "@/components/MinimalMenuItemCard";
 import { FloatingCartBar } from "@/components/FloatingCartBar";
 import { CategoryCard } from "@/components/CategoryCard";
-import { Search, ChevronLeft, Sparkles } from "lucide-react";
+import { Search, ChevronLeft, Sparkles, X, ShoppingCart, Plus, Minus } from "lucide-react";
+import { getDirectImageUrl } from "@/utils/image";
 
 export default function RestaurantPage() {
     const router = useRouter();
@@ -42,6 +43,7 @@ export default function RestaurantPage() {
     const [isOrdering, setIsOrdering] = useState(false);
     const [orderComplete, setOrderComplete] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
     const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -152,36 +154,11 @@ export default function RestaurantPage() {
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-[#F5F1E8] pb-40">
-            {/* 1. PREMIUM TOP BAR */}
-            <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 px-6 py-4 flex items-center justify-between ${scrolled || activeCategory !== 'all' ? "bg-white/80 backdrop-blur-2xl border-b border-[#0F3D2E]/5 shadow-sm" : "bg-transparent"}`}>
-                <div className="flex items-center gap-4">
-                    {activeCategory !== 'all' ? (
-                        <motion.button 
-                            initial={{ x: -10, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            onClick={() => setActiveCategory('all')} 
-                            className="w-10 h-10 rounded-full bg-[#0F3D2E]/5 flex items-center justify-center text-[#0F3D2E]"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </motion.button>
-                    ) : (
-                        <button onClick={() => router.back()} className="text-[#0F3D2E]/40 text-[10px] font-black uppercase tracking-widest">← Back</button>
-                    )}
-                    <h1 className="text-[#0F3D2E] text-sm font-black italic tracking-tighter">
-                        {activeCategory === 'all' ? 'The Menu' : currentCategory?.name}
-                    </h1>
-                </div>
-                
-                <div className="relative flex-1 max-w-[160px] ml-4">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#0F3D2E]/40" />
-                    <input 
-                        type="text" 
-                        placeholder="Search flavors..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-[#0F3D2E]/5 border-none rounded-full py-2.5 pl-10 pr-4 text-[11px] font-medium focus:ring-1 focus:ring-[#C8A96A] transition-all placeholder:text-[#0F3D2E]/20"
-                    />
-                </div>
+            {/* 1. PREMIUM MINIMAL TOP BAR */}
+            <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 px-6 py-4 flex items-center justify-center ${scrolled || activeCategory !== 'all' ? "bg-white/80 backdrop-blur-2xl border-b border-[#0F3D2E]/5 shadow-sm" : "bg-transparent"}`}>
+                <h1 className="text-[#0F3D2E] text-sm font-black italic tracking-tighter">
+                    {activeCategory === 'all' ? 'THE MENU' : currentCategory?.name}
+                </h1>
             </header>
 
             {/* 2. GLOBAL CATEGORY NAV */}
@@ -193,6 +170,37 @@ export default function RestaurantPage() {
             />
 
             <main className="max-w-md mx-auto px-6 pt-28">
+                {/* 3. SUB-HEADER (Back & Search) */}
+                <div className="flex items-center gap-4 mb-8">
+                    {activeCategory !== 'all' ? (
+                        <motion.button 
+                            initial={{ x: -10, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            onClick={() => setActiveCategory('all')} 
+                            className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#0F3D2E] border border-[#0F3D2E]/5"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </motion.button>
+                    ) : (
+                        <button 
+                            onClick={() => router.back()} 
+                            className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#0F3D2E]/60 border border-[#0F3D2E]/5"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                    )}
+                    
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0F3D2E]/30" />
+                        <input 
+                            type="text" 
+                            placeholder="Search flavors..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-white border border-[#0F3D2E]/5 shadow-sm rounded-2xl py-3.5 pl-11 pr-4 text-xs font-semibold focus:ring-2 focus:ring-[#C8A96A]/20 transition-all placeholder:text-[#0F3D2E]/20 text-[#0F3D2E]"
+                        />
+                    </div>
+                </div>
                 <AnimatePresence mode="wait">
                     {searchTerm ? (
                         /* SEARCH RESULTS VIEW */
@@ -211,9 +219,11 @@ export default function RestaurantPage() {
                                     <MinimalMenuItemCard 
                                         key={item.id} 
                                         item={item} 
-                                        quantity={cart[item.id] || 0} 
-                                        onAdd={() => updateQuantity(item.id, (cart[item.id] || 0) + 1)} 
-                                        onRemove={() => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))} 
+                                        quantity={cart[item.id] || 0}
+                                        onAdd={() => updateQuantity(item.id, (cart[item.id] || 0) + 1)}
+                                        onRemove={() => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))}
+                                        onClick={() => setSelectedItem(item as any)}
+                                        theme={theme}
                                     />
                                 ))}
                             </div>
@@ -236,13 +246,14 @@ export default function RestaurantPage() {
                                 <p className="text-[#0F3D2E]/40 text-sm font-medium italic">Discover flavors handcrafted for your mood.</p>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-8">
+                            <div className="flex flex-wrap justify-between gap-y-12">
                                 {categories.filter(c => c.id !== "all").map((cat, idx) => (
                                     <motion.div
                                         key={cat.id}
                                         initial={{ opacity: 0, y: 30 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.1 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        className="w-[45%]"
                                     >
                                         <CategoryCard 
                                             category={cat as any} 
@@ -285,7 +296,9 @@ export default function RestaurantPage() {
                                             item={item} 
                                             quantity={cart[item.id] || 0} 
                                             onAdd={() => updateQuantity(item.id, (cart[item.id] || 0) + 1)} 
-                                            onRemove={() => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))} 
+                                            onRemove={() => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))}
+                                            onClick={() => setSelectedItem(item as any)}
+                                            theme={theme}
                                         />
                                     ))}
                                 </div>
@@ -297,6 +310,92 @@ export default function RestaurantPage() {
 
             <FloatingCartBar count={cartCount} total={cartTotal} onClick={() => setShowCart(true)} isVisible={!showCart} />
             <CartOverlay isOpen={showCart} onClose={() => setShowCart(false)} cart={cart} updateQuantity={updateQuantity} cartTotal={cartTotal} isOrdering={isOrdering} onOrder={handleOrder} hotelId={branding?.id} menuItems={availableItems} />
+
+            {/* 5. PRODUCT STORY MODAL (Full View) */}
+            <AnimatePresence>
+                {selectedItem && (
+                    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md px-0 sm:px-6">
+                        <motion.div
+                            initial={{ y: "100%" }}
+                                animate={{ y: 0 }}
+                                exit={{ y: "100%" }}
+                                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                                className="bg-[#F5F1E8] w-full max-w-lg sm:rounded-[3rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+                            >
+                                {/* Sticky Header with Close */}
+                                <div className="absolute top-6 right-6 z-10">
+                                    <button 
+                                        onClick={() => setSelectedItem(null)}
+                                        className="w-12 h-12 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20 active:scale-90 transition-all"
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+
+                                <div className="overflow-y-auto no-scrollbar pb-32">
+                                    {/* Hero Image */}
+                                    <div className="relative aspect-square w-full">
+                                        <img 
+                                            src={getDirectImageUrl(selectedItem.image_url)} 
+                                            className="w-full h-full object-cover" 
+                                            alt={selectedItem.title} 
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#F5F1E8] via-transparent to-black/20" />
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="px-8 -mt-12 relative z-10 space-y-8">
+                                        <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/60 shadow-xl shadow-black/5">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <h2 className="text-3xl font-black text-[#0F3D2E] tracking-tight">{selectedItem.title}</h2>
+                                                    <p className="text-[#C8A96A] text-xs font-black uppercase tracking-[0.3em] mt-2">Premium Creation</p>
+                                                </div>
+                                                <div className="bg-[#0F3D2E] text-white px-5 py-3 rounded-2xl font-black text-lg shadow-lg">
+                                                    ₹{selectedItem.price}
+                                                </div>
+                                            </div>
+                                            <p className="text-[#0F3D2E]/70 text-sm leading-relaxed italic font-medium">
+                                                {selectedItem.description || "A masterpiece of flavors, handcrafted for the ultimate indulgence."}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Floating Action Bar */}
+                                <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-[#F5F1E8] via-[#F5F1E8] to-transparent">
+                                    <div className="flex items-center gap-4 bg-[#0F3D2E] p-3 rounded-[2rem] shadow-2xl">
+                                        <div className="flex items-center bg-white/10 rounded-full p-1.5 ml-1">
+                                            <button 
+                                                onClick={() => updateQuantity(selectedItem.id, Math.max(0, (cart[selectedItem.id] || 0) - 1))}
+                                                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-90 transition-all"
+                                            >
+                                                <Minus className="w-4 h-4" />
+                                            </button>
+                                            <span className="w-12 text-center text-white font-black text-lg">{cart[selectedItem.id] || 0}</span>
+                                            <button 
+                                                onClick={() => updateQuantity(selectedItem.id, (cart[selectedItem.id] || 0) + 1)}
+                                                className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#0F3D2E] active:scale-90 transition-all font-black"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                        <button 
+                                            onClick={() => {
+                                                if (!cart[selectedItem.id]) updateQuantity(selectedItem.id, 1);
+                                                setSelectedItem(null);
+                                            }}
+                                            className="flex-1 text-center text-white font-black text-[12px] uppercase tracking-[0.3em] flex items-center justify-center gap-3"
+                                        >
+                                            <ShoppingCart className="w-5 h-5 opacity-40" />
+                                            {cart[selectedItem.id] ? "Done" : "Add to Cart"}
+                                        </button>
+                                    </div>
+                                </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }

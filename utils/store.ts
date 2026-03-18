@@ -1441,32 +1441,7 @@ export function useUpsellRules(hotelId: string | undefined) {
     };
 }
 
-export async function saveMenuCategory(hotelId: string, category: Partial<MenuCategory>) {
-    const payload = {
-        slug: normalizeCategoryKey(category.slug || category.name),
-        name: category.name || formatCategoryName(category.slug),
-        description: category.description || null,
-        image_url: category.image_url || null,
-        icon_emoji: category.icon_emoji || null,
-        icon_url: category.icon_url || null,
-        display_style: category.display_style || 'pill',
-        is_highlighted: category.is_highlighted ?? false,
-        active_hours: category.active_hours || null,
-        sort_order: category.sort_order ?? 0,
-        is_active: category.is_active ?? true,
-    };
 
-    if (category.id) {
-        return await supabase
-            .from('menu_categories')
-            .update(payload)
-            .eq('id', category.id);
-    }
-
-    return await supabase
-        .from('menu_categories')
-        .insert([{ ...payload, hotel_id: hotelId }]);
-}
 
 export async function saveSupabaseHero(hotelId: string, hero: Partial<Hero>) {
     const payload = {
@@ -1512,6 +1487,33 @@ export async function deleteUpsellRule(id: string) {
 
 export async function deleteMenuCategory(id: string) {
     return await supabase.from('menu_categories').delete().eq('id', id);
+}
+
+export async function saveMenuCategory(hotelId: string, category: Partial<MenuCategory>) {
+    const payload = {
+        slug: normalizeCategoryKey(category.slug || category.name),
+        name: category.name || formatCategoryName(category.slug),
+        description: category.description || null,
+        image_url: category.image_url || null,
+        icon_emoji: category.icon_emoji || null,
+        icon_url: category.icon_url || null,
+        display_style: category.display_style || 'pill',
+        is_highlighted: category.is_highlighted ?? false,
+        active_hours: JSON.stringify(category.active_hours) || null,
+        sort_order: category.sort_order ?? 0,
+        is_active: category.is_active ?? true,
+    };
+
+    if (category.id) {
+        return await supabase
+            .from('menu_categories')
+            .update(payload)
+            .eq('id', category.id);
+    } else {
+        return await supabase
+            .from('menu_categories')
+            .insert([{ ...payload, hotel_id: hotelId }]);
+    }
 }
 
 /**

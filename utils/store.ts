@@ -247,6 +247,17 @@ export interface SeasonalStory {
     created_at?: string;
 }
 
+export interface Mood {
+    id: string;
+    hotel_id: string;
+    name: string;
+    icon: string;
+    tag_linked: string;
+    priority: number;
+    is_active: boolean;
+    created_at?: string;
+}
+
 const REQUEST_TYPE_KEYWORDS = {
     dining: ['dining order', 'restaurant order', 'restaurant', 'food order', 'room service', 'breakfast', 'lunch', 'dinner'],
     beverages: ['water', 'mineral water', 'tea', 'coffee', 'beverage'],
@@ -1545,6 +1556,60 @@ export async function saveSpecialOffer(hotelId: string, offer: Partial<SpecialOf
  */
 export async function deleteSpecialOffer(id: string) {
     return await supabase.from('special_offers').delete().eq('id', id);
+}
+
+/**
+ * Hook to fetch and subscribe to active moods for a specific hotel
+ */
+export function useMoods(hotelId?: string) {
+    const state = useRealtimeCollection<Mood>({
+        table: 'moods',
+        consumer: 'moods',
+        scopeKey: hotelId || 'no-hotel',
+        enabled: !!hotelId,
+        fetchFilters: hotelId ? [{ column: 'hotel_id', value: hotelId }] : [],
+        channelFilter: hotelId ? { column: 'hotel_id', value: hotelId } : undefined,
+        orderBy: { column: 'priority', ascending: false },
+        enablePollingFallback: true,
+    });
+
+    return {
+        moods: state.data,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+        fetchError: state.fetchError,
+        lastSyncedAt: state.lastSyncedAt,
+    };
+}
+
+/**
+ * Save or add a mood
+ */
+export async function saveMood(hotelId: string, mood: Partial<Mood>) {
+    if (mood.id) {
+        return await supabase
+            .from('moods')
+            .update({
+                name: mood.name,
+                icon: mood.icon,
+                tag_linked: mood.tag_linked,
+                priority: mood.priority,
+                is_active: mood.is_active
+            })
+            .eq('id', mood.id);
+    } else {
+        return await supabase
+            .from('moods')
+            .insert([{ ...mood, hotel_id: hotelId }]);
+    }
+}
+
+/**
+ * Delete a mood
+ */
+export async function deleteMood(id: string) {
+    return await supabase.from('moods').delete().eq('id', id);
 }
 
 /**

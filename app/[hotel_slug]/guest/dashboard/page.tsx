@@ -37,9 +37,10 @@ import {
     normalizeCategoryKey,
     getRoomAccessState,
     useSpecialOffers,
-    useMenuSections,
     useHeroes,
-    useSeasonalStories
+    useSeasonalStories,
+    useMoods,
+    useMenuSections
 } from "@/utils/store";
 import { CategorySectionHeader } from "@/components/CategorySectionHeader";
 import { ChefPicksSnapRail } from "@/components/ChefPicksSnapRail";
@@ -47,6 +48,8 @@ import { PopularGrid } from "@/components/PopularGrid";
 import { IndulgeSection } from "@/components/IndulgeSection";
 import { MinimalMenuItemCard } from "@/components/MinimalMenuItemCard";
 import { SeasonalStories } from "@/components/SeasonalStories";
+import { EatByMoodSection } from "@/components/EatByMoodSection";
+import { MoodItemsGrid } from "@/components/MoodItemsGrid";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { Toast } from "@/components/Toast";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -72,6 +75,7 @@ export default function GuestDashboard() {
     const [searchQuery, setSearchQuery] = useState("");
     const [scrolled, setScrolled] = useState(false);
     const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+    const [activeMoodId, setActiveMoodId] = useState<string | null>(null);
 
     const sectionRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -87,6 +91,7 @@ export default function GuestDashboard() {
     const { sections, loading: sectionsLoading } = useMenuSections(branding?.id);
     const { heroes, loading: heroesLoading } = useHeroes(branding?.id);
     const { stories, loading: storiesLoading } = useSeasonalStories(branding?.id);
+    const { moods, loading: moodsLoading } = useMoods(branding?.id);
 
     // Derived Data
     const availableMenuItems = useMemo(
@@ -134,6 +139,15 @@ export default function GuestDashboard() {
     const mostOrderedItems = useMemo(() => {
         return availableMenuItems.filter(i => i.is_popular).slice(0, 5);
     }, [availableMenuItems]);
+
+    // Mood Engine Filtering
+    const activeMood = useMemo(() => moods?.find(m => m.id === activeMoodId), [moods, activeMoodId]);
+    const moodItems = useMemo(() => {
+        if (!activeMood) return [];
+        return availableMenuItems
+            .filter(item => item.tags?.includes(activeMood.tag_linked))
+            .slice(0, 6); // Top 6 matches
+    }, [activeMood, availableMenuItems]);
 
     const cartTotal = useMemo(() => {
         return Object.entries(cart).reduce((sum, [id, q]) => {
@@ -237,6 +251,32 @@ export default function GuestDashboard() {
                             onRemove={(item) => removeFromCart(item)}
                         />
                     </section>
+                )}
+
+                {/* EAT BY MOOD ENGINE */}
+                {activeCategory === 'all' && moods && moods.length > 0 && (
+                    <div className="relative z-10 space-y-2" id="eat-by-mood-section">
+                        <EatByMoodSection 
+                            moods={moods} 
+                            activeMoodId={activeMoodId} 
+                            onMoodSelect={(id) => {
+                                setActiveMoodId(id);
+                                setTimeout(() => {
+                                    document.getElementById('eat-by-mood-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                }, 100);
+                            }} 
+                        />
+                        {activeMoodId && activeMood && (
+                            <MoodItemsGrid 
+                                items={moodItems} 
+                                moodName={activeMood.name}
+                                cart={cart}
+                                onAdd={(item) => addToCart(item)}
+                                onRemove={(item) => removeFromCart(item)}
+                                onItemClick={(item) => setSelectedProduct(item)}
+                            />
+                        )}
+                    </div>
                 )}
 
                 {/* DYNAMIC SECTIONS ENGINE */}

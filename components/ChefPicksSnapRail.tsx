@@ -22,7 +22,7 @@ export function ChefPicksSnapRail({ items, cart, onAdd, onRemove }: ChefPicksSna
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#C8A96A]">For You</span>
             </div>
 
-            <div className="flex gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory px-6 pb-6">
+            <div className="flex gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory -mx-6 px-6 pb-6">
                 {items.map((item) => (
                     <motion.div 
                         key={item.id}

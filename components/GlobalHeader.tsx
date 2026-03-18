@@ -38,7 +38,7 @@ export function GlobalHeader() {
         <motion.header 
             initial={{ y: -100 }}
             animate={{ y: 0 }}
-            className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 py-3 ${scrolled ? 'bg-white/90 backdrop-blur-xl border-b border-slate-200 shadow-sm' : 'bg-transparent'}`}
+            className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 py-3 ${scrolled ? 'bg-[#0F3D2E]/95 backdrop-blur-xl border-b border-white/5 shadow-md' : 'bg-gradient-to-b from-[#0F3D2E]/80 to-transparent'}`}
         >
             <div className="flex flex-col gap-4">
                 {/* Row 1: Menu (Left), Branding (Center), Cart (Right) */}
@@ -47,10 +47,9 @@ export function GlobalHeader() {
                     <div className="w-12">
                         <button 
                             onClick={() => setShowUtility(!showUtility)}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 border ${scrolled ? 'border-slate-200 bg-white shadow-sm' : 'border-white/40 bg-black/20 shadow-sm'}`}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 border border-white/20 bg-black/20 shadow-sm text-white`}
                             style={{ 
-                                backgroundColor: showUtility ? theme.primary : (scrolled ? "white" : "rgba(0,0,0,0.2)"),
-                                color: scrolled ? "#0F3D2E" : "white"
+                                backgroundColor: showUtility ? theme.primary : "rgba(0,0,0,0.2)"
                             }}
                         >
                             {showUtility ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -62,30 +61,30 @@ export function GlobalHeader() {
                                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    className="absolute top-12 left-0 w-52 bg-white rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-200 overflow-hidden py-2 z-[110]"
+                                    className="absolute top-12 left-0 w-52 bg-[#0F3D2E] rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 overflow-hidden py-2 z-[110]"
                                 >
-                                    <div className="px-5 py-3 border-b border-black/5 mb-1.5">
-                                        <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">Guest Selection</p>
+                                    <div className="px-5 py-3 border-b border-white/10 mb-1.5">
+                                        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/40">Guest Selection</p>
                                     </div>
                                     <button 
                                         onClick={() => openQuickActions("waiter")}
-                                        className="w-full px-5 py-3 flex items-center justify-between hover:bg-black/5 transition-colors group"
+                                        className="w-full px-5 py-3 flex items-center justify-between hover:bg-white/5 transition-colors group"
                                     >
-                                        <div className="flex items-center space-x-3">
-                                            <Bell className="w-4 h-4" style={{ color: theme.primary }} />
+                                        <div className="flex items-center space-x-3 text-white">
+                                            <Bell className="w-4 h-4 text-[#C8A96A]" />
                                             <span className="text-[10px] font-bold uppercase tracking-widest">Call Host</span>
                                         </div>
-                                        <ChevronRight className="w-3 h-3 opacity-20" />
+                                        <ChevronRight className="w-3 h-3 text-white/20" />
                                     </button>
                                     <button 
                                         onClick={() => openQuickActions("water")}
-                                        className="w-full px-5 py-3 flex items-center justify-between hover:bg-black/5 transition-colors group"
+                                        className="w-full px-5 py-3 flex items-center justify-between hover:bg-white/5 transition-colors group"
                                     >
-                                        <div className="flex items-center space-x-3">
-                                            <Droplets className="w-4 h-4" style={{ color: theme.primary }} />
+                                        <div className="flex items-center space-x-3 text-white">
+                                            <Droplets className="w-4 h-4 text-[#C8A96A]" />
                                             <span className="text-[10px] font-bold uppercase tracking-widest">Hydration</span>
                                         </div>
-                                        <ChevronRight className="w-3 h-3 opacity-20" />
+                                        <ChevronRight className="w-3 h-3 text-white/20" />
                                     </button>
                                 </motion.div>
                             )}
@@ -94,7 +93,7 @@ export function GlobalHeader() {
 
                     {/* Center: Hotel Name */}
                     <div className="flex-1 text-center truncate px-2">
-                        <h1 className={`text-base font-black italic tracking-tighter truncate transition-colors duration-500 ${scrolled ? 'text-[#0F3D2E]' : 'text-white shadow-sm'}`}>
+                        <h1 className="text-base font-black italic tracking-tighter truncate text-white drop-shadow-md">
                             {branding?.name}
                         </h1>
                     </div>
@@ -104,14 +103,14 @@ export function GlobalHeader() {
                         <button 
                             id="header-cart-button"
                             onClick={() => window.dispatchEvent(new CustomEvent('open_cart'))}
-                            className={`relative w-10 h-10 rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all border ${scrolled ? 'bg-[#0F3D2E] text-white border-[#0F3D2E]/10' : 'bg-white/20 text-white border-white/40'}`}
+                            className="relative w-10 h-10 rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all border bg-white/10 text-white border-white/20 backdrop-blur-md"
                         >
                             <ShoppingBag className="w-5 h-5" />
                             {cartCount > 0 && (
                                 <motion.span 
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    className="absolute -top-1 -right-1 w-5 h-5 bg-[#C8A96A] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border-2 border-white"
+                                    className="absolute -top-1 -right-1 w-5 h-5 bg-[#C8A96A] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border-2 border-[#0F3D2E]"
                                 >
                                     {cartCount}
                                 </motion.span>

@@ -15,7 +15,7 @@ export function BottomNav() {
     const { branding } = useHotelBranding(hotelSlug);
     const theme = useTheme(branding);
     const [isHidden, setIsHidden] = React.useState(false);
-    const dockTone = theme.id === "FINE_DINE" ? "rgba(18,18,18,0.9)" : "rgba(15,61,46,0.88)";
+    const dockTone = "rgba(255,255,255,0.88)";
 
     const navItems = [
         { id: "home", label: "Home", icon: Home, path: `/${hotelSlug}/guest/dashboard` },
@@ -37,12 +37,12 @@ export function BottomNav() {
 
     return (
         <div className={`fixed inset-x-0 bottom-0 z-[100] transition-all duration-500 ${isHidden ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"} pointer-events-none`}>
-            <div className="mx-3 mb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+            <div className="mx-3 mb-[calc(env(safe-area-inset-bottom)+0.6rem)]">
                 <div
-                    className="pointer-events-auto flex items-center justify-between rounded-[1.55rem] border px-3 py-2 shadow-[0_22px_45px_rgba(0,0,0,0.22)] backdrop-blur-2xl"
+                    className="pointer-events-auto flex items-center justify-between rounded-[1.4rem] border px-3 py-2.5 shadow-[0_18px_32px_rgba(0,0,0,0.12)] backdrop-blur-xl"
                     style={{
                         backgroundColor: dockTone,
-                        borderColor: "rgba(255,255,255,0.10)",
+                        borderColor: "rgba(15,23,42,0.06)",
                     }}
                 >
                     {navItems.map((item) => {
@@ -54,26 +54,26 @@ export function BottomNav() {
                                 key={item.id}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => item.onClick ? item.onClick() : router.push(item.path)}
-                                className={`flex flex-col items-center justify-center relative transition-all duration-300 flex-1 py-2 rounded-[1rem] ${isActive ? "bg-white/10" : "bg-transparent"}`}
+                                className={`flex flex-col items-center justify-center relative transition-all duration-300 flex-1 py-2 rounded-[0.95rem] ${isActive ? "bg-slate-50" : "bg-transparent"}`}
                             >
                                 <item.icon 
                                     className={`transition-all duration-300 ${
                                         isService ? 'w-6 h-6' : 'w-5 h-5'
                                     } ${
-                                        isActive ? '' : 'text-white/55'
+                                        isActive ? '' : 'text-slate-400'
                                     }`} 
                                     style={isActive ? { color: theme.accent || "#C8A96A" } : undefined}
                                     strokeWidth={isActive ? 2.5 : 2}
                                 />
                                 {!isService && (
                                     <span className={`text-[8px] font-black uppercase tracking-[0.1em] mt-1 transition-colors ${
-                                        isActive ? '' : 'text-white/55'
+                                        isActive ? '' : 'text-slate-400'
                                     }`} style={isActive ? { color: theme.accent || "#C8A96A" } : undefined}>
                                         {item.label}
                                     </span>
                                 )}
                                 {isService && (
-                                    <span className="text-[8px] font-black uppercase tracking-[0.1em] mt-1 text-white/55 transition-colors">
+                                    <span className="text-[8px] font-black uppercase tracking-[0.1em] mt-1 text-slate-400 transition-colors">
                                         {item.label}
                                     </span>
                                 )}

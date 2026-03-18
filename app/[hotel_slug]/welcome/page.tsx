@@ -5,6 +5,7 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useHotelBranding } from "@/utils/store";
 import { motion } from "framer-motion";
 import { Utensils, ShoppingBag } from "lucide-react";
+import { getDirectImageUrl } from "@/utils/image";
 
 export default function WelcomeSelectionPage() {
     const router = useRouter();
@@ -12,8 +13,7 @@ export default function WelcomeSelectionPage() {
     const searchParams = useSearchParams();
     const hotelSlug = params?.hotel_slug as string;
 
-    const { branding, loading } = useHotelBranding(hotelSlug);
-    const { getDirectImageUrl } = require("@/utils/image");
+    const { branding, loading, fetchError } = useHotelBranding(hotelSlug);
 
     const room = searchParams?.get("room") || "";
     const pin = searchParams?.get("pin") || "";
@@ -23,6 +23,18 @@ export default function WelcomeSelectionPage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <div className="w-12 h-12 border-4 border-slate-300 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+
+    if (!branding && fetchError) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 text-center">
+                <div>
+                    <h1 className="text-2xl font-black text-slate-900 mb-2">Unable To Load Property</h1>
+                    <p className="text-slate-500 font-medium mb-3">We could not load this restaurant right now. Please try again.</p>
+                    <p className="text-[11px] font-bold text-slate-400">{fetchError}</p>
+                </div>
             </div>
         );
     }

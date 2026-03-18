@@ -1,529 +1,543 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import React, { useState, useMemo } from "react";
-import { 
-    Plus, 
-    Minus,
-    Search, 
-    ShoppingBag, 
-    ChevronRight, 
-    Star, 
-    Flame, 
-    Clock, 
-    ChevronLeft,
-    HandPlatter,
-    Info,
-    X,
-    Bell,
-    Droplets,
-    UtensilsCrossed,
-    MapPin,
-    Home,
-    ShoppingBag as CartIcon
+import React from "react";
+import { useParams, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import {
+    ArrowRight,
+    ClipboardList,
+    Receipt,
+    RefreshCw,
+    ShoppingBag,
+    Sparkles,
+    UserRound,
 } from "lucide-react";
-import { getDirectImageUrl } from "@/utils/image";
-import { useRouter, useParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-    useHotelBranding, 
-    useSupabaseRequests, 
-    addSupabaseRequest, 
-    useCart, 
-    useSupabaseMenuItems, 
-    useMenuCategories, 
-    deriveMenuCategories, 
-    normalizeCategoryKey,
-    getRoomAccessState,
-    useSpecialOffers,
-    useHeroes,
-    useSeasonalStories,
-    useMoods,
-    useMenuSections
-} from "@/utils/store";
-import { CategorySectionHeader } from "@/components/CategorySectionHeader";
-import { ChefPicksSnapRail } from "@/components/ChefPicksSnapRail";
-import { PopularGrid } from "@/components/PopularGrid";
-import { IndulgeSection } from "@/components/IndulgeSection";
-import { MinimalMenuItemCard } from "@/components/MinimalMenuItemCard";
-import { SeasonalStories } from "@/components/SeasonalStories";
-import { EatByMoodSection } from "@/components/EatByMoodSection";
-import { MoodItemsGrid } from "@/components/MoodItemsGrid";
-import { useGuestRoom } from "../GuestAuthWrapper";
+import { CartOverlay } from "@/components/CartOverlay";
+import { LoyaltySignIn } from "@/components/LoyaltySignIn";
 import { Toast } from "@/components/Toast";
-import { LoadingScreen } from "@/components/LoadingScreen";
-import { useAddEffectTrigger } from "@/components/AddEffect";
-import { useTheme, getTimeTheme } from "@/utils/themes";
+import {
+    addLoyaltyPoints,
+    addSupabaseRequest,
+    getRoomAccessState,
+    saveGuestLoyaltySession,
+    useCart,
+    useGuestLoyalty,
+    useHotelBranding,
+    useSupabaseMenuItems,
+    useSupabaseRequests,
+} from "@/utils/store";
+import { useGuestRoom } from "../GuestAuthWrapper";
+import { useTheme } from "@/utils/themes";
+import { getDirectImageUrl } from "@/utils/image";
+import { DISCOVERY_MOODS } from "@/utils/guestDiscovery";
+
+type LoyaltyProfile = {
+    phone: string;
+    name: string;
+    lastVisitAt?: string | null;
+};
+
+const formatDateTime = (value?: string | null) => {
+    if (!value) return "First visit";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "First visit";
+
+    return date.toLocaleString(undefined, {
+        day: "numeric",
+        month: "short",
+        hour: "numeric",
+        minute: "2-digit",
+    });
+};
 
 export default function GuestDashboard() {
     const router = useRouter();
     const params = useParams();
     const hotelSlug = params?.hotel_slug as string;
-
-    const { roomNumber: tableNumber, checkedInAt, orderMode, switchToDineIn, switchToTakeaway } = useGuestRoom();
+    const { roomNumber, checkedInAt, orderMode } = useGuestRoom();
     const { branding, loading } = useHotelBranding(hotelSlug);
-    const { categories: menuCategories } = useMenuCategories(branding?.id);
-    const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id);
-    const { offers, loading: offersLoading } = useSpecialOffers(branding?.id);
-    const requests = useSupabaseRequests(branding?.id, tableNumber, checkedInAt);
     const theme = useTheme(branding);
-    const timeTheme = getTimeTheme();
+    const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id);
+    const { menuItems } = useSupabaseMenuItems(branding?.id);
+    const requests = useSupabaseRequests(branding?.id, roomNumber, checkedInAt);
 
-    const [activeCategory, setActiveCategory] = useState("all");
-    const [selectedProduct, setSelectedProduct] = useState<any>(null);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [scrolled, setScrolled] = useState(false);
-    const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
-    const [activeMoodId, setActiveMoodId] = useState<string | null>(null);
+    const [showCart, setShowCart] = React.useState(false);
+    const [isOrdering, setIsOrdering] = React.useState(false);
+    const [orderComplete, setOrderComplete] = React.useState(false);
+    const [isLoyaltyOpen, setIsLoyaltyOpen] = React.useState(false);
+    const [toast, setToast] = React.useState<{ message: string; type: "success" | "error"; isVisible: boolean }>({
+        message: "",
+        type: "success",
+        isVisible: false,
+    });
+    const [loyaltyProfile, setLoyaltyProfile] = React.useState<LoyaltyProfile | null>(() => {
+        if (typeof window === "undefined") return null;
+        const stored = localStorage.getItem(`guest_loyalty_${hotelSlug}`);
+        return stored ? JSON.parse(stored) : null;
+    });
 
-    const sectionRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
-
-    const triggerFly = useAddEffectTrigger();
-
-    React.useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 50);
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
-
-    const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
-    const { sections, loading: sectionsLoading } = useMenuSections(branding?.id);
-    const { heroes, loading: heroesLoading } = useHeroes(branding?.id);
-    const { stories, loading: storiesLoading } = useSeasonalStories(branding?.id);
-    const { moods, loading: moodsLoading } = useMoods(branding?.id);
-
-    // Derived Data
-    const availableMenuItems = useMemo(
+    const { loyalty: realLoyalty } = useGuestLoyalty(branding?.id, loyaltyProfile?.phone || null);
+    const availableMenuItems = React.useMemo(
         () => menuItems.filter((item) => item.is_available !== false),
         [menuItems]
     );
 
-    const categories = useMemo(() => {
-        const derived = deriveMenuCategories(menuItems);
-        
-        // Merge with official menuCategories from DB to get images/icons
-        return [
-            { 
-                id: "all", 
-                name: "All", 
-                icon: "🍱", 
-                image_url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=256&auto=format" 
-            },
-            ...derived.map(cat => {
-                const official = menuCategories.find(mc => normalizeCategoryKey(mc.name) === cat.slug);
-                return {
-                    id: cat.slug,
-                    name: cat.name,
-                    icon: official?.icon_emoji || cat.icon_emoji || "🍽️",
-                    image_url: official?.image_url || undefined
-                };
-            })
-        ];
-    }, [menuItems, menuCategories]);
-
-    const heroItems = useMemo(() => {
-        const activeHeroes = (heroes || []).filter(h => h.is_active);
-        if (activeHeroes.length > 0) return activeHeroes;
-        return [{ image_url: branding?.heroImage || availableMenuItems[0]?.image_url }];
-    }, [heroes, branding, availableMenuItems]);
+    React.useEffect(() => {
+        const handleOpenCart = () => setShowCart(true);
+        window.addEventListener("open_cart", handleOpenCart);
+        return () => window.removeEventListener("open_cart", handleOpenCart);
+    }, []);
 
     React.useEffect(() => {
-        if (heroItems.length <= 1) return;
-        const interval = setInterval(() => {
-            setCurrentHeroIndex((prev) => (prev + 1) % heroItems.length);
-        }, 5000);
-        return () => clearInterval(interval);
-    }, [heroItems.length]);
+        if (!menuItems.length) return;
 
-    const mostOrderedItems = useMemo(() => {
-        return availableMenuItems.filter(i => i.is_popular).slice(0, 5);
-    }, [availableMenuItems]);
+        const soldOutIds = Object.keys(cart).filter((id) =>
+            menuItems.some((item) => item.id === id && item.is_available === false)
+        );
 
-    // Mood Engine Filtering
-    const activeMood = useMemo(() => moods?.find(m => m.id === activeMoodId), [moods, activeMoodId]);
-    const moodItems = useMemo(() => {
-        if (!activeMood) return [];
-        return availableMenuItems
-            .filter(item => item.tags?.includes(activeMood.tag_linked))
-            .slice(0, 6); // Top 6 matches
-    }, [activeMood, availableMenuItems]);
+        soldOutIds.forEach((id) => updateQuantity(id, 0));
+    }, [menuItems, cart, updateQuantity]);
 
-    const cartTotal = useMemo(() => {
-        return Object.entries(cart).reduce((sum, [id, q]) => {
-            const item = availableMenuItems.find(m => m.id === id);
-            return sum + ((item?.price || 0) * (q as number));
-        }, 0);
-    }, [cart, availableMenuItems]);
+    const handleLoyaltySignIn = async (phone: string, name: string) => {
+        const profile = { phone, name, lastVisitAt: new Date().toISOString() };
+        localStorage.setItem(`guest_loyalty_${hotelSlug}`, JSON.stringify(profile));
+        setLoyaltyProfile(profile);
 
-    const addToCart = (item: any, e?: React.MouseEvent) => {
-        if (!item.is_available) {
-            window.dispatchEvent(new CustomEvent("guest_show_toast", { detail: { message: "Sold out", type: "error" } }));
+        if (branding?.id) {
+            await saveGuestLoyaltySession(branding.id, phone, name, { lastVisitAt: profile.lastVisitAt });
+        }
+    };
+
+    const cartTotal = Object.entries(cart).reduce((sum, [id, quantity]) => {
+        const item = availableMenuItems.find((menuItem) => menuItem.id === id);
+        return sum + ((item?.price || 0) * quantity);
+    }, 0);
+
+    const liveBillTotal = requests
+        .filter((request) => (request.total || 0) > 0 && !request.is_paid)
+        .reduce((sum, request) => sum + (request.total || 0), 0);
+
+    const openOrderCount = requests.filter((request) => request.status !== "Completed").length;
+    const completedOrderCount = requests.filter((request) => request.status === "Completed").length;
+    const lastVisit = realLoyalty?.last_visit_at || loyaltyProfile?.lastVisitAt || null;
+    const lastOrder = realLoyalty?.last_order_at || null;
+
+    const handleOrder = async () => {
+        if (!branding?.id) return;
+
+        const soldOutIds = Object.keys(cart).filter((id) =>
+            menuItems.some((item) => item.id === id && item.is_available === false)
+        );
+
+        if (soldOutIds.length > 0) {
+            soldOutIds.forEach((id) => updateQuantity(id, 0));
+            setToast({
+                message: "Some sold out items were removed from your bag. Please review your cart.",
+                type: "error",
+                isVisible: true,
+            });
             return;
         }
-        updateQuantity(item.id, (cart[item.id] || 0) + 1);
-        if (e && triggerFly) {
-            triggerFly(item.id, item.image_url || '', e);
+
+        if (!loyaltyProfile) {
+            setIsLoyaltyOpen(true);
+            return;
         }
+
+        if (orderMode !== "takeaway") {
+            const accessState = await getRoomAccessState(branding.id, roomNumber);
+            if (!accessState.active) {
+                setToast({
+                    message: "This table is not active right now. Ask staff to activate the table before placing an order.",
+                    type: "error",
+                    isVisible: true,
+                });
+                return;
+            }
+        }
+
+        const now = new Date().toISOString();
+        await saveGuestLoyaltySession(branding.id, loyaltyProfile.phone, loyaltyProfile.name, {
+            lastVisitAt: loyaltyProfile.lastVisitAt || now,
+            lastOrderAt: now,
+            lastOrderMode: orderMode,
+        });
+
+        setIsOrdering(true);
+
+        const cartItemsData = Object.entries(cart).map(([id, quantity]) => {
+            const item = availableMenuItems.find((menuItem) => menuItem.id === id);
+            return {
+                id,
+                title: item?.title || "Unknown Item",
+                quantity,
+                price: item?.price || 0,
+                total: (item?.price || 0) * quantity,
+            };
+        });
+
+        const { error } = await addSupabaseRequest(branding.id, {
+            room: roomNumber || "Unknown",
+            type: "Dining Order",
+            notes: cartItemsData.map((item) => `${item.quantity}x ${item.title}`).join(", "),
+            status: "Pending",
+            price: cartTotal,
+            total: cartTotal,
+            items: cartItemsData,
+        });
+
+        setIsOrdering(false);
+
+        if (error) {
+            setToast({ message: `Order failed: ${error.message}`, type: "error", isVisible: true });
+            return;
+        }
+
+        if (cartTotal > 0) {
+            await addLoyaltyPoints(branding.id, loyaltyProfile.phone, Math.floor(cartTotal / 10));
+        }
+
+        clearCart();
+        setShowCart(false);
+        setOrderComplete(true);
+        setToast({ message: "Order placed successfully.", type: "success", isVisible: true });
     };
 
-    const removeFromCart = (item: any) => {
-        const currentQty = cart[item.id] || 0;
-        if (currentQty <= 0) return;
-        updateQuantity(item.id, currentQty - 1);
-    };
-
-    const filteredItems = useMemo(() => {
-        return availableMenuItems.filter(i => 
-            (activeCategory === 'all' || normalizeCategoryKey(i.category) === activeCategory) &&
-            (i.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-             i.description?.toLowerCase().includes(searchQuery.toLowerCase()))
+    if (loading || !branding) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <RefreshCw className="w-8 h-8 animate-spin text-slate-300" />
+            </div>
         );
-    }, [availableMenuItems, activeCategory, searchQuery]);
+    }
 
-
-    if (loading || menuLoading) return (
-        <LoadingScreen 
-            hotelName={branding?.name} 
-            logo={branding?.logoImage || branding?.logo} 
-            backgroundImage={branding?.loadingImage}
-        />
-    );
+    const actionCards = [
+        {
+            id: "menu",
+            label: "Menu",
+            value: `${availableMenuItems.length} items`,
+            description: "Browse the full menu and place a new order.",
+            icon: ShoppingBag,
+            onClick: () => router.push(`/${hotelSlug}/guest/restaurant`),
+        },
+        {
+            id: "orders",
+            label: "Orders",
+            value: `${openOrderCount} live`,
+            description: "Track open kitchen and service requests.",
+            icon: ClipboardList,
+            onClick: () => router.push(`/${hotelSlug}/guest/status`),
+        },
+        {
+            id: "bill",
+            label: "Live Bill",
+            value: `Rs ${liveBillTotal.toFixed(0)}`,
+            description: "See running charges and request the bill when ready.",
+            icon: Receipt,
+            onClick: () => router.push(`/${hotelSlug}/guest/bill`),
+        },
+        {
+            id: "identity",
+            label: loyaltyProfile ? "Known Guest" : "Guest Identity",
+            value: loyaltyProfile ? loyaltyProfile.name : "Save details",
+            description: loyaltyProfile
+                ? `Last visit ${formatDateTime(lastVisit)}`
+                : "Keep takeaway and repeat visits smooth.",
+            icon: UserRound,
+            onClick: () => (loyaltyProfile ? router.push(`/${hotelSlug}/guest/profile`) : setIsLoyaltyOpen(true)),
+        },
+    ];
 
     return (
-        <div className="min-h-screen bg-[#F5F1E8] text-[#0F3D2E] selection:bg-[#C8A96A] selection:text-white pb-32 font-sans overflow-x-hidden">
-            
-            {/* 2. MINIMAL AUTO-CAROUSEL HERO */}
-            <section className="relative h-[60vh] w-full overflow-hidden">
-                <AnimatePresence mode="wait">
-                    <motion.div 
-                        key={currentHeroIndex}
-                        initial={{ opacity: 0, scale: 1.05 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 1.5, ease: "easeInOut" }}
-                        className="absolute inset-0"
-                    >
-                        <img 
-                            src={getDirectImageUrl(heroItems[currentHeroIndex]?.image_url)} 
-                            className="w-full h-full object-cover"
-                            alt="Restaurant Ad"
-                        />
-                    </motion.div>
-                </AnimatePresence>
-                
-                {/* Subtle Gradient for readability of overlay elements if any */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent pointer-events-none" />
+        <div
+            className="min-h-screen pb-32 pt-6 w-full max-w-[460px] mx-auto px-3.5 relative"
+            style={{ backgroundColor: theme.background, color: theme.text, fontFamily: theme.fontSans }}
+        >
+            <div className="absolute inset-0 -z-20 pointer-events-none">
+                <div
+                    className="absolute inset-0"
+                    style={{ background: `linear-gradient(180deg, ${theme.background} 0%, ${theme.surface} 100%)` }}
+                />
+                {branding.heroImage ? (
+                    <img
+                        src={getDirectImageUrl(branding.heroImage)}
+                        alt={branding.name}
+                        className="absolute inset-x-0 top-0 h-[280px] w-full object-cover opacity-12 blur-[2px] scale-105"
+                    />
+                ) : null}
+                <div className="absolute -top-12 right-0 h-52 w-52 rounded-full blur-[90px]" style={{ backgroundColor: `${theme.secondary}55` }} />
+                <div className="absolute top-44 -left-10 h-44 w-44 rounded-full blur-[90px]" style={{ backgroundColor: `${theme.primary}18` }} />
+            </div>
 
-                {/* Progress Indicators */}
-                {heroItems.length > 1 && (
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                        {heroItems.map((_, idx) => (
-                            <div 
-                                key={idx} 
-                                className={`h-1 rounded-full transition-all duration-500 ${idx === currentHeroIndex ? 'w-6 bg-white' : 'w-2 bg-white/30'}`}
-                            />
-                        ))}
-                    </div>
-                )}
-            </section>
-
-            {/* 3. SEASONAL STORIES (REPLACES CATEGORIES) */}
-            <SeasonalStories 
-                stories={stories} 
-                loading={storiesLoading}
-                onStoryClick={(story) => {
-                    if (story.menu_item_id) {
-                        const item = availableMenuItems.find(i => i.id === story.menu_item_id);
-                        if (item) setSelectedProduct(item);
-                    }
-                }}
-            />
-
-            <main className="max-w-md mx-auto px-6 space-y-8 pt-2 relative z-10">
-                {activeCategory === 'all' && mostOrderedItems.length > 0 && (
-                    <section className="space-y-6">
-                        <h3 className="text-2xl font-black italic tracking-tight text-[#0F3D2E]">Chef's Handcrafted Picks</h3>
-                        <ChefPicksSnapRail 
-                            items={mostOrderedItems} 
-                            cart={cart} 
-                            onAdd={(item) => addToCart(item)}
-                            onRemove={(item) => removeFromCart(item)}
-                        />
-                    </section>
-                )}
-
-                {/* EAT BY MOOD ENGINE */}
-                {activeCategory === 'all' && moods && moods.length > 0 && (
-                    <div className="relative z-10 space-y-2" id="eat-by-mood-section">
-                        <EatByMoodSection 
-                            moods={moods} 
-                            activeMoodId={activeMoodId} 
-                            onMoodSelect={(id) => {
-                                setActiveMoodId(id);
-                                setTimeout(() => {
-                                    document.getElementById('eat-by-mood-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                                }, 100);
-                            }} 
-                        />
-                        {activeMoodId && activeMood && (
-                            <MoodItemsGrid 
-                                items={moodItems} 
-                                moodName={activeMood.name}
-                                cart={cart}
-                                onAdd={(item) => addToCart(item)}
-                                onRemove={(item) => removeFromCart(item)}
-                                onItemClick={(item) => setSelectedProduct(item)}
-                            />
-                        )}
-                    </div>
-                )}
-
-                {/* DYNAMIC SECTIONS ENGINE */}
-                {!activeMoodId && sections?.map((section) => {
-                    const sectionItems = availableMenuItems.filter(item => {
-                        if (section.type === 'category') {
-                             return normalizeCategoryKey(item.category) === normalizeCategoryKey(section.category_id || "");
-                        }
-                        if (section.type === 'bestseller') {
-                            return item.is_popular;
-                        }
-                        if (section.type === 'tag') {
-                            return section.tags?.some(tag => item.tags?.includes(tag));
-                        }
-                        if (section.type === 'upsell') {
-                            return item.is_popular; // Placeholder
-                        }
-                        return false;
-                    }).slice(0, section.rules?.limit || 10);
-
-                    if (sectionItems.length === 0 && section.type !== 'static') return null;
-
-                    return (
-                        <section 
-                            key={section.id} 
-                            id={section.id}
-                            ref={(el) => { sectionRefs.current[section.id] = el as HTMLDivElement; }}
-                            className="space-y-6"
-                        >
-                            {section.type === 'static' ? (
-                                <div className="flex items-center gap-6 py-4">
-                                    <div className="h-[1px] flex-1 bg-[#0F3D2E]/10" />
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#0F3D2E]/40">{section.title}</h4>
-                                    <div className="h-[1px] flex-1 bg-[#0F3D2E]/10" />
-                                </div>
-                            ) : section.rules?.layout === 'snap' ? (
-                                <>
-                                     <h3 className="text-2xl font-black italic tracking-tight text-[#0F3D2E]">{section.title}</h3>
-                                     <ChefPicksSnapRail 
-                                        items={sectionItems} cart={cart} 
-                                        onAdd={(item) => addToCart(item)}
-                                        onRemove={(item) => removeFromCart(item)}
-                                    />
-                                </>
-                            ) : section.type === 'bestseller' ? (
-                                <>
-                                    <h3 className="text-2xl font-black italic tracking-tight text-[#0F3D2E]">{section.title}</h3>
-                                    <PopularGrid items={sectionItems} onAdd={(item) => addToCart(item)} />
-                                </>
-                            ) : section.type === 'tag' ? (
-                                <IndulgeSection items={sectionItems} onAdd={(item) => addToCart(item)} title={section.title} />
-                            ) : (
-                                <>
-                                    <CategorySectionHeader 
-                                        name={section.title} 
-                                        tagline={section.rules?.tagline || "Freshly prepared."} 
-                                        imageUrl={section.rules?.image_url} 
-                                    />
-                                    <div className="space-y-4">
-                                        {sectionItems.map((item) => (
-                                            <MinimalMenuItemCard 
-                                                key={item.id} 
-                                                item={item} 
-                                                quantity={cart[item.id] || 0} 
-                                                onAdd={() => addToCart(item)} 
-                                                onRemove={() => removeFromCart(item)} 
-                                            />
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-                        </section>
-                    );
-                })}
-
-                {/* Search / Filtered View (Fallback or Manual Search) */}
-                {!activeMoodId && searchQuery && (
-                    <section className="space-y-8">
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-2xl font-black italic tracking-tight text-[#0F3D2E]">Search Results</h4>
-                        </div>
-                        <div className="grid grid-cols-1 gap-12">
-                            {filteredItems.map((item) => (
-                                <motion.div 
-                                    key={item.id}
-                                    layout
-                                    className="flex items-center gap-6 group cursor-pointer"
-                                    onClick={() => setSelectedProduct(item)}
-                                >
-                                    <div className="w-32 h-32 rounded-[2rem] overflow-hidden shadow-xl border border-black/5 relative shrink-0">
-                                        <img src={getDirectImageUrl(item.image_url)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.title} />
-                                    </div>
-                                    <div className="flex-1 space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <h5 className="text-lg font-black italic tracking-tighter text-[#0F3D2E]">{item.title}</h5>
-                                            <span className="text-[#C8A96A] font-black text-sm px-2">₹{item.price}</span>
-                                        </div>
-                                        <p className="text-[#0F3D2E]/60 text-[11px] leading-relaxed line-clamp-2 italic font-medium">
-                                            {item.description}
-                                        </p>
-                                        <div className="pt-2">
-                                            <button 
-                                                onClick={(e) => { e.stopPropagation(); addToCart(item, e as any); }}
-                                                className="px-6 py-2.5 bg-[#C8A96A] text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg"
-                                            >
-                                                + Add
-                                            </button>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {/* Default Category View if no sections configured or "All" selected */}
-                {!activeMoodId && (!sections || sections.length === 0 || activeCategory !== 'all') && (
-                    <div className="space-y-16">
-                         {categories.filter(c => c.id !== "all" && (activeCategory === 'all' || activeCategory === c.id)).map((cat: any) => (
-                            <section key={cat.id} id={cat.id} ref={(el) => { sectionRefs.current[cat.id] = el as HTMLDivElement; }} className="space-y-6">
-                                <CategorySectionHeader name={cat.name} tagline={cat.tagline || "Freshly prepared."} imageUrl={cat.imageUrl} />
-                                <div className="space-y-4">
-                                    {availableMenuItems.filter((item: any) => normalizeCategoryKey(item.category) === cat.id).map((item) => (
-                                        <MinimalMenuItemCard 
-                                            key={item.id} 
-                                            item={item} 
-                                            quantity={cart[item.id] || 0} 
-                                            onAdd={() => addToCart(item)} 
-                                            onRemove={() => removeFromCart(item)} 
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                        ))}
-                    </div>
-                )}
-            </main>
-
-            {/* Apple Story Mode: Product Detail Modal */}
-            <AnimatePresence>
-                {selectedProduct && (
-                        <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[150] bg-[#F5F1E8] flex flex-col overflow-y-auto no-scrollbar"
-                        >
-                        {/* Header: Absolute Close */}
-                        <div className="fixed top-0 left-0 right-0 z-[160] p-8 flex justify-end">
-                            <motion.button 
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => setSelectedProduct(null)}
-                                className="w-12 h-12 rounded-full bg-black/60 flex items-center justify-center text-white"
-                            >
-                                <X className="w-6 h-6" />
-                            </motion.button>
+            <div className="space-y-4">
+                <motion.section
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-[2.25rem] border p-5 shadow-[0_24px_80px_-32px_rgba(0,0,0,0.28)] backdrop-blur-2xl overflow-hidden relative"
+                    style={{
+                        background: "linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.22) 100%)",
+                        borderColor: "rgba(255,255,255,0.46)",
+                    }}
+                >
+                    <div
+                        className="absolute inset-0 opacity-70 pointer-events-none"
+                        style={{ background: `radial-gradient(circle at top right, ${theme.secondary}66, transparent 46%)` }}
+                    />
+                    <div className="relative z-10">
+                        <div className="inline-flex items-center gap-2 rounded-full border px-3 py-2 mb-4 backdrop-blur-md" style={{ backgroundColor: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.42)" }}>
+                            <Sparkles className="w-3.5 h-3.5" style={{ color: theme.primary }} />
+                            <span className="text-[9px] font-black uppercase tracking-[0.24em]" style={{ color: theme.primary }}>
+                                {orderMode === "takeaway" ? "Takeaway Session" : "Table Session"}
+                            </span>
                         </div>
 
-                        {/* Top: Massive Visuals */}
-                        <section className="relative h-[60vh] w-full shrink-0">
-                            <img 
-                                src={getDirectImageUrl(selectedProduct.image_url)} 
-                                className="w-full h-full object-cover" 
-                                alt={selectedProduct.title}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#F5F1E8] via-transparent to-black/20" />
-                        </section>
-
-                        {/* Bottom: The Story */}
-                        <section className="px-8 -mt-20 relative z-10 space-y-12 pb-32">
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2">
-                                    <Star className="w-4 h-4 text-[#C8A96A] fill-[#C8A96A]" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C8A96A]">Signature Masterpiece</span>
-                                </div>
-                                <h2 className="text-5xl font-black italic tracking-tighter text-[#0F3D2E] leading-none">{selectedProduct.title}</h2>
-                                <div className="flex items-center justify-between pt-4">
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-3xl font-black text-[#0F3D2E]">₹{selectedProduct.price}</span>
-                                        <div className="h-6 w-[1px] bg-white/10" />
-                                        <div className="flex items-center gap-1">
-                                            <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
-                                            <span className="text-[10px] font-black uppercase text-white/40">450 kcal</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-6">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#0F3D2E]/40">The Experience</h3>
-                                <p className="text-2xl font-medium italic text-[#0F3D2E]/80 leading-snug">
-                                    {selectedProduct.description || "A symphony of textures and flavors, handcrafted with premium ingredients for the ultimate sensory delight."}
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0">
+                                <h1 className="text-[clamp(1.7rem,7vw,2.4rem)] font-black tracking-tight leading-none" style={{ color: theme.primary }}>
+                                    {orderMode === "takeaway" ? "Ready for pickup" : roomNumber ? `Table ${roomNumber}` : "Ready to order"}
+                                </h1>
+                                <p className="mt-2 text-sm font-semibold opacity-65 max-w-[26ch]">
+                                    Clean ordering, live status, and one place to track the bill.
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-6 rounded-[2rem] bg-white border border-[#0F3D2E]/5 space-y-2">
-                                    <Clock className="w-6 h-6 text-[#C8A96A]" />
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-[#0F3D2E]/40">Prep Time</h4>
-                                    <p className="text-sm font-black text-[#0F3D2E]">12-15 Mins</p>
-                                </div>
-                                <div className="p-6 rounded-[2rem] bg-white border border-[#0F3D2E]/5 space-y-2">
-                                    <Star className="w-6 h-6 text-[#C8A96A]" />
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-[#0F3D2E]/40">Rating</h4>
-                                    <p className="text-sm font-black text-[#0F3D2E]">4.9 / 5.0</p>
-                                </div>
+                            <div className="rounded-[1.3rem] px-4 py-3 border backdrop-blur-md shrink-0" style={{ backgroundColor: "rgba(255,255,255,0.36)", borderColor: "rgba(255,255,255,0.38)" }}>
+                                <p className="text-[8px] font-black uppercase tracking-[0.26em] opacity-35 mb-1">Known Guest</p>
+                                <p className="text-sm font-black" style={{ color: theme.primary }}>
+                                    {loyaltyProfile ? loyaltyProfile.name : "Not synced"}
+                                </p>
+                                <p className="text-[10px] font-bold opacity-50 mt-1">{formatDateTime(lastVisit)}</p>
                             </div>
+                        </div>
 
-                            {/* Floating Action Bar */}
-                            <div className="fixed bottom-10 left-8 right-8 z-[160]">
-                                <motion.div 
-                                    initial={{ y: 50, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    className="bg-[#0F3D2E] rounded-[2.5rem] p-4 flex items-center justify-between shadow-2xl"
-                                >
-                                    <div className="flex items-center gap-4 bg-white/10 rounded-full p-1 border border-white/10 ml-2">
-                                        <button 
-                                            onClick={() => removeFromCart(selectedProduct)}
-                                            className="w-10 h-10 rounded-full flex items-center justify-center text-white active:scale-80 transition-all"
-                                        >
-                                            <Minus className="w-5 h-5" />
-                                        </button>
-                                        <span className="text-lg font-black text-white min-w-[1.5rem] text-center">{cart[selectedProduct.id] || 0}</span>
-                                        <button 
-                                            onClick={(e) => addToCart(selectedProduct, e as any)}
-                                            className="w-10 h-10 rounded-full flex items-center justify-center text-white active:scale-80 transition-all"
-                                        >
-                                            <Plus className="w-5 h-5" />
-                                        </button>
+                        <div className="grid grid-cols-3 gap-3 mt-5">
+                            <MiniStat label="Bag" value={`${cartCount}`} theme={theme} />
+                            <MiniStat label="Open" value={`${openOrderCount}`} theme={theme} />
+                            <MiniStat label="Done" value={`${completedOrderCount}`} theme={theme} />
+                        </div>
+                    </div>
+                </motion.section>
+
+                <section className="grid grid-cols-2 gap-3">
+                    {actionCards.map((card, index) => (
+                        <motion.button
+                            key={card.id}
+                            initial={{ opacity: 0, y: 18 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.04 * index }}
+                            onClick={card.onClick}
+                            className="rounded-[1.8rem] border bg-white/82 backdrop-blur-xl p-4 text-left shadow-[0_18px_50px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all"
+                            style={{ borderColor: `${theme.primary}10` }}
+                        >
+                            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: `${theme.secondary}55`, color: theme.primary }}>
+                                <card.icon className="w-5 h-5" />
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-40 mb-2" style={{ color: theme.primary }}>
+                                {card.label}
+                            </p>
+                            <h2 className="text-lg font-black tracking-tight mb-1 line-clamp-2" style={{ color: theme.primary }}>
+                                {card.value}
+                            </h2>
+                            <p className="text-[11px] font-medium leading-5 opacity-60" style={{ color: theme.primary }}>
+                                {card.description}
+                            </p>
+                        </motion.button>
+                    ))}
+                </section>
+
+                <motion.section
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 }}
+                    className="rounded-[2rem] p-5 border shadow-[0_20px_60px_-30px_rgba(0,0,0,0.18)]"
+                    style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}
+                >
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.24em] opacity-35 mb-2" style={{ color: theme.primary }}>
+                                Eat by mood
+                            </p>
+                            <h3 className="text-xl font-black tracking-tight" style={{ color: theme.primary }}>
+                                Start with how you feel, not the full menu.
+                            </h3>
+                        </div>
+                        <button
+                            onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
+                            className="shrink-0 rounded-full border px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.24em] transition-all active:scale-95"
+                            style={{ color: theme.primary, borderColor: `${theme.primary}12`, backgroundColor: "rgba(255,255,255,0.7)" }}
+                        >
+                            Open Menu
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        {DISCOVERY_MOODS.map((mood, index) => (
+                            <motion.button
+                                key={mood.id}
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 + index * 0.04 }}
+                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant?mood=${mood.id}`)}
+                                className="rounded-[1.7rem] border p-4 text-left bg-white/82 backdrop-blur-xl shadow-[0_16px_45px_rgba(0,0,0,0.05)] active:scale-[0.98] transition-all"
+                                style={{ borderColor: `${theme.primary}10` }}
+                            >
+                                <div className="flex items-center justify-between gap-3 mb-4">
+                                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl" style={{ backgroundColor: `${theme.secondary}45` }}>
+                                        {mood.icon}
                                     </div>
-                                    <button 
-                                        onClick={() => {
-                                            if (!cart[selectedProduct.id]) addToCart(selectedProduct);
-                                            setSelectedProduct(null);
-                                        }}
-                                        className="bg-[#C8A96A] text-white px-8 py-4 rounded-[2rem] text-xs font-black uppercase tracking-widest shadow-xl flex-1 ml-4"
-                                    >
-                                        {cart[selectedProduct.id] > 0 ? "Done" : "Add to Journey"}
-                                    </button>
-                                </motion.div>
-                            </div>
-                        </section>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                    <ArrowRight className="w-4 h-4 opacity-35" style={{ color: theme.primary }} />
+                                </div>
+                                <p className="text-base font-black tracking-tight mb-1" style={{ color: theme.primary }}>
+                                    {mood.label}
+                                </p>
+                                <p className="text-[11px] font-semibold opacity-60 leading-5" style={{ color: theme.primary }}>
+                                    {mood.guidance}
+                                </p>
+                            </motion.button>
+                        ))}
+                    </div>
+                </motion.section>
 
+                {cartCount > 0 ? (
+                    <motion.section
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.12 }}
+                        className="rounded-[2rem] p-5 border shadow-[0_20px_60px_-30px_rgba(0,0,0,0.22)]"
+                        style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}
+                    >
+                        <div className="flex items-center justify-between gap-4">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.24em] opacity-35 mb-2" style={{ color: theme.primary }}>
+                                    In your bag
+                                </p>
+                                <h3 className="text-2xl font-black tracking-tight" style={{ color: theme.primary }}>
+                                    Rs {cartTotal.toFixed(0)}
+                                </h3>
+                                <p className="text-sm font-medium opacity-60 mt-1">
+                                    {cartCount} item{cartCount === 1 ? "" : "s"} ready for checkout.
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={() => setShowCart(true)}
+                                className="rounded-full px-5 py-3 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-lg active:scale-95 transition-all flex items-center gap-2"
+                                style={{ backgroundColor: theme.primary }}
+                            >
+                                Open Bag
+                                <ArrowRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </motion.section>
+                ) : (
+                    <motion.section
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.12 }}
+                        className="rounded-[2rem] p-5 border shadow-[0_20px_60px_-30px_rgba(0,0,0,0.18)]"
+                        style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}
+                    >
+                        <div className="flex items-center justify-between gap-4">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.24em] opacity-35 mb-2" style={{ color: theme.primary }}>
+                                    Start ordering
+                                </p>
+                                <h3 className="text-xl font-black tracking-tight" style={{ color: theme.primary }}>
+                                    Open the menu and place your next order.
+                                </h3>
+                            </div>
+
+                            <button
+                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
+                                className="rounded-full px-5 py-3 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-lg active:scale-95 transition-all flex items-center gap-2 shrink-0"
+                                style={{ backgroundColor: theme.primary }}
+                            >
+                                Menu
+                                <ArrowRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </motion.section>
+                )}
+            </div>
+
+            {orderComplete && (
+                <div className="fixed inset-0 z-[150] bg-black/35 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-sm rounded-[2rem] bg-white p-6 text-center shadow-2xl border border-white/80">
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-500 mb-2">Order placed</p>
+                        <h2 className="text-2xl font-black text-slate-900 mb-2">Kitchen has your order</h2>
+                        <p className="text-sm text-slate-500 mb-6">You can track progress from the orders page.</p>
+                        <div className="grid grid-cols-1 gap-3">
+                            <button
+                                onClick={() => router.push(`/${hotelSlug}/guest/status`)}
+                                className="rounded-full bg-slate-900 text-white py-3.5 text-[10px] font-black uppercase tracking-[0.24em]"
+                            >
+                                View Orders
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setOrderComplete(false);
+                                    router.push(`/${hotelSlug}/guest/restaurant`);
+                                }}
+                                className="rounded-full border border-slate-200 py-3.5 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700"
+                            >
+                                Order More
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <LoyaltySignIn
+                isOpen={isLoyaltyOpen}
+                onClose={() => setIsLoyaltyOpen(false)}
+                onSignIn={handleLoyaltySignIn}
+                guestName={loyaltyProfile?.name || ""}
+                guestPhone={loyaltyProfile?.phone || ""}
+                lastVisitAt={lastVisit}
+            />
+
+            <CartOverlay
+                isOpen={showCart}
+                onClose={() => setShowCart(false)}
+                cart={cart}
+                updateQuantity={updateQuantity}
+                cartTotal={cartTotal}
+                isOrdering={isOrdering}
+                onOrder={handleOrder}
+                hotelId={branding.id}
+                menuItems={menuItems}
+            />
+
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                isVisible={toast.isVisible}
+                onClose={() => setToast((prev) => ({ ...prev, isVisible: false }))}
+            />
         </div>
     );
 }
 
+function MiniStat({
+    label,
+    value,
+    theme,
+}: {
+    label: string;
+    value: string;
+    theme: ReturnType<typeof useTheme>;
+}) {
+    return (
+        <div
+            className="rounded-[1.25rem] border px-4 py-3 backdrop-blur-md"
+            style={{ backgroundColor: "rgba(255,255,255,0.34)", borderColor: "rgba(255,255,255,0.38)" }}
+        >
+            <p className="text-[8px] font-black uppercase tracking-[0.26em] opacity-35 mb-1">{label}</p>
+            <p className="text-lg font-black tracking-tight" style={{ color: theme.primary }}>
+                {value}
+            </p>
+        </div>
+    );
+}

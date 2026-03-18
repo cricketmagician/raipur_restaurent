@@ -1,26 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Playfair_Display, Inter } from "next/font/google";
+import type { CSSProperties } from "react";
 import "../styles/globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -28,6 +8,13 @@ export const metadata: Metadata = {
 };
 
 import { BrandingProvider } from "@/components/BrandingProvider";
+
+const fontVariables = {
+  "--font-geist-sans": '"Inter", "Helvetica Neue", Arial, sans-serif',
+  "--font-geist-mono": '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
+  "--font-playfair": '"Georgia", "Times New Roman", serif',
+  "--font-inter": '"Inter", "Helvetica Neue", Arial, sans-serif',
+} as CSSProperties;
 
 export default function RootLayout({
   children,
@@ -37,7 +24,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${inter.variable} antialiased font-sans`}
+        className="antialiased font-sans"
+        style={fontVariables}
         suppressHydrationWarning
       >
         <BrandingProvider>

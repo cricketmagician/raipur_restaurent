@@ -3,6 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Search, Flame, ArrowUpRight } from "lucide-react";
+import type { DiscoveryMood } from "@/utils/guestDiscovery";
 
 interface Category {
     id: string;
@@ -21,6 +22,8 @@ interface CategoryDiscoveryGridProps {
     theme: any;
     searchTerm: string;
     onSearchChange: (value: string) => void;
+    mood?: DiscoveryMood | null;
+    onClearMood?: () => void;
 }
 
 export function CategoryDiscoveryGrid({
@@ -31,9 +34,41 @@ export function CategoryDiscoveryGrid({
     theme,
     searchTerm,
     onSearchChange,
+    mood,
+    onClearMood,
 }: CategoryDiscoveryGridProps) {
     return (
         <div className="space-y-6 mt-6">
+            {mood && (
+                <section
+                    className="rounded-[2rem] border bg-white/84 backdrop-blur-xl px-5 py-5 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.28)]"
+                    style={{ borderColor: `${theme.primary}12` }}
+                >
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                            <p className="text-[10px] font-black uppercase tracking-[0.24em] opacity-40 mb-2" style={{ color: theme.primary }}>
+                                Eat by mood
+                            </p>
+                            <h2 className="text-2xl font-black tracking-tight mb-2" style={{ color: theme.primary }}>
+                                {mood.icon} {mood.label} picks
+                            </h2>
+                            <p className="text-sm font-medium leading-6 opacity-65" style={{ color: theme.primary }}>
+                                {mood.guidance}
+                            </p>
+                        </div>
+                        {onClearMood && (
+                            <button
+                                onClick={onClearMood}
+                                className="shrink-0 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] transition-all active:scale-95"
+                                style={{ color: theme.primary, borderColor: `${theme.primary}12` }}
+                            >
+                                Clear
+                            </button>
+                        )}
+                    </div>
+                </section>
+            )}
+
             <section className="space-y-3">
                 <div className="px-1">
                     <p className="text-[10px] font-black uppercase tracking-[0.26em] opacity-45 mb-2" style={{ color: theme.primary }}>

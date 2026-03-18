@@ -49,6 +49,35 @@ export function QuickActionFAB() {
 
     const { branding } = useHotelBranding(hotelSlug);
 
+    const resolveActiveRoom = () => {
+        const contextRoom = roomNumber?.trim();
+        if (contextRoom) {
+            return contextRoom;
+        }
+
+        if (typeof window === "undefined") {
+            return "";
+        }
+
+        const currentUrl = new URL(window.location.href);
+        const urlRoom = currentUrl.searchParams.get("room")?.trim();
+        if (urlRoom) {
+            return urlRoom;
+        }
+
+        return localStorage.getItem(`hotel_room_${hotelSlug}`)?.trim() || "";
+    };
+
+    const isTakeawayRoom = (value?: string | null) => {
+        const normalized = value?.trim().toLowerCase();
+        return normalized === "takeaway" || normalized === "takeout";
+    };
+
+    const isMissingTable = (value?: string | null) => {
+        const normalized = value?.trim().toLowerCase();
+        return !normalized || normalized === "unknown" || normalized === "n/a" || normalized === "na";
+    };
+
     useEffect(() => {
         const handleOpenQuickActions = (event: Event) => {
             const customEvent = event as CustomEvent<{ actionId?: string }>;
@@ -68,9 +97,16 @@ export function QuickActionFAB() {
             return;
         }
 
-        if (!roomNumber) {
+        const resolvedRoom = resolveActiveRoom();
+
+        if (isMissingTable(resolvedRoom)) {
             setToast({ message: "Please verify your room or open My Identity first.", type: "error", isVisible: true });
             setTimeout(() => router.push(`/${hotelSlug}/guest/profile`), 700);
+            return;
+        }
+
+        if (isTakeawayRoom(resolvedRoom)) {
+            setToast({ message: "Waiter and water requests work only for active dine-in tables.", type: "error", isVisible: true });
             return;
         }
 
@@ -80,7 +116,7 @@ export function QuickActionFAB() {
         
         try {
             const { error } = await addSupabaseRequest(branding.id, {
-                room: roomNumber,
+                room: resolvedRoom,
                 type: action.type,
                 notes: action.notes,
                 status: "Pending"

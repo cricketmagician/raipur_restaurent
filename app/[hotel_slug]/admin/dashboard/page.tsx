@@ -7,7 +7,7 @@ import { useRouter, useParams } from "next/navigation";
 import { StatusBadge, RequestStatus } from "@/components/StatusBadge";
 import { CheckCircle, Volume2, VolumeX, Eye, Utensils, Bell, LogOut, RefreshCw, ShoppingBag, Hotel, Inbox, ShieldAlert, BarChart3, Sparkles, Palette, CreditCard, Phone, UserRound, Gem, Clock3 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, useSupabaseRequestsState, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms, useHotelGuests, useHotelGuestLoyalty, isDiningRequest, isHousekeepingRequest, isServiceRequest, isBillRequest, requestTypeMatches, summarizeRequestItems, type SyncStatus } from "@/utils/store";
+import { useHotelBranding, useSupabaseRequestsState, updateSupabaseRequestStatus, HotelRequest, signOut, useAuth, useProfile, useHotelRooms, useHotelGuests, useHotelGuestLoyalty, isDiningRequest, isHousekeepingRequest, isServiceRequest, isBillRequest, requestTypeMatches, summarizeRequestItems, extractGuestContextFromNotes, stripGuestContextFromNotes, normalizeRequestRoom, isTakeawayRequestRoom, getRequestRoomLabel, type SyncStatus } from "@/utils/store";
 import { startAdminAlert, stopAdminAlert, startWaterAlert, stopWaterAlert, initAudioContext } from "@/utils/audio";
 import { RequestDetailModal } from "@/components/RequestDetailModal";
 
@@ -288,9 +288,10 @@ export default function AdminHub() {
         guests
             .filter((guest) => guest.status !== "deleted")
             .forEach((guest) => {
-                const existing = map.get(guest.room_number);
+                const roomKey = normalizeRequestRoom(guest.room_number) || guest.room_number;
+                const existing = map.get(roomKey);
                 if (!existing || existing.status !== "active") {
-                    map.set(guest.room_number, guest);
+                    map.set(roomKey, guest);
                 }
             });
         return map;
@@ -447,7 +448,7 @@ export default function AdminHub() {
                 )}
             </AnimatePresence>
 
-            {/* THE PULSE: Hero Section */}
+            {/* Hero Section */}
             <header className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-6">
                 <div className="flex-1 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                     <div>
@@ -456,19 +457,19 @@ export default function AdminHub() {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F59E0B] opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F59E0B]"></span>
                             </span>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Live Pulse</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Live Operations</p>
                         </div>
                         <h1 className="text-5xl font-black text-[#3E2723] tracking-tight leading-none mb-4 uppercase">
-                            {branding?.name?.split(' ')[0] || 'Property'} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3E2723] to-[#F59E0B]">{branding?.name?.split(' ').slice(1).join(' ') || 'Pulse'}</span>
+                            Admin <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3E2723] to-[#F59E0B]">Dashboard</span>
                         </h1>
                         <div className="flex items-center space-x-6 text-slate-400 font-bold text-xs uppercase tracking-widest">
                             <div className="flex items-center">
                                 <RefreshCw className="w-3 h-3 mr-2 animate-spin-slow" />
-                                Updated Now
+                                Updated Live
                             </div>
                             <div className="flex items-center">
                                 <ShoppingBag className="w-3 h-3 mr-2 text-[#F59E0B]" />
-                                {requests.length} Active Cravings
+                                {queueRequests.length} Pending · {activeRequests.length} Active
                             </div>
                         </div>
                     </div>
@@ -478,7 +479,7 @@ export default function AdminHub() {
                         className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm flex items-center group mb-2"
                     >
                         <BarChart3 className="w-4 h-4 mr-2 text-indigo-500 group-hover:text-indigo-300" />
-                        Business Performance
+                        Analytics
                     </button>
 
                     <button 
@@ -486,18 +487,18 @@ export default function AdminHub() {
                         className="px-6 py-3 bg-slate-900 text-white border border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200/50 flex items-center group mb-2"
                     >
                         <Palette className="w-4 h-4 mr-2 text-indigo-400 group-hover:text-indigo-300" />
-                        Quick Visuals & Hero
+                        Branding & Settings
                     </button>
                 </div>
             </header>
 
-            {/* PRIMARY METRICS: Animated Cards */}
+            {/* Primary Metrics */}
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: 'Pending Cravings', value: queueRequests.length, color: 'orange', icon: <Bell />, tab: 'queue' },
-                    { label: 'Fulfilling', value: activeRequests.length, color: 'brown', icon: <RefreshCw />, tab: 'active' },
-                    { label: 'Crave Revenue', value: `₹${totalRevenue.toFixed(0)}`, color: 'orange', icon: <ShoppingBag /> },
-                    { label: 'Active Tables', value: Array.from(new Set(requests.filter(r => r.status !== 'Completed').map(r => r.room))).length, color: 'brown', icon: <Hotel /> }
+                    { label: 'Pending Orders', value: queueRequests.length, color: 'orange', icon: <Bell />, tab: 'queue' },
+                    { label: 'In Progress', value: activeRequests.length, color: 'brown', icon: <RefreshCw />, tab: 'active' },
+                    { label: 'Revenue', value: `₹${totalRevenue.toFixed(0)}`, color: 'orange', icon: <ShoppingBag /> },
+                    { label: 'Open Tables', value: Array.from(new Set(requests.filter(r => r.status !== 'Completed').map(r => r.room))).length, color: 'brown', icon: <Hotel /> }
                 ].map((stat, i) => (
                     <motion.button
                         key={stat.label}
@@ -518,48 +519,29 @@ export default function AdminHub() {
                 ))}
             </section>
 
-            {/* CRAVING ENGINE ANALYTICS (Blueprint Feature) */}
+            {/* Snapshot Analytics */}
             <section className="bg-white rounded-[2.5rem] p-10 border border-[#3E2723]/5 shadow-2xl shadow-[#3E2723]/5 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-10 opacity-5">
-                    <Sparkles className="w-32 h-32 text-[#F59E0B]" />
-                </div>
-                
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
                     <div>
                         <h2 className="text-xs font-black uppercase tracking-[0.3em] text-[#F59E0B] mb-2 flex items-center">
-                            <Sparkles className="w-4 h-4 mr-2" /> Craving Engine Insights
+                            <Sparkles className="w-4 h-4 mr-2" /> Revenue Snapshot
                         </h2>
-                        <h3 className="text-3xl font-serif italic text-[#3E2723]">Blueprint Performance</h3>
+                        <h3 className="text-3xl font-black tracking-tight text-[#3E2723]">Today at a glance</h3>
                     </div>
-                    
-                    <div className="flex flex-wrap gap-12">
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Avg Order Value</p>
-                            <div className="flex items-baseline space-x-2">
-                                <span className="text-4xl font-black text-[#3E2723]">₹{aov.toFixed(0)}</span>
-                                <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded cursor-default">+12% vs last week</span>
-                            </div>
-                        </div>
-                        
-                        <div className="w-[1px] h-12 bg-slate-100 hidden md:block" />
-                        
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upsell Conversion</p>
-                            <div className="flex items-baseline space-x-2">
-                                <span className="text-4xl font-black text-[#3E2723]">{upsellConversion.toFixed(1)}%</span>
-                                <span className="text-[10px] font-bold text-[#F59E0B] bg-orange-50 px-2 py-0.5 rounded cursor-default">Target: 25%</span>
-                            </div>
-                        </div>
+                </div>
 
-                        <div className="w-[1px] h-12 bg-slate-100 hidden md:block" />
-
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Impulse Hits</p>
-                            <div className="flex items-baseline space-x-2">
-                                <span className="text-4xl font-black text-[#3E2723]">{diningRequests.filter(r => (r.items?.length || 0) > 1).length}</span>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Smart Pairings</p>
-                            </div>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                    <div className="rounded-[1.8rem] border border-slate-100 bg-slate-50/70 p-5">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Avg Order Value</p>
+                        <p className="text-3xl font-black text-[#3E2723]">₹{aov.toFixed(0)}</p>
+                    </div>
+                    <div className="rounded-[1.8rem] border border-slate-100 bg-slate-50/70 p-5">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Upsell Rate</p>
+                        <p className="text-3xl font-black text-[#3E2723]">{upsellConversion.toFixed(1)}%</p>
+                    </div>
+                    <div className="rounded-[1.8rem] border border-slate-100 bg-slate-50/70 p-5">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Completed Orders</p>
+                        <p className="text-3xl font-black text-[#3E2723]">{historyRequests.length}</p>
                     </div>
                 </div>
             </section>
@@ -771,14 +753,24 @@ export default function AdminHub() {
                                 ) : (
                                     (activeTab === 'queue' ? queueRequests : activeRequests).map((req) => {
                                         const billRequest = isBillRequest(req.type);
-                                        const isTakeaway = req.room.toLowerCase() === 'takeaway';
-                                        const guest = req.status === "Completed" ? null : roomGuestMap.get(req.room);
-                                        const loyalty = guest ? loyaltyByPhone.get(normalizePhone(guest.phone)) : null;
-                                        const guestName = loyalty?.name || guest?.name || null;
-                                        const guestPhone = guest?.phone || loyalty?.phone || null;
+                                        const normalizedRoom = normalizeRequestRoom(req.room);
+                                        const isTakeaway = isTakeawayRequestRoom(req.room);
+                                        const guestFromNotes = extractGuestContextFromNotes(req.notes);
+                                        const guest = req.status === "Completed" || !normalizedRoom ? null : roomGuestMap.get(normalizedRoom);
+                                        const loyaltyPhone = normalizePhone(guest?.phone || guestFromNotes?.phone || null);
+                                        const loyalty = loyaltyPhone ? loyaltyByPhone.get(loyaltyPhone) : null;
+                                        const guestName = loyalty?.name || guest?.name || guestFromNotes?.name || null;
+                                        const guestPhone = guest?.phone || guestFromNotes?.phone || loyalty?.phone || null;
                                         const guestLastSeen = formatLastSeen(loyalty?.last_visit_at || guest?.check_in_date);
-                                        const isKnownGuest = !!loyalty || !!guestName;
+                                        const hasGuestIdentity = !!guestName || !!guestPhone;
+                                        const isKnownGuest = !!loyalty;
                                         const accent = getRequestAccent(req);
+                                        const cleanedNotes = stripGuestContextFromNotes(req.notes);
+                                        const requestSummary = isDiningRequest(req.type) ? summarizeRequestItems(req) : req.type;
+                                        const hasStructuredItems = Array.isArray(req.items) && req.items.length > 0;
+                                        const requestDetails = cleanedNotes || (hasStructuredItems ? "Order captured and ready for kitchen." : "No extra note added for this request.");
+                                        const roomLabel = getRequestRoomLabel(guest?.room_number || req.room);
+                                        const tableBadge = normalizedRoom || guest?.room_number || "?";
 
                                         return (
                                         <motion.div
@@ -806,12 +798,12 @@ export default function AdminHub() {
                                                         className="w-14 h-14 rounded-[1.35rem] flex items-center justify-center font-black text-xl mr-4 shadow-xl"
                                                         style={{ backgroundColor: accent.iconBg, color: accent.iconColor }}
                                                     >
-                                                        {billRequest ? <CreditCard className="w-6 h-6" /> : (isTakeaway ? <ShoppingBag className="w-6 h-6" /> : req.room)}
+                                                        {billRequest ? <CreditCard className="w-6 h-6" /> : (isTakeaway ? <ShoppingBag className="w-6 h-6" /> : tableBadge)}
                                                     </div>
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                                             <span className="font-black text-slate-900 block text-[1.7rem] leading-none tracking-tight">
-                                                                {isTakeaway ? 'Takeaway' : `Table ${req.room}`}
+                                                                {roomLabel}
                                                             </span>
                                                             <span
                                                                 className="text-[9px] font-black uppercase tracking-[0.18em] px-2.5 py-1 rounded-full border"
@@ -868,12 +860,12 @@ export default function AdminHub() {
                                                     <div className="min-w-0 rounded-[1.35rem] border border-white bg-white/75 px-4 py-3 shadow-sm">
                                                         <div className="flex items-center justify-between gap-3 mb-1">
                                                             <span className="text-sm font-black text-slate-900 truncate">
-                                                                {isDiningRequest(req.type) ? summarizeRequestItems(req) : req.type}
+                                                                {requestSummary}
                                                             </span>
                                                             <StatusBadge status={req.status} />
                                                         </div>
                                                         <p className="text-xs font-medium text-slate-500 leading-5 line-clamp-2">
-                                                            {req.notes || "No extra note added for this request."}
+                                                            {requestDetails}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -882,11 +874,11 @@ export default function AdminHub() {
                                                     <div className="flex items-center justify-between gap-3">
                                                         <div className="min-w-0">
                                                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Guest Snapshot</p>
-                                                            {guestName ? (
+                                                            {hasGuestIdentity ? (
                                                                 <div className="space-y-1.5">
                                                                     <div className="flex items-center gap-2 text-sm font-black text-slate-900">
                                                                         <UserRound className="w-4 h-4 text-slate-400" />
-                                                                        <span className="truncate">{guestName}</span>
+                                                                        <span className="truncate">{guestName || "Guest on table"}</span>
                                                                     </div>
                                                                     {guestPhone && (
                                                                         <div className="flex items-center gap-2 text-xs font-bold text-slate-500">

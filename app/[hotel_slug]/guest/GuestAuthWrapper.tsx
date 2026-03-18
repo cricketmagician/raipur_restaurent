@@ -39,7 +39,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
     const params = useParams();
     const pathname = usePathname();
     const hotelSlug = params?.hotel_slug as string;
-    const { branding, loading: brandingLoading } = useHotelBranding(hotelSlug);
+    const { branding, loading: brandingLoading, fetchError: brandingError } = useHotelBranding(hotelSlug);
 
     const [isVerified, setIsVerified] = useState<boolean | null>(null);
     const [roomNumber, setRoomNumber] = useState<string>("");
@@ -252,6 +252,27 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
                         borderTopColor: 'transparent'
                     }}
                 ></div>
+            </div>
+        );
+    }
+
+    if (brandingError && branding === null) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 text-center">
+                <div className="max-w-sm">
+                    <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mb-6 text-amber-600 mx-auto">
+                        <AlertCircle className="w-8 h-8" />
+                    </div>
+                    <h1 className="text-2xl font-black text-slate-900 mb-2">Unable To Load Property</h1>
+                    <p className="text-slate-500 font-medium mb-3">We could not reach the property details right now. Please try again in a moment.</p>
+                    <p className="text-[11px] font-bold text-slate-400 mb-8 break-words">{brandingError}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm uppercase tracking-widest active:scale-95 transition-all"
+                    >
+                        Try Again
+                    </button>
+                </div>
             </div>
         );
     }

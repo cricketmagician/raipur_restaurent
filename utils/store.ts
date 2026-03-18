@@ -137,6 +137,12 @@ export interface RequestLineItem {
     total?: number;
 }
 
+export interface RequestGuestContext {
+    name: string;
+    phone?: string | null;
+    remainingNotes?: string;
+}
+
 export interface Room {
     id: string;
     hotel_id: string;
@@ -267,6 +273,7 @@ const REQUEST_TYPE_KEYWORDS = {
 
 const BILL_REQUEST_TYPES = ['Checkout Requested', 'Bill Requested'] as const;
 const BILL_REQUEST_KEYWORDS = ['checkout requested', 'bill requested'] as const;
+const UNKNOWN_ROOM_VALUES = new Set(['unknown', 'n/a', 'na', 'null', 'undefined']);
 
 export function requestTypeMatches(requestType: string, allowedTypes: string[]) {
     const normalized = requestType.toLowerCase();
@@ -287,6 +294,64 @@ export function isServiceRequest(requestType: string) {
 
 export function isBillRequest(requestType: string) {
     return requestTypeMatches(requestType, [...BILL_REQUEST_KEYWORDS]);
+}
+
+export function normalizeRequestRoom(room?: string | null) {
+    const trimmed = room?.toString().trim() || '';
+    if (!trimmed) return null;
+
+    return UNKNOWN_ROOM_VALUES.has(trimmed.toLowerCase()) ? null : trimmed;
+}
+
+export function isTakeawayRequestRoom(room?: string | null) {
+    const normalizedRoom = normalizeRequestRoom(room);
+    if (!normalizedRoom) return false;
+
+    const lowerRoom = normalizedRoom.toLowerCase();
+    return lowerRoom === 'takeaway' || lowerRoom === 'takeout';
+}
+
+export function getRequestRoomLabel(room?: string | null) {
+    if (isTakeawayRequestRoom(room)) {
+        return 'Takeaway';
+    }
+
+    const normalizedRoom = normalizeRequestRoom(room);
+    return normalizedRoom ? `Table ${normalizedRoom}` : 'Table Pending';
+}
+
+export function extractGuestContextFromNotes(notes?: string | null): RequestGuestContext | null {
+    const text = notes?.trim();
+    if (!text) return null;
+
+    const detailedMatch = text.match(/^guest:\s*([^|(]+?)(?:\s*\(([^)]+)\))?\s*\|\s*items?:\s*(.+)$/i);
+    if (detailedMatch) {
+        return {
+            name: detailedMatch[1].trim(),
+            phone: detailedMatch[2]?.trim() || null,
+            remainingNotes: detailedMatch[3].trim(),
+        };
+    }
+
+    const guestOnlyMatch = text.match(/^guest:\s*([^|(]+?)(?:\s*\(([^)]+)\))?\s*$/i);
+    if (guestOnlyMatch) {
+        return {
+            name: guestOnlyMatch[1].trim(),
+            phone: guestOnlyMatch[2]?.trim() || null,
+            remainingNotes: '',
+        };
+    }
+
+    return null;
+}
+
+export function stripGuestContextFromNotes(notes?: string | null) {
+    const extracted = extractGuestContextFromNotes(notes);
+    if (extracted) {
+        return extracted.remainingNotes?.trim() || '';
+    }
+
+    return notes?.trim() || '';
 }
 
 const parseRequestNoteLine = (segment: string): RequestLineItem | null => {
@@ -483,6 +548,33 @@ const mapHotelBrandingRow = (data: any): HotelBranding => ({
     orderExperience: data.order_experience,
     loadingImage: data.loading_image,
 });
+
+const buildDemoHotelBranding = (slug: string): HotelBranding => {
+    const normalizedSlug = (slug || "demo-property").trim().toLowerCase();
+    const displayName = normalizedSlug
+        .split(/[-_\s]+/)
+        .filter(Boolean)
+        .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+        .join(" ") || "Demo Property";
+
+    return {
+        id: `demo-${normalizedSlug}`,
+        slug: normalizedSlug,
+        name: displayName,
+        logo: displayName.charAt(0),
+        logoImage: "",
+        primaryColor: "#3C2A21",
+        accentColor: "#EADBC8",
+        wifiName: "",
+        wifiPassword: "",
+        receptionPhone: "",
+        bgPattern: "",
+        address: "",
+        welcomeMessage: `Welcome to ${displayName}`,
+        heroImage: "",
+        guestTheme: "CAFE",
+    };
+};
 
 // --- Utilities ---
 
@@ -927,8 +1019,17 @@ export function useHotelBranding(slug: string | undefined) {
         enablePollingFallback: true,
     });
 
+    const isDevelopmentFallback =
+        !!slug &&
+        !state.loading &&
+        !state.data[0] &&
+        (process.env.NODE_ENV !== 'production' || !isSupabaseConfigured) &&
+        !!state.fetchError;
+
+    const branding = state.data[0] || (isDevelopmentFallback ? buildDemoHotelBranding(slug) : null);
+
     return {
-        branding: state.data[0] || null,
+        branding,
         loading: state.loading,
         refresh: state.refresh,
         syncStatus: state.syncStatus,
@@ -992,9 +1093,19 @@ export async function addSupabaseRequest(hotelId: string, request: Partial<Hotel
         return { data: null, error: { message: "Invalid Hotel Configuration (Production)" } };
     }
 
+    const normalizedRoom = normalizeRequestRoom(request.room);
+    const resolvedRoom = isTakeawayRequestRoom(request.room) ? 'Takeaway' : normalizedRoom;
+
+    if (!resolvedRoom) {
+        return {
+            data: null,
+            error: { message: "Missing table number. Please scan the table QR again or open My Identity first." },
+        };
+    }
+
     const newRequestData: Omit<HotelRequest, 'id'> = {
         hotel_id: hotelId,
-        room: (request.room || 'Unknown').toString().trim(),
+        room: resolvedRoom,
         type: request.type || 'Request',
         notes: request.notes,
         status: (request.status as RequestStatus) || 'Pending',

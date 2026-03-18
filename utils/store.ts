@@ -253,6 +253,39 @@ export interface SeasonalStory {
     created_at?: string;
 }
 
+export const SEASONAL_STORY_ITEM_PREFIX = 'story:';
+
+export function getSeasonalStoryCartItemId(storyId: string) {
+    return `${SEASONAL_STORY_ITEM_PREFIX}${storyId}`;
+}
+
+export function isSeasonalStoryCartItemId(itemId?: string | null) {
+    return !!itemId && itemId.startsWith(SEASONAL_STORY_ITEM_PREFIX);
+}
+
+export function buildStandaloneSeasonalStoryItems(stories: SeasonalStory[]): MenuItem[] {
+    return stories
+        .filter((story) => story.is_active !== false)
+        .filter((story) => !story.menu_item_id)
+        .filter((story) => !!story.label && Number(story.price || 0) > 0)
+        .map((story) => ({
+            id: getSeasonalStoryCartItemId(story.id),
+            hotel_id: story.hotel_id,
+            category: 'seasonal stories',
+            title: story.label,
+            description: story.type ? `${story.type} story special` : 'Seasonal story special',
+            price: Number(story.price || 0),
+            image_url: story.image_url,
+            is_available: true,
+            is_popular: true,
+            is_recommended: true,
+            is_combo: false,
+            upsell_items: [],
+            badges: story.type ? [story.type] : ['Story'],
+            tags: ['seasonal', 'story'],
+        }));
+}
+
 export interface Mood {
     id: string;
     hotel_id: string;
@@ -2068,16 +2101,19 @@ export async function saveSeasonalStory(hotelId: string, story: Partial<Seasonal
 export async function deleteSeasonalStory(id: string) {
     return await supabase.from('seasonal_stories').delete().eq('id', id);
 }
-export function useMenuSections(hotelId?: string) {
+export function useMenuSections(hotelId?: string, options?: { includeInactive?: boolean }) {
+    const includeInactive = options?.includeInactive ?? false;
     const { data: sections, loading, syncStatus, fetchError, refresh } = useRealtimeCollection<MenuSection>({
         table: 'menu_sections',
-        consumer: 'guest_menu',
-        scopeKey: hotelId || 'none',
+        consumer: includeInactive ? 'admin_menu_sections' : 'guest_menu',
+        scopeKey: `${hotelId || 'none'}:${includeInactive ? 'all' : 'active'}`,
         enabled: !!hotelId,
-        fetchFilters: [
-            { column: 'hotel_id', value: hotelId || '' },
-            { column: 'is_active', value: true }
-        ],
+        fetchFilters: includeInactive
+            ? [{ column: 'hotel_id', value: hotelId || '' }]
+            : [
+                { column: 'hotel_id', value: hotelId || '' },
+                { column: 'is_active', value: true }
+            ],
         orderBy: { column: 'priority', ascending: true }
     });
 

@@ -136,11 +136,6 @@ export default function RestaurantPage() {
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-[#F5F1E8] pb-40">
             {/* 1. PREMIUM MINIMAL TOP BAR */}
-            <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 px-6 py-4 flex items-center justify-center ${scrolled || activeCategory !== 'all' ? "bg-white/80 backdrop-blur-2xl border-b border-[#0F3D2E]/5 shadow-sm" : "bg-transparent"}`}>
-                <h1 className="text-[#0F3D2E] text-sm font-black italic tracking-tighter">
-                    {activeCategory === 'all' ? 'THE MENU' : currentCategory?.name}
-                </h1>
-            </header>
 
             {/* 2. GLOBAL CATEGORY NAV */}
             <CategoryScrollNav 
@@ -150,7 +145,7 @@ export default function RestaurantPage() {
                 scrolled={scrolled || activeCategory !== 'all'} 
             />
 
-            <main className="max-w-md mx-auto px-6 pt-36">
+            <div className="max-w-md mx-auto px-6 pt-4">
                 {/* 3. SUB-HEADER (Back & Search) */}
                 <div className="flex items-center gap-4 mb-6">
                     {activeCategory !== 'all' ? (
@@ -287,7 +282,7 @@ export default function RestaurantPage() {
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </main>
+            </div>
 
             {/* 5. PRODUCT STORY MODAL (Full View) */}
             <AnimatePresence>

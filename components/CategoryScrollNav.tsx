@@ -32,7 +32,7 @@ export function CategoryScrollNav({ categories, activeCategory, onCategoryClick,
 
     return (
         <div 
-            className={`sticky top-[0px] z-[90] transition-all duration-500 pt-4 pb-6 ${
+            className={`sticky top-[64px] z-[90] transition-all duration-500 pt-4 pb-6 ${
                 scrolled ? "bg-white/90 backdrop-blur-xl shadow-md border-b border-black/5" : "bg-transparent"
             }`}
         >

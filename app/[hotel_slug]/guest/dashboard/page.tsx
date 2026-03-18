@@ -221,24 +221,25 @@ export default function GuestDashboard() {
                         alt="Hero background"
                     />
                 </motion.div>
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0F3D2E]/40 via-transparent to-[#F5F1E8]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0F3D2E]/20 via-transparent to-[rgba(0,0,0,0.7)]" />
                 
-                <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center pt-20">
+                <div className="absolute inset-0 flex flex-col items-start justify-center px-8 lg:px-12 pt-20">
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-6"
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="space-y-4 max-w-sm"
                     >
-                        <h2 className="text-white text-lg font-bold tracking-widest uppercase opacity-80">{timeTheme.greeting}</h2>
-                        <h1 className="text-white text-5xl font-black italic tracking-tighter leading-[0.9] drop-shadow-2xl">
-                            {timeTheme.subtext.split('.')[0]}
+                        <h2 className="text-white/70 text-[10px] font-black tracking-[0.4em] uppercase">{timeTheme.greeting}</h2>
+                        <h1 className="text-white text-[42px] font-semibold tracking-[-0.03em] leading-[1.1] drop-shadow-2xl">
+                            Fresh mornings,<br/>made better
                         </h1>
-                        <p className="text-white/80 text-sm font-medium italic opacity-60">"You deserve something amazing today."</p>
+                        <p className="text-white/60 text-sm font-medium italic">"You deserve something amazing today."</p>
                         
-                        <div className="pt-8">
+                        <div className="pt-6">
                             <motion.button 
+                                whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.96 }}
-                                className="bg-white/20 border border-white/40 px-8 py-4 rounded-full text-white text-xs font-black uppercase tracking-[0.3em] shadow-2xl"
+                                className="bg-white/15 backdrop-blur-xl border border-white/20 px-8 py-4 rounded-full text-white text-[10px] font-black uppercase tracking-[0.3em] shadow-2xl transition-all"
                                 onClick={() => window.scrollTo({ top: window.innerHeight * 0.8, behavior: 'smooth' })}
                             >
                                 Explore Menu →
@@ -257,10 +258,10 @@ export default function GuestDashboard() {
                             <button
                                 key={cat.id}
                                 onClick={() => setActiveCategory(cat.id)}
-                                className={`flex items-center gap-3 px-6 py-4 rounded-full transition-all duration-500 shrink-0 shadow-lg ${
+                                className={`flex items-center gap-3 px-6 py-4 rounded-full transition-all duration-500 shrink-0 ${
                                     activeCategory === cat.id 
-                                    ? "bg-[#0F3D2E] text-white scale-105 shadow-[#0F3D2E]/20" 
-                                    : "bg-white border border-[#0F3D2E]/5 text-[#0F3D2E]/60 hover:bg-[#0F3D2E]/5"
+                                    ? "bg-[#0F3D2E] text-white scale-105 shadow-[0_10px_25px_rgba(15,61,46,0.3)]" 
+                                    : "bg-white/60 backdrop-blur-md border border-white/40 text-[#0F3D2E]/60 hover:bg-white/80"
                                 }`}
                             >
                                 <span className="text-lg">{cat.icon}</span>

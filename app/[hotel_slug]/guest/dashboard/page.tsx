@@ -12,13 +12,16 @@ import {
 import { CartOverlay } from "@/components/CartOverlay";
 import { LoyaltySignIn } from "@/components/LoyaltySignIn";
 import { SeasonalStories } from "@/components/SeasonalStories";
+import { StoryOverlay } from "@/components/StoryOverlay";
 import { ChefPicksSnapRail } from "@/components/ChefPicksSnapRail";
 import { EatByMoodSection } from "@/components/EatByMoodSection";
 import { Toast } from "@/components/Toast";
 import {
     addLoyaltyPoints,
     addSupabaseRequest,
+    buildStandaloneSeasonalStoryItems,
     getRoomAccessState,
+    getSeasonalStoryCartItemId,
     saveGuestLoyaltySession,
     useHeroes,
     useCart,
@@ -73,6 +76,8 @@ export default function GuestDashboard() {
     const [isLoyaltyOpen, setIsLoyaltyOpen] = React.useState(false);
     const [activeMoodId, setActiveMoodId] = React.useState<string | null>(null);
     const [activeHeroIndex, setActiveHeroIndex] = React.useState(0);
+    const [activeStoryIndex, setActiveStoryIndex] = React.useState(0);
+    const [isStoryOverlayOpen, setIsStoryOverlayOpen] = React.useState(false);
     const [toast, setToast] = React.useState<{ message: string; type: "success" | "error"; isVisible: boolean }>({
         message: "",
         type: "success",
@@ -92,6 +97,14 @@ export default function GuestDashboard() {
     const activeStories = React.useMemo(
         () => stories.filter((story) => story.is_active !== false),
         [stories]
+    );
+    const standaloneStoryItems = React.useMemo(
+        () => buildStandaloneSeasonalStoryItems(activeStories),
+        [activeStories]
+    );
+    const cartCatalogItems = React.useMemo(
+        () => [...menuItems, ...standaloneStoryItems],
+        [menuItems, standaloneStoryItems]
     );
     const activeHeroes = React.useMemo(() => {
         const heroRecords = heroes.filter((hero) => hero.is_active !== false);
@@ -144,7 +157,7 @@ export default function GuestDashboard() {
 
         const interval = window.setInterval(() => {
             setActiveHeroIndex((current) => (current + 1) % activeHeroes.length);
-        }, 3000);
+        }, 5000);
 
         return () => window.clearInterval(interval);
     }, [activeHeroes.length]);
@@ -170,7 +183,7 @@ export default function GuestDashboard() {
     };
 
     const cartTotal = Object.entries(cart).reduce((sum, [id, quantity]) => {
-        const item = availableMenuItems.find((menuItem) => menuItem.id === id);
+        const item = cartCatalogItems.find((menuItem) => menuItem.id === id);
         return sum + ((item?.price || 0) * quantity);
     }, 0);
 
@@ -227,7 +240,7 @@ export default function GuestDashboard() {
         setIsOrdering(true);
 
         const cartItemsData = Object.entries(cart).map(([id, quantity]) => {
-            const item = availableMenuItems.find((menuItem) => menuItem.id === id);
+            const item = cartCatalogItems.find((menuItem) => menuItem.id === id);
             return {
                 id,
                 title: item?.title || "Unknown Item",
@@ -262,6 +275,51 @@ export default function GuestDashboard() {
         setShowCart(false);
         setOrderComplete(true);
         setToast({ message: "Order placed successfully.", type: "success", isVisible: true });
+    };
+
+    const handleStoryPrimaryAction = (story: (typeof activeStories)[number], event: React.MouseEvent) => {
+        event.stopPropagation();
+
+        const linkedItem = story.menu_item_id
+            ? menuItems.find((item) => item.id === story.menu_item_id)
+            : null;
+
+        if (linkedItem) {
+            if (linkedItem.is_available === false) {
+                setToast({
+                    message: `${linkedItem.title} is sold out right now.`,
+                    type: "error",
+                    isVisible: true,
+                });
+                return;
+            }
+
+            updateQuantity(linkedItem.id, (cart[linkedItem.id] || 0) + 1);
+            setToast({
+                message: `${linkedItem.title} added to your bag.`,
+                type: "success",
+                isVisible: true,
+            });
+            setIsStoryOverlayOpen(false);
+            return;
+        }
+
+        const standaloneId = getSeasonalStoryCartItemId(story.id);
+        const standaloneItem = standaloneStoryItems.find((item) => item.id === standaloneId);
+
+        if (standaloneItem) {
+            updateQuantity(standaloneItem.id, (cart[standaloneItem.id] || 0) + 1);
+            setToast({
+                message: `${standaloneItem.title} added to your bag.`,
+                type: "success",
+                isVisible: true,
+            });
+            setIsStoryOverlayOpen(false);
+            return;
+        }
+
+        setIsStoryOverlayOpen(false);
+        router.push(`/${hotelSlug}/guest/restaurant`);
     };
 
     if (loading || !branding) {
@@ -308,16 +366,19 @@ export default function GuestDashboard() {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.85, ease: "easeInOut" }}
+                                    transition={{ duration: 1.15, ease: [0.22, 1, 0.36, 1] }}
                                     className="absolute inset-0"
                                 >
                                     <motion.img
                                         src={getDirectImageUrl(currentHero?.image_url) || getDirectImageUrl(branding.heroImage)}
                                         alt={currentHero?.title || branding.name}
                                         className="h-full w-full object-cover"
-                                        initial={{ scale: 1.02 }}
-                                        animate={{ scale: 1.08 }}
-                                        transition={{ duration: 3, ease: "linear" }}
+                                        initial={{ scale: 1.01 }}
+                                        animate={{ scale: 1.05 }}
+                                        transition={{
+                                            duration: 6,
+                                            ease: [0.22, 1, 0.36, 1],
+                                        }}
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/30 to-black/80" />
                                 </motion.div>
@@ -365,11 +426,9 @@ export default function GuestDashboard() {
                             stories={activeStories}
                             loading={storiesLoading}
                             onStoryClick={(story) => {
-                                if (story.menu_item_id) {
-                                    router.push(`/${hotelSlug}/guest/item/${story.menu_item_id}`);
-                                    return;
-                                }
-                                router.push(`/${hotelSlug}/guest/restaurant`);
+                                const nextIndex = activeStories.findIndex((entry) => entry.id === story.id);
+                                setActiveStoryIndex(nextIndex >= 0 ? nextIndex : 0);
+                                setIsStoryOverlayOpen(true);
                             }}
                         />
                         {!storiesLoading && activeStories.length === 0 && (
@@ -569,7 +628,15 @@ export default function GuestDashboard() {
                 isOrdering={isOrdering}
                 onOrder={handleOrder}
                 hotelId={branding.id}
-                menuItems={menuItems}
+                menuItems={cartCatalogItems}
+            />
+
+            <StoryOverlay
+                stories={activeStories}
+                initialIndex={activeStoryIndex}
+                isVisible={isStoryOverlayOpen}
+                onClose={() => setIsStoryOverlayOpen(false)}
+                onOrder={handleStoryPrimaryAction}
             />
 
             <Toast

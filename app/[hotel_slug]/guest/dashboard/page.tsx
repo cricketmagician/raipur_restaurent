@@ -251,31 +251,9 @@ export default function GuestDashboard() {
 
             <main className="max-w-md mx-auto relative z-10 -mt-20 pb-32">
                 
-                {/* 4. LIQUID CATEGORY NAV (Floating Pills) */}
-                <section className="sticky top-[80px] z-50 mb-12">
-                    <div className="flex gap-4 overflow-x-auto no-scrollbar px-6 py-4">
-                        {categories.map((cat) => (
-                            <button
-                                key={cat.id}
-                                onClick={() => setActiveCategory(cat.id)}
-                                className={`flex items-center gap-3 px-6 py-4 rounded-full transition-all duration-500 shrink-0 ${
-                                    activeCategory === cat.id 
-                                    ? "bg-[#0F3D2E] text-white scale-105 shadow-[0_10px_25px_rgba(15,61,46,0.3)]" 
-                                    : "bg-white/60 backdrop-blur-md border border-white/40 text-[#0F3D2E]/60 hover:bg-white/80"
-                                }`}
-                            >
-                                <span className="text-lg">{cat.icon}</span>
-                                <span className="text-[10px] font-black uppercase tracking-widest">{cat.name}</span>
-                                {activeCategory === cat.id && (
-                                    <motion.div layoutId="nav-dot" className="w-1.5 h-1.5 rounded-full bg-[#C8A96A]" />
-                                )}
-                            </button>
-                        ))}
-                    </div>
-                </section>
 
                 {/* 5. CHEF'S PICKS (Instagram Reel Cards) */}
-                <section className="px-6 space-y-8 mb-16">
+                <section className="px-6 space-y-8 mb-16 pt-8">
                     <div className="flex items-center justify-between">
                         <h4 className="text-2xl font-black italic tracking-tight text-[#0F3D2E]">Chef's Picks</h4>
                         <span className="text-[10px] font-black uppercase tracking-widest text-[#C8A96A]">For You</span>
@@ -330,6 +308,29 @@ export default function GuestDashboard() {
                                     </div>
                                 </div>
                             </motion.div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* 4. LIQUID CATEGORY NAV (Floating Pills) */}
+                <section className="sticky top-[80px] z-50 mb-12">
+                    <div className="flex gap-4 overflow-x-auto no-scrollbar px-6 py-4">
+                        {categories.map((cat) => (
+                            <button
+                                key={cat.id}
+                                onClick={() => setActiveCategory(cat.id)}
+                                className={`flex items-center gap-3 px-6 py-4 rounded-full transition-all duration-500 shrink-0 ${
+                                    activeCategory === cat.id 
+                                    ? "bg-[#0F3D2E] text-white scale-105 shadow-[0_10px_25px_rgba(15,61,46,0.3)]" 
+                                    : "bg-white/60 backdrop-blur-md border border-white/40 text-[#0F3D2E]/60 hover:bg-white/80"
+                                }`}
+                            >
+                                <span className="text-lg">{cat.icon}</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest">{cat.name}</span>
+                                {activeCategory === cat.id && (
+                                    <motion.div layoutId="nav-dot" className="w-1.5 h-1.5 rounded-full bg-[#C8A96A]" />
+                                )}
+                            </button>
                         ))}
                     </div>
                 </section>

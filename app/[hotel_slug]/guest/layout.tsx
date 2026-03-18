@@ -20,19 +20,16 @@ import { useGuestRoom } from "./GuestAuthWrapper";
 
 import { useTheme } from "@/utils/themes";
 
-export default function GuestLayout({
-    children,
-}: {
-    children: React.ReactNode;
+function GuestLayoutContent({ children, hotelSlug, branding, theme, isDashboard, pathname }: { 
+    children: React.ReactNode; 
+    hotelSlug: string; 
+    branding: any; 
+    theme: any; 
+    isDashboard: boolean;
+    pathname: string;
 }) {
-    const pathname = usePathname();
-    const params = useParams();
-    const hotelSlug = params?.hotel_slug as string;
-    const { branding } = useHotelBranding(hotelSlug);
-    const theme = useTheme(branding);
-    const isDashboard = pathname?.endsWith("/dashboard");
     const { cartCount } = useCart(branding?.id);
-    const { roomNumber: tableNumber } = useGuestRoom();
+    const { roomNumber: tableNumber, orderMode } = useGuestRoom();
     
     const [showServiceHub, setShowServiceHub] = useState(false);
     const [showCart, setShowCart] = useState(false);
@@ -98,6 +95,82 @@ export default function GuestLayout({
         };
     }, []);
 
+    return (
+        <>
+            <GlobalHeader />
+            <AddEffect />
+            <QuickActionFAB />
+
+            {/* Ambient Background Gradient - Refined for Theme */}
+            {!isDashboard && (
+                <div 
+                    className="fixed inset-0 -z-10 opacity-30"
+                    style={{ backgroundImage: `radial-gradient(circle at top right, ${theme.secondary}66, transparent 60%)` }}
+                ></div>
+            )}
+
+            <main className={`flex-1 w-full relative ${isDashboard ? 'pt-0' : 'pt-28'}`}>
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={pathname}
+                        initial={{ opacity: 0, x: 10, scale: 0.99 }} // Horizontal slide for native feel
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: -10, scale: 0.99 }}
+                        transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                    >
+                        {children}
+                    </motion.div>
+                </AnimatePresence>
+            </main>
+
+            <BottomNav />
+
+            <ServiceHubOverlay 
+                isOpen={showServiceHub}
+                onClose={() => setShowServiceHub(false)}
+                branding={branding}
+                tableNumber={tableNumber}
+                cartCount={cartCount}
+                onShowBag={() => window.dispatchEvent(new CustomEvent('open_cart'))}
+                setToast={setToast}
+            />
+
+            <Toast {...toast} onClose={() => setToast({ ...toast, isVisible: false })} />
+
+            <CartOverlay 
+                isOpen={showCart} 
+                onClose={() => setShowCart(false)}
+                cart={cart}
+                updateQuantity={updateQuantity}
+                cartTotal={cartTotal}
+                isOrdering={isOrdering}
+                onOrder={handleOrder}
+                hotelId={branding?.id}
+                menuItems={menuItems}
+                defaultTable={tableNumber}
+                defaultMode={orderMode}
+            />
+
+            <OrderSuccessOverlay 
+                isVisible={showSuccess}
+                onClose={() => setShowSuccess(false)}
+            />
+        </>
+    );
+}
+
+export default function GuestLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const pathname = usePathname();
+    const params = useParams();
+    const hotelSlug = params?.hotel_slug as string;
+    const { branding } = useHotelBranding(hotelSlug);
+    const theme = useTheme(branding);
+    const isDashboard = pathname?.endsWith("/dashboard");
+
     useEffect(() => {
         const unlock = () => {
             console.log("AudioContext unlocking...");
@@ -117,65 +190,17 @@ export default function GuestLayout({
             style={{ backgroundColor: isDashboard ? 'transparent' : theme.background }}
         >
             <GuestAuthWrapper>
-                <GlobalHeader />
-                <AddEffect />
-                <QuickActionFAB />
-
-                {/* Ambient Background Gradient - Refined for Theme */}
-                {!isDashboard && (
-                    <div 
-                        className="fixed inset-0 -z-10 opacity-30"
-                        style={{ backgroundImage: `radial-gradient(circle at top right, ${theme.secondary}66, transparent 60%)` }}
-                    ></div>
-                )}
-
-                <main className={`flex-1 w-full relative ${isDashboard ? 'pt-0' : 'pt-28'}`}>
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={pathname}
-                            initial={{ opacity: 0, x: 10, scale: 0.99 }} // Horizontal slide for native feel
-                            animate={{ opacity: 1, x: 0, scale: 1 }}
-                            exit={{ opacity: 0, x: -10, scale: 0.99 }}
-                            transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
-                        >
-                            {children}
-                        </motion.div>
-                    </AnimatePresence>
-                </main>
-
-                <BottomNav />
-
-                <ServiceHubOverlay 
-                    isOpen={showServiceHub}
-                    onClose={() => setShowServiceHub(false)}
-                    branding={branding}
-                    tableNumber={tableNumber}
-                    cartCount={cartCount}
-                    onShowBag={() => window.dispatchEvent(new CustomEvent('open_cart'))}
-                    setToast={setToast}
-                />
-
-                <Toast {...toast} onClose={() => setToast({ ...toast, isVisible: false })} />
-
-                <CartOverlay 
-                    isOpen={showCart} 
-                    onClose={() => setShowCart(false)}
-                    cart={cart}
-                    updateQuantity={updateQuantity}
-                    cartTotal={cartTotal}
-                    isOrdering={isOrdering}
-                    onOrder={handleOrder}
-                    hotelId={branding?.id}
-                    menuItems={menuItems}
-                    defaultTable={tableNumber}
-                    defaultMode={useGuestRoom().orderMode}
-                />
-
-                <OrderSuccessOverlay 
-                    isVisible={showSuccess}
-                    onClose={() => setShowSuccess(false)}
-                />
+                <GuestLayoutContent 
+                    hotelSlug={hotelSlug} 
+                    branding={branding} 
+                    theme={theme} 
+                    isDashboard={isDashboard}
+                    pathname={pathname}
+                >
+                    {children}
+                </GuestLayoutContent>
             </GuestAuthWrapper>
         </div>
     );
 }
+

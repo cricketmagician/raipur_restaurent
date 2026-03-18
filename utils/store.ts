@@ -954,8 +954,12 @@ export function useSupabaseRequestsState(hotelId?: string, roomNumber?: string, 
     });
 
     const requests = state.data.filter((request) => {
-        if (roomNumber && request.room !== roomNumber) {
-            return false;
+        if (roomNumber) {
+            const normalizedReqRoom = request.room?.toString().trim().toLowerCase();
+            const normalizedSearchRoom = roomNumber.toString().trim().toLowerCase();
+            if (normalizedReqRoom !== normalizedSearchRoom) {
+                return false;
+            }
         }
         if (checkedInAt && request.timestamp < checkedInAt) {
             return false;
@@ -990,7 +994,7 @@ export async function addSupabaseRequest(hotelId: string, request: Partial<Hotel
 
     const newRequestData: Omit<HotelRequest, 'id'> = {
         hotel_id: hotelId,
-        room: request.room || 'Unknown',
+        room: (request.room || 'Unknown').toString().trim(),
         type: request.type || 'Request',
         notes: request.notes,
         status: (request.status as RequestStatus) || 'Pending',

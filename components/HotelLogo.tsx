@@ -3,6 +3,7 @@
 import React from "react";
 import { useParams } from "next/navigation";
 import { useHotelBranding } from "@/utils/store";
+import { getDirectImageUrl } from "@/utils/image";
 
 export function HotelLogo({ name: propName, logoUrl }: { name?: string; logoUrl?: string }) {
     const params = useParams();
@@ -12,13 +13,13 @@ export function HotelLogo({ name: propName, logoUrl }: { name?: string; logoUrl?
     if (loading) return <div className="w-16 h-16 bg-slate-100 animate-pulse rounded-xl mb-4 mx-auto" />;
 
     const displayName = propName || branding?.name || "Hotel";
-    const finalLogoUrl = logoUrl || branding?.logoImage;
-    const displayLogo = branding?.logo || displayName.charAt(0);
+    const finalLogoUrl = logoUrl || branding?.logoImage || branding?.logo;
+    const displayLogo = branding?.logo && !branding.logo.includes("http") ? branding.logo : displayName.charAt(0);
 
     return (
         <div className="flex flex-col items-center justify-center py-8">
-            {finalLogoUrl ? (
-                <img src={finalLogoUrl} alt={displayName} className="h-16 object-contain mb-4" />
+            {finalLogoUrl && finalLogoUrl.includes("http") ? (
+                <img src={getDirectImageUrl(finalLogoUrl)} alt={displayName} className="h-16 object-contain mb-4" />
             ) : (
                 <div
                     className="w-16 h-16 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-primary/20"

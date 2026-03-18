@@ -185,79 +185,104 @@ export default function BrandingSettingsPage() {
                         </div>
                     </section>
 
-                    {/* Visual Assets */}
+                    {/* Logo & Identity assets */}
                     <section className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/20">
                         <div className="flex items-center space-x-4 mb-8">
                             <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
                                 <ImageIcon className="w-5 h-5" />
                             </div>
-                            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Visual Assets</h2>
+                            <div>
+                                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Visual Identity</h2>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Add your logos here for a consistent brand feel</p>
+                            </div>
                         </div>
                         
-                        <div className="space-y-6">
+                        <div className="space-y-8">
                             <div>
-                                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Interface Logo (URL)</label>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">1. App Navbar Logo (Square)</label>
+                                    <span className="text-[9px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">Used in Top Bars</span>
+                                </div>
                                 <input
                                     type="url"
                                     value={formData.logo}
                                     onChange={(e) => setFormData({...formData, logo: e.target.value})}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all"
-                                    placeholder="https://link-to-small-logo.png"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all mb-2"
+                                    placeholder="Square logo URL (e.g. 512x512)"
                                 />
+                                <p className="text-[9px] font-medium text-slate-400 italic">This logo appears in the top navigation and circular icons.</p>
                             </div>
+
+                            <div className="p-1 h-[1px] bg-slate-50" />
+
                             <div>
-                                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Welcome Branding Image (URL)</label>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">2. Welcome Splash Logo (Transparent)</label>
+                                    <span className="text-[9px] font-bold text-fuchsia-500 bg-fuchsia-50 px-2 py-0.5 rounded-full">Used on Welcome/Login</span>
+                                </div>
                                 <input
                                     type="url"
                                     value={formData.logoImage}
                                     onChange={(e) => setFormData({...formData, logoImage: e.target.value})}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all"
-                                    placeholder="https://link-to-large-hero-branding.png"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all mb-2"
+                                    placeholder="Large transparent logo URL"
                                 />
+                                <p className="text-[9px] font-medium text-slate-400 italic">This logo appears on the splash screen. Use a high-quality PNG with no background for best results.</p>
                             </div>
-                            <div>
-                                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Homepage Hero Image (URL)</label>
-                                
-                                {/* AI Presets Gallery */}
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                                    {[
-                                        { id: 'default', name: 'Premium Luxury', url: '/images/branding/hero.png' },
-                                        { id: 'cafe', name: 'Cozy Cafe', url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=1000' },
-                                        { id: 'fine', name: 'Fine Dining', url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=1000' },
-                                        { id: 'modern', name: 'Modern Vibe', url: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=1000' }
-                                    ].map((preset) => (
-                                        <button
-                                            key={preset.id}
-                                            type="button"
-                                            onClick={() => setFormData({...formData, heroImage: preset.url})}
-                                            className={`group relative aspect-video rounded-2xl overflow-hidden border-2 transition-all ${
-                                                formData.heroImage === preset.url ? 'border-indigo-600 ring-4 ring-indigo-500/10' : 'border-slate-100 hover:border-slate-300'
-                                            }`}
-                                        >
-                                            <img src={getDirectImageUrl(preset.url)} alt={preset.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-3">
-                                                <span className="text-[8px] font-black text-white uppercase tracking-widest">{preset.name}</span>
-                                            </div>
-                                            {formData.heroImage === preset.url && (
-                                                <div className="absolute top-2 right-2 bg-indigo-600 text-white p-1 rounded-full">
-                                                    <CheckCircle className="w-3 h-3" />
-                                                </div>
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
+                        </div>
+                    </section>
 
-                                <input
-                                    type="url"
-                                    value={formData.heroImage}
-                                    onChange={(e) => setFormData({...formData, heroImage: e.target.value})}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all"
-                                    placeholder="Or paste custom image URL here..."
-                                />
-                                <p className="text-[9px] font-bold text-slate-400 mt-2 uppercase tracking-tight italic">
-                                    Select a preset or paste a link. This image appears as the background for your guest dashboard.
-                                </p>
+                    {/* Hero Assets Section */}
+                    <section className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/20">
+                        <div className="flex items-center space-x-4 mb-8">
+                            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
+                                <Palette className="w-5 h-5" />
                             </div>
+                            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Homepage Presentation</h2>
+                        </div>
+
+                        <div className="space-y-6">
+                            <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Homepage Hero Image (Background)</label>
+                            
+                            {/* AI Presets Gallery */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                                {[
+                                    { id: 'default', name: 'Premium Luxury', url: '/images/branding/hero.png' },
+                                    { id: 'cafe', name: 'Cozy Cafe', url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=1000' },
+                                    { id: 'fine', name: 'Fine Dining', url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=1000' },
+                                    { id: 'modern', name: 'Modern Vibe', url: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=1000' }
+                                ].map((preset) => (
+                                    <button
+                                        key={preset.id}
+                                        type="button"
+                                        onClick={() => setFormData({...formData, heroImage: preset.url})}
+                                        className={`group relative aspect-video rounded-2xl overflow-hidden border-2 transition-all ${
+                                            formData.heroImage === preset.url ? 'border-indigo-600 ring-4 ring-indigo-500/10' : 'border-slate-100 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        <img src={getDirectImageUrl(preset.url)} alt={preset.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-3">
+                                            <span className="text-[8px] font-black text-white uppercase tracking-widest">{preset.name}</span>
+                                        </div>
+                                        {formData.heroImage === preset.url && (
+                                            <div className="absolute top-2 right-2 bg-indigo-600 text-white p-1 rounded-full">
+                                                <CheckCircle className="w-3 h-3" />
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <input
+                                type="url"
+                                value={formData.heroImage}
+                                onChange={(e) => setFormData({...formData, heroImage: e.target.value})}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all"
+                                placeholder="Or paste custom image URL here..."
+                            />
+                            <p className="text-[9px] font-bold text-slate-400 mt-2 uppercase tracking-tight italic">
+                                Select a preset or paste a link. This image appears as the background for your guest dashboard.
+                            </p>
                         </div>
                     </section>
 
@@ -331,20 +356,20 @@ export default function BrandingSettingsPage() {
                             </span>
                         </div>
 
-                            <div 
-                                className="aspect-[9/16] rounded-[3rem] shadow-2xl relative overflow-hidden border-[8px] border-slate-900"
-                                style={{ 
-                                    backgroundColor: formData.primaryColor,
-                                    backgroundImage: formData.heroImage ? `url(${getDirectImageUrl(formData.heroImage)})` : 'none',
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center'
-                                }}
-                            >
+                        <div 
+                            className="aspect-[9/16] rounded-[3rem] shadow-2xl relative overflow-hidden border-[8px] border-slate-900"
+                            style={{ 
+                                backgroundColor: formData.primaryColor,
+                                backgroundImage: formData.heroImage ? `url(${getDirectImageUrl(formData.heroImage)})` : 'none',
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center'
+                            }}
+                        >
                             {/* Overlay */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/80" />
 
                             <div className="relative z-10 h-full flex flex-col items-center justify-center p-8 text-center">
-                                <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-3xl p-4 mb-8 border border-white/20 shadow-2xl">
+                                <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-3xl p-4 mb-8 border border-white/20 shadow-2xl overflow-hidden flex items-center justify-center">
                                     {formData.logoImage || formData.logo ? (
                                         <img src={getDirectImageUrl(formData.logoImage || formData.logo)} alt="Logo" className="w-full h-full object-contain" />
                                     ) : (

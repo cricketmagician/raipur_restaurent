@@ -13,6 +13,7 @@ export default function WelcomeSelectionPage() {
     const hotelSlug = params?.hotel_slug as string;
 
     const { branding, loading } = useHotelBranding(hotelSlug);
+    const { getDirectImageUrl } = require("@/utils/image");
 
     const room = searchParams?.get("room") || "";
     const pin = searchParams?.get("pin") || "";
@@ -72,8 +73,13 @@ export default function WelcomeSelectionPage() {
                     className="text-center mb-16"
                 >
                     {branding.logoImage || branding.logo ? (
-                        <div className="w-32 h-32 mx-auto bg-white/10 backdrop-blur-md rounded-3xl p-4 mb-8 shadow-2xl border border-white/20">
-                            <img src={branding.logoImage || branding.logo!} alt={branding.name} className="w-full h-full object-contain" />
+                        <div className="w-32 h-32 mx-auto bg-white/10 backdrop-blur-md rounded-3xl p-4 mb-8 shadow-2xl border border-white/20 overflow-hidden flex items-center justify-center">
+                            <img 
+                                src={getDirectImageUrl(branding.logoImage || branding.logo!)} 
+                                alt={branding.name} 
+                                className="w-full h-full object-contain"
+                                onError={(e) => (e.currentTarget.style.display = 'none')}
+                            />
                         </div>
                     ) : null}
                     <h1 className="text-4xl font-serif font-black text-white mb-2 tracking-tight">

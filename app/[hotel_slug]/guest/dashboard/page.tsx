@@ -177,7 +177,7 @@ export default function GuestDashboard() {
     );
 
     return (
-        <div className="min-h-screen bg-[#0A0A0A] text-white selection:bg-[#C8A96A] selection:text-white pb-32 font-sans overflow-x-hidden">
+        <div className="min-h-screen bg-[#F5F1E8] text-[#0F3D2E] selection:bg-[#C8A96A] selection:text-white pb-32 font-sans overflow-x-hidden">
             
             {/* Success Animation Overlay */}
             <AnimatePresence>
@@ -221,7 +221,7 @@ export default function GuestDashboard() {
                         alt="Hero background"
                     />
                 </motion.div>
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0F3D2E]/40 via-transparent to-[#0A0A0A]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0F3D2E]/40 via-transparent to-[#F5F1E8]" />
                 
                 <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center pt-20">
                     <motion.div
@@ -259,8 +259,8 @@ export default function GuestDashboard() {
                                 onClick={() => setActiveCategory(cat.id)}
                                 className={`flex items-center gap-3 px-6 py-4 rounded-full transition-all duration-500 shrink-0 shadow-lg ${
                                     activeCategory === cat.id 
-                                    ? "bg-[#C8A96A] text-white scale-105 shadow-[#C8A96A]/20" 
-                                    : "bg-white/5 border border-white/10 text-white/60 hover:bg-white/10"
+                                    ? "bg-[#0F3D2E] text-white scale-105 shadow-[#0F3D2E]/20" 
+                                    : "bg-white border border-[#0F3D2E]/5 text-[#0F3D2E]/60 hover:bg-[#0F3D2E]/5"
                                 }`}
                             >
                                 <span className="text-lg">{cat.icon}</span>
@@ -276,7 +276,7 @@ export default function GuestDashboard() {
                 {/* 5. CHEF'S PICKS (Instagram Reel Cards) */}
                 <section className="px-6 space-y-8 mb-16">
                     <div className="flex items-center justify-between">
-                        <h4 className="text-2xl font-black italic tracking-tight text-white">Chef's Picks</h4>
+                        <h4 className="text-2xl font-black italic tracking-tight text-[#0F3D2E]">Chef's Picks</h4>
                         <span className="text-[10px] font-black uppercase tracking-widest text-[#C8A96A]">For You</span>
                     </div>
                     
@@ -336,9 +336,9 @@ export default function GuestDashboard() {
                 {/* 6. FULL MENU = "CONTENT CARDS" (Apple Style) */}
                 <section className="px-6 space-y-12">
                     <div className="flex items-center gap-6">
-                                <div className="h-[1px] flex-1 bg-white/5" />
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-white/40">Explore Journey</h4>
-                                <div className="h-[1px] flex-1 bg-white/5" />
+                                <div className="h-[1px] flex-1 bg-[#0F3D2E]/10" />
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#0F3D2E]/40">Explore Journey</h4>
+                                <div className="h-[1px] flex-1 bg-[#0F3D2E]/10" />
                     </div>
 
                     <div className="grid grid-cols-1 gap-12">
@@ -357,12 +357,12 @@ export default function GuestDashboard() {
                                 {/* Right: Product Story */}
                                 <div className="flex-1 space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <h5 className="text-lg font-black italic tracking-tighter text-white">{item.title}</h5>
-                                        <span className="text-[#C8A96A] font-black text-sm px-2">₹{item.price}</span>
-                                    </div>
-                                    <p className="text-white/60 text-[11px] leading-relaxed line-clamp-2 italic font-medium">
-                                        {item.description || "Handcrafted with premium ingredients and curated balance."}
-                                    </p>
+                                    <h5 className="text-lg font-black italic tracking-tighter text-[#0F3D2E]">{item.title}</h5>
+                                    <span className="text-[#C8A96A] font-black text-sm px-2">₹{item.price}</span>
+                                </div>
+                                <p className="text-[#0F3D2E]/60 text-[11px] leading-relaxed line-clamp-2 italic font-medium">
+                                    {item.description || "Handcrafted with premium ingredients and curated balance."}
+                                </p>
                                     
                                     <div className="pt-2">
                                         <AnimatePresence mode="wait">
@@ -410,7 +410,7 @@ export default function GuestDashboard() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[150] bg-[#0A0A0A] flex flex-col overflow-y-auto no-scrollbar"
+                            className="fixed inset-0 z-[150] bg-[#F5F1E8] flex flex-col overflow-y-auto no-scrollbar"
                         >
                         {/* Header: Absolute Close */}
                         <div className="fixed top-0 left-0 right-0 z-[160] p-8 flex justify-end">
@@ -430,7 +430,7 @@ export default function GuestDashboard() {
                                 className="w-full h-full object-cover" 
                                 alt={selectedProduct.title}
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-black/20" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#F5F1E8] via-transparent to-black/20" />
                         </section>
 
                         {/* Bottom: The Story */}
@@ -440,10 +440,10 @@ export default function GuestDashboard() {
                                     <Star className="w-4 h-4 text-[#C8A96A] fill-[#C8A96A]" />
                                     <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C8A96A]">Signature Masterpiece</span>
                                 </div>
-                                <h2 className="text-5xl font-black italic tracking-tighter text-white leading-none">{selectedProduct.title}</h2>
+                                <h2 className="text-5xl font-black italic tracking-tighter text-[#0F3D2E] leading-none">{selectedProduct.title}</h2>
                                 <div className="flex items-center justify-between pt-4">
                                     <div className="flex items-center gap-4">
-                                        <span className="text-3xl font-black text-white">₹{selectedProduct.price}</span>
+                                        <span className="text-3xl font-black text-[#0F3D2E]">₹{selectedProduct.price}</span>
                                         <div className="h-6 w-[1px] bg-white/10" />
                                         <div className="flex items-center gap-1">
                                             <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
@@ -454,22 +454,22 @@ export default function GuestDashboard() {
                             </div>
 
                             <div className="space-y-6">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-white/40">The Experience</h3>
-                                <p className="text-2xl font-medium italic text-white/80 leading-snug">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#0F3D2E]/40">The Experience</h3>
+                                <p className="text-2xl font-medium italic text-[#0F3D2E]/80 leading-snug">
                                     {selectedProduct.description || "A symphony of textures and flavors, handcrafted with premium ingredients for the ultimate sensory delight."}
                                 </p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-6 rounded-[2rem] bg-white/5 border border-white/5 space-y-2">
+                                <div className="p-6 rounded-[2rem] bg-white border border-[#0F3D2E]/5 space-y-2">
                                     <Clock className="w-6 h-6 text-[#C8A96A]" />
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">Prep Time</h4>
-                                    <p className="text-sm font-black text-white">12-15 Mins</p>
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-[#0F3D2E]/40">Prep Time</h4>
+                                    <p className="text-sm font-black text-[#0F3D2E]">12-15 Mins</p>
                                 </div>
-                                <div className="p-6 rounded-[2rem] bg-white/5 border border-white/5 space-y-2">
+                                <div className="p-6 rounded-[2rem] bg-white border border-[#0F3D2E]/5 space-y-2">
                                     <Star className="w-6 h-6 text-[#C8A96A]" />
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">Rating</h4>
-                                    <p className="text-sm font-black text-white">4.9 / 5.0</p>
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-[#0F3D2E]/40">Rating</h4>
+                                    <p className="text-sm font-black text-[#0F3D2E]">4.9 / 5.0</p>
                                 </div>
                             </div>
 

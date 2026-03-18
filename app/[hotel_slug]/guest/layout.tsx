@@ -68,7 +68,7 @@ export default function GuestLayout({
 
     return (
         <div 
-            className={`flex flex-col min-h-[100dvh] antialiased pb-[88px] overflow-x-hidden pt-safe transition-colors duration-500`}
+            className={`flex flex-col min-h-[100dvh] text-slate-900 antialiased pb-[70px] overflow-x-hidden pt-safe transition-colors duration-500`}
             style={{ backgroundColor: isDashboard ? 'transparent' : theme.background }}
         >
             <GuestAuthWrapper>

@@ -53,32 +53,24 @@ export function ServiceHubOverlay({
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 z-[200] flex items-end justify-center px-4 pb-10"
                 >
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => { onClose(); setServiceAction(null); }}
-                        className="absolute inset-0 bg-black/60"
-                    />
-                    
                         <motion.div 
                             initial={{ y: "100%" }}
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
-                            className="relative w-full max-w-md bg-[#0F3D2E] rounded-[3rem] shadow-2xl overflow-hidden p-8 space-y-8 border border-white/10"
+                            className="relative w-full max-w-md bg-[#F5F1E8] rounded-t-[3rem] shadow-2xl overflow-hidden p-8 space-y-8 border-t border-white"
                         >
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#C8A96A] mb-1">Guest Assistance</p>
-                                    <h3 className="text-2xl font-black italic tracking-tighter text-white">Service Hub</h3>
+                                    <h3 className="text-2xl font-black italic tracking-tighter text-[#0F3D2E]">Service Hub</h3>
                                 </div>
-                                <button onClick={() => onClose()} className="p-3 bg-white/10 rounded-full text-white"><X className="w-5 h-5" /></button>
+                                <button onClick={() => onClose()} className="p-3 bg-[#0F3D2E]/5 rounded-full text-[#0F3D2E]"><X className="w-5 h-5" /></button>
                             </div>
 
                         <div className="grid grid-cols-1 gap-4">
                             <button 
                                 onClick={() => setServiceAction('water')}
-                                className={`p-6 rounded-[2rem] border transition-all flex items-center justify-between group ${serviceAction === 'water' ? 'bg-[#C8A96A] border-[#C8A96A] text-white' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
+                                className={`p-6 rounded-[2rem] border transition-all flex items-center justify-between group ${serviceAction === 'water' ? 'bg-[#0F3D2E] border-[#0F3D2E] text-white' : 'bg-white border-[#0F3D2E]/5 text-[#0F3D2E] hover:bg-[#0F3D2E]/5 shadow-sm'}`}
                             >
                                 <div className="flex items-center gap-4">
                                     <div className={`p-3 rounded-2xl ${serviceAction === 'water' ? 'bg-white/20' : 'bg-white/10'}`}>
@@ -94,7 +86,7 @@ export function ServiceHubOverlay({
 
                             <button 
                                 onClick={() => setServiceAction('waiter')}
-                                className={`p-6 rounded-[2rem] border transition-all flex items-center justify-between group ${serviceAction === 'waiter' ? 'bg-[#C8A96A] border-[#C8A96A] text-white' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
+                                className={`p-6 rounded-[2rem] border transition-all flex items-center justify-between group ${serviceAction === 'waiter' ? 'bg-[#0F3D2E] border-[#0F3D2E] text-white' : 'bg-white border-[#0F3D2E]/5 text-[#0F3D2E] hover:bg-[#0F3D2E]/5 shadow-sm'}`}
                             >
                                 <div className="flex items-center gap-4">
                                     <div className={`p-3 rounded-2xl ${serviceAction === 'waiter' ? 'bg-white/20' : 'bg-white/10'}`}>
@@ -135,7 +127,7 @@ export function ServiceHubOverlay({
                                     className="pt-6 border-t border-slate-100"
                                 >
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-4 text-center">Slide to Confirm Service</p>
-                                    <div className="relative h-16 bg-white/5 rounded-full p-1 border border-white/10 overflow-hidden text-white">
+                                    <div className="relative h-16 bg-[#0F3D2E]/5 rounded-full p-1 border border-[#0F3D2E]/10 overflow-hidden text-[#0F3D2E]">
                                         <motion.div 
                                             drag="x"
                                             dragConstraints={{ left: 0, right: 300 }}

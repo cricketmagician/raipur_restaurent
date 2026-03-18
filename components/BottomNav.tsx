@@ -38,10 +38,10 @@ export function BottomNav() {
 
     return (
         <div className={`fixed bottom-0 left-0 right-0 z-[100] transition-all duration-500 ${isHidden ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"}`}>
-            {/* Navigation Hub: Floating Premium Pill */}
-            <div className="max-w-md mx-auto px-4 pb-6">
+            {/* Navigation Hub: Full Width Bottom Bar */}
+            <div className="w-full">
                 <div 
-                    className="bg-[#0F3D2E] rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] p-2 flex items-center justify-between border border-white/10"
+                    className="bg-[#0F3D2E] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] px-6 py-2 flex items-center justify-between border-t border-white/5"
                 >
                     {navItems.map((item) => {
                         const isActive = pathname === item.path;
@@ -54,8 +54,8 @@ export function BottomNav() {
                                 onClick={() => item.onClick ? item.onClick() : router.push(item.path)}
                                 className={`flex flex-col items-center justify-center relative transition-all duration-300 ${
                                     isService 
-                                        ? 'w-16 h-16 bg-[#C8A96A] rounded-full -mt-10 border-4 border-[#F5F1E8] shadow-xl' 
-                                        : 'flex-1 py-3'
+                                        ? 'w-16 h-16 bg-[#C8A96A] rounded-full -mt-12 border-4 border-[#F5F1E8] shadow-xl' 
+                                        : 'flex-1 py-1'
                                 }`}
                             >
                                 <item.icon 

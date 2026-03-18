@@ -7,14 +7,8 @@ import { useParams, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
     ArrowRight,
-    ClipboardList,
-    Flame,
     PlayCircle,
-    Receipt,
     RefreshCw,
-    ShoppingBag,
-    Sparkles,
-    UserRound,
 } from "lucide-react";
 import { CartOverlay } from "@/components/CartOverlay";
 import { LoyaltySignIn } from "@/components/LoyaltySignIn";
@@ -187,7 +181,6 @@ export default function GuestDashboard() {
     const openOrderCount = requests.filter((request) => request.status !== "Completed").length;
     const completedOrderCount = requests.filter((request) => request.status === "Completed").length;
     const lastVisit = realLoyalty?.last_visit_at || loyaltyProfile?.lastVisitAt || null;
-    const lastOrder = realLoyalty?.last_order_at || null;
 
     const handleOrder = async () => {
         if (!branding?.id) return;
@@ -278,43 +271,6 @@ export default function GuestDashboard() {
         );
     }
 
-    const actionCards = [
-        {
-            id: "menu",
-            label: "Menu",
-            value: `${availableMenuItems.length} items`,
-            description: "Browse the full menu and place a new order.",
-            icon: ShoppingBag,
-            onClick: () => router.push(`/${hotelSlug}/guest/restaurant`),
-        },
-        {
-            id: "orders",
-            label: "Orders",
-            value: `${openOrderCount} live`,
-            description: "Track open kitchen and service requests.",
-            icon: ClipboardList,
-            onClick: () => router.push(`/${hotelSlug}/guest/status`),
-        },
-        {
-            id: "bill",
-            label: "Live Bill",
-            value: `Rs ${liveBillTotal.toFixed(0)}`,
-            description: "See running charges and request the bill when ready.",
-            icon: Receipt,
-            onClick: () => router.push(`/${hotelSlug}/guest/bill`),
-        },
-        {
-            id: "identity",
-            label: loyaltyProfile ? "Known Guest" : "Guest Identity",
-            value: loyaltyProfile ? loyaltyProfile.name : "Save details",
-            description: loyaltyProfile
-                ? `Last visit ${formatDateTime(lastVisit)}`
-                : "Keep takeaway and repeat visits smooth.",
-            icon: UserRound,
-            onClick: () => (loyaltyProfile ? router.push(`/${hotelSlug}/guest/profile`) : setIsLoyaltyOpen(true)),
-        },
-    ];
-
     return (
         <div
             className="min-h-screen pb-32 pt-6 w-full max-w-[460px] mx-auto px-3.5 relative"
@@ -337,54 +293,6 @@ export default function GuestDashboard() {
             </div>
 
             <div className="space-y-4">
-                <motion.section
-                    initial={{ opacity: 0, y: 18 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="rounded-[2.25rem] border p-5 shadow-[0_24px_80px_-32px_rgba(0,0,0,0.28)] backdrop-blur-2xl overflow-hidden relative"
-                    style={{
-                        background: "linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.22) 100%)",
-                        borderColor: "rgba(255,255,255,0.46)",
-                    }}
-                >
-                    <div
-                        className="absolute inset-0 opacity-70 pointer-events-none"
-                        style={{ background: `radial-gradient(circle at top right, ${theme.secondary}66, transparent 46%)` }}
-                    />
-                    <div className="relative z-10">
-                        <div className="inline-flex items-center gap-2 rounded-full border px-3 py-2 mb-4 backdrop-blur-md" style={{ backgroundColor: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.42)" }}>
-                            <Sparkles className="w-3.5 h-3.5" style={{ color: theme.primary }} />
-                            <span className="text-[9px] font-black uppercase tracking-[0.24em]" style={{ color: theme.primary }}>
-                                {orderMode === "takeaway" ? "Takeaway Session" : "Table Session"}
-                            </span>
-                        </div>
-
-                        <div className="flex items-start justify-between gap-4">
-                            <div className="min-w-0">
-                                <h1 className="text-[clamp(1.7rem,7vw,2.4rem)] font-black tracking-tight leading-none" style={{ color: theme.primary }}>
-                                    {orderMode === "takeaway" ? "Ready for pickup" : roomNumber ? `Table ${roomNumber}` : "Ready to order"}
-                                </h1>
-                                <p className="mt-2 text-sm font-semibold opacity-65 max-w-[26ch]">
-                                    Clean ordering, live status, and one place to track the bill.
-                                </p>
-                            </div>
-
-                            <div className="rounded-[1.3rem] px-4 py-3 border backdrop-blur-md shrink-0" style={{ backgroundColor: "rgba(255,255,255,0.36)", borderColor: "rgba(255,255,255,0.38)" }}>
-                                <p className="text-[8px] font-black uppercase tracking-[0.26em] opacity-35 mb-1">Known Guest</p>
-                                <p className="text-sm font-black" style={{ color: theme.primary }}>
-                                    {loyaltyProfile ? loyaltyProfile.name : "Not synced"}
-                                </p>
-                                <p className="text-[10px] font-bold opacity-50 mt-1">{formatDateTime(lastVisit)}</p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-3 mt-5">
-                            <MiniStat label="Bag" value={`${cartCount}`} theme={theme} />
-                            <MiniStat label="Open" value={`${openOrderCount}`} theme={theme} />
-                            <MiniStat label="Done" value={`${completedOrderCount}`} theme={theme} />
-                        </div>
-                    </div>
-                </motion.section>
-
                 {activeHeroes.length > 0 && (
                     <motion.section
                         initial={{ opacity: 0, y: 18 }}
@@ -500,33 +408,6 @@ export default function GuestDashboard() {
                         </div>
                     )}
                 </motion.section>
-
-                <section className="grid grid-cols-2 gap-3">
-                    {actionCards.map((card, index) => (
-                        <motion.button
-                            key={card.id}
-                            initial={{ opacity: 0, y: 18 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.04 * index }}
-                            onClick={card.onClick}
-                            className="rounded-[1.8rem] border bg-white/82 backdrop-blur-xl p-4 text-left shadow-[0_18px_50px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all"
-                            style={{ borderColor: `${theme.primary}10` }}
-                        >
-                            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: `${theme.secondary}55`, color: theme.primary }}>
-                                <card.icon className="w-5 h-5" />
-                            </div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-40 mb-2" style={{ color: theme.primary }}>
-                                {card.label}
-                            </p>
-                            <h2 className="text-lg font-black tracking-tight mb-1 line-clamp-2" style={{ color: theme.primary }}>
-                                {card.value}
-                            </h2>
-                            <p className="text-[11px] font-medium leading-5 opacity-60" style={{ color: theme.primary }}>
-                                {card.description}
-                            </p>
-                        </motion.button>
-                    ))}
-                </section>
 
                 <motion.section
                     initial={{ opacity: 0, y: 18 }}

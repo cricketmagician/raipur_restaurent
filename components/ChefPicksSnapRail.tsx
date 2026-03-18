@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Plus, Minus } from "lucide-react";
 import { getDirectImageUrl } from "@/utils/image";
+import { useAddEffectTrigger } from "./AddEffect";
 
 interface ChefPicksSnapRailProps {
     items: any[];
@@ -14,6 +15,8 @@ interface ChefPicksSnapRailProps {
 }
 
 export function ChefPicksSnapRail({ items, cart, onAdd, onRemove, onItemClick }: ChefPicksSnapRailProps) {
+    const triggerFly = useAddEffectTrigger();
+
     if (!items.length) return null;
 
     return (
@@ -58,7 +61,11 @@ export function ChefPicksSnapRail({ items, cart, onAdd, onRemove, onItemClick }:
                                             </button>
                                             <span className="text-sm font-black text-white min-w-[1rem] text-center">{cart[item.id]}</span>
                                             <button 
-                                                onClick={(e) => { e.stopPropagation(); onAdd(item); }} 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (item.image_url) triggerFly(item.id, item.image_url, e);
+                                                    onAdd(item);
+                                                }} 
                                                 className="w-8 h-8 rounded-full bg-[#C8A96A] text-white shadow-md hover:scale-105 active:scale-95"
                                             >
                                                 <Plus className="w-4 h-4" />
@@ -66,7 +73,11 @@ export function ChefPicksSnapRail({ items, cart, onAdd, onRemove, onItemClick }:
                                         </div>
                                     ) : (
                                         <button 
-                                            onClick={(e) => { e.stopPropagation(); onAdd(item); }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (item.image_url) triggerFly(item.id, item.image_url, e);
+                                                onAdd(item);
+                                            }}
                                             className="bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-full text-white shadow-2xl hover:scale-110 transition-all"
                                         >
                                             <Plus className="w-5 h-5" />

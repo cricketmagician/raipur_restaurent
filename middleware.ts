@@ -25,6 +25,7 @@ export async function middleware(request: NextRequest) {
         return response;
     }
 
+    // 1. Initialize Supabase client
     const supabase = createServerClient(
         supabaseUrl!,
         supabaseKey!,
@@ -34,59 +35,39 @@ export async function middleware(request: NextRequest) {
                     return request.cookies.get(name)?.value;
                 },
                 set(name: string, value: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    });
+                    request.cookies.set({ name, value, ...options });
                     response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
+                        request: { headers: request.headers },
                     });
-                    response.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    });
+                    response.cookies.set({ name, value, ...options });
                 },
                 remove(name: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    });
+                    request.cookies.set({ name, value: '', ...options });
                     response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
+                        request: { headers: request.headers },
                     });
-                    response.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    });
+                    response.cookies.set({ name, value: '', ...options });
                 },
             },
         }
     );
 
+    // 2. Faster session check instead of full getUser() for middleware.
+    // getSession() reads from the cookie and doesn't hit the Supabase Auth API
+    // as aggressively as getUser(). For deeper security, the client-side 
+    // or Server Components will perform a full getUser() check.
     const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
+        data: { session },
+    } = await supabase.auth.getSession();
 
     const url = new URL(request.url);
     const pathSegments = url.pathname.split('/');
 
-    // Protect admin routes, but keep the middleware auth check lightweight.
-    // Hotel/profile matching is enforced in the client app where profile reads
-    // have proven more reliable than edge lookups for this project.
+    // Protect admin routes
     if (pathSegments.length >= 3 && pathSegments[2] === 'admin' && pathSegments[3] !== 'login') {
         const hotelSlug = pathSegments[1];
 
-        // 1. Check if user is logged in
-        if (userError || !user) {
+        if (!session) {
             return NextResponse.redirect(new URL(`/${hotelSlug}/admin/login`, request.url));
         }
     }

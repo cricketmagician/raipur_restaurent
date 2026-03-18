@@ -300,7 +300,7 @@ export default function GuestDashboard() {
                 </div>
             </section>
 
-            <main className="max-w-md mx-auto relative z-10 -mt-20">
+            <main className="max-w-md mx-auto relative z-10 -mt-20 pb-32">
                 
                 {/* 4. LIQUID CATEGORY NAV (Floating Pills) */}
                 <section className="sticky top-[80px] z-50 mb-12">

@@ -40,7 +40,7 @@ export function BottomNav() {
         <div className={`fixed bottom-0 left-0 right-0 z-[100] transition-transform duration-500 ${isHidden ? "translate-y-full" : "translate-y-0"}`}>
             {/* Navigation Bar */}
             <div 
-                className="w-full px-4 pb-safe pt-2 backdrop-blur-3xl border-t flex items-center justify-around shadow-[0_-20px_50px_rgba(0,0,0,0.1)]"
+                className="w-full px-4 pb-safe pt-2 border-t flex items-center justify-around shadow-lg"
                 style={{ 
                     backgroundColor: `rgba(255, 255, 255, 0.8)`,
                     borderColor: `${theme.primary}15`,

@@ -41,7 +41,7 @@ export default function GuestLayout({
 
     return (
         <div 
-            className="flex flex-col min-h-[100dvh] text-slate-900 antialiased pb-[88px] overflow-x-hidden pt-safe transition-colors duration-500"
+            className={`flex flex-col min-h-[100dvh] text-slate-900 antialiased ${isDashboard ? 'pb-0' : 'pb-[88px]'} overflow-x-hidden pt-safe transition-colors duration-500`}
             style={{ backgroundColor: isDashboard ? 'transparent' : theme.background }}
         >
             <GuestAuthWrapper>
@@ -71,7 +71,7 @@ export default function GuestLayout({
                     </AnimatePresence>
                 </main>
 
-                <BottomNav />
+                {!isDashboard && <BottomNav />}
             </GuestAuthWrapper>
         </div>
     );

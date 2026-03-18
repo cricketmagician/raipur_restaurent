@@ -176,8 +176,9 @@ export default function RestaurantPage() {
     const { categories: menuCategories } = useMenuCategories(branding?.id);
     const { sections: menuSections } = useMenuSections(branding?.id);
     const { stories } = useSeasonalStories(branding?.id);
-    const { roomNumber, orderMode } = useGuestRoom();
-    const { cart, updateQuantity, clearCart } = useCart(branding?.id);
+    const { roomNumber, checkedInAt, orderMode } = useGuestRoom();
+    const sessionKey = `${roomNumber || "guest"}:${checkedInAt || "new"}`;
+    const { cart, updateQuantity, clearCart } = useCart(branding?.id, [], sessionKey);
     const theme = useTheme(branding);
     const [isOrdering, setIsOrdering] = useState(false);
     const [orderComplete, setOrderComplete] = useState(false);

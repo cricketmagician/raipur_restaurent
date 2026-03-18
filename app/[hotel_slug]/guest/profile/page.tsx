@@ -33,8 +33,9 @@ export default function GuestProfilePage() {
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
     const theme = useTheme(branding);
-    const { roomNumber, orderMode, switchToDineIn, switchToTakeaway } = useGuestRoom();
-    const { cartCount } = useCart(branding?.id);
+    const { roomNumber, checkedInAt, orderMode, switchToDineIn, switchToTakeaway } = useGuestRoom();
+    const sessionKey = `${roomNumber || "guest"}:${checkedInAt || "new"}`;
+    const { cartCount } = useCart(branding?.id, [], sessionKey);
 
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [profile, setProfile] = useState<GuestProfile | null>(() => {

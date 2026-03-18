@@ -11,7 +11,7 @@ import { initAudioContext } from "@/utils/audio";
 import { GuestAuthWrapper } from "./GuestAuthWrapper";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { useHotelBranding, useCart, useSupabaseMenuItems, addSupabaseRequest } from "@/utils/store";
+import { useHotelBranding, useCart, useSupabaseMenuItems, addSupabaseRequest, useSeasonalStories, buildStandaloneSeasonalStoryItems } from "@/utils/store";
 import { ServiceHubOverlay } from "@/components/ServiceHubOverlay";
 import { CartOverlay } from "@/components/CartOverlay";
 import { OrderSuccessOverlay } from "@/components/OrderSuccessOverlay";
@@ -28,8 +28,9 @@ function GuestLayoutContent({ children, hotelSlug, branding, theme, isDashboard,
     isDashboard: boolean;
     pathname: string;
 }) {
-    const { cartCount } = useCart(branding?.id);
-    const { roomNumber: tableNumber, orderMode } = useGuestRoom();
+    const { roomNumber: tableNumber, checkedInAt, orderMode } = useGuestRoom();
+    const sessionKey = `${tableNumber || "guest"}:${checkedInAt || "new"}`;
+    const { cartCount } = useCart(branding?.id, [], sessionKey);
     
     const [showServiceHub, setShowServiceHub] = useState(false);
     const [showCart, setShowCart] = useState(false);
@@ -42,10 +43,18 @@ function GuestLayoutContent({ children, hotelSlug, branding, theme, isDashboard,
     });
 
     const { menuItems } = useSupabaseMenuItems(branding?.id);
-    const { cart, updateQuantity, clearCart } = useCart(branding?.id);
+    const { stories } = useSeasonalStories(branding?.id);
+    const { cart, updateQuantity, clearCart } = useCart(branding?.id, [], sessionKey);
+
+    const cartCatalogItems = (() => {
+        const syntheticStoryItems = buildStandaloneSeasonalStoryItems(
+            (stories || []).filter((story: any) => story.is_active !== false)
+        );
+        return [...menuItems, ...syntheticStoryItems];
+    })();
 
     const cartTotal = Object.entries(cart).reduce((sum, [id, q]) => {
-        const item = menuItems.find(m => m.id === id);
+        const item = cartCatalogItems.find(m => m.id === id);
         return sum + ((item?.price || 0) * (q as number));
     }, 0);
 
@@ -54,7 +63,7 @@ function GuestLayoutContent({ children, hotelSlug, branding, theme, isDashboard,
         setIsOrdering(true);
         
         const cartItemsData = Object.entries(cart).map(([id, q]) => {
-            const item = menuItems.find(m => m.id === id);
+            const item = cartCatalogItems.find(m => m.id === id);
             return { id, title: item?.title || 'Unknown', quantity: q, price: item?.price || 0, total: (item?.price || 0) * (q as number) };
         });
 
@@ -146,7 +155,7 @@ function GuestLayoutContent({ children, hotelSlug, branding, theme, isDashboard,
                 isOrdering={isOrdering}
                 onOrder={handleOrder}
                 hotelId={branding?.id}
-                menuItems={menuItems}
+                menuItems={cartCatalogItems}
                 defaultTable={tableNumber}
                 defaultMode={orderMode}
             />
@@ -203,4 +212,3 @@ export default function GuestLayout({
         </div>
     );
 }
-

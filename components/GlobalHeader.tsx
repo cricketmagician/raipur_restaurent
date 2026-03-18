@@ -13,8 +13,9 @@ export function GlobalHeader() {
     const pathname = usePathname();
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
-    const { roomNumber } = useGuestRoom();
-    const { cartCount } = useCart(branding?.id);
+    const { roomNumber, checkedInAt } = useGuestRoom();
+    const sessionKey = `${roomNumber || "guest"}:${checkedInAt || "new"}`;
+    const { cartCount } = useCart(branding?.id, [], sessionKey);
     const theme = useTheme(branding);
     
     const [scrolled, setScrolled] = useState(false);

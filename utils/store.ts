@@ -1843,12 +1843,13 @@ export async function deleteSupabaseMenuItem(id: string, hotelId: string) {
  * Shared Cart Hook for Guest Ordering
  * Persists to localStorage to share state between Dashboard and Restaurant pages
  */
-export function useCart(hotelId: string | undefined, menuItems: any[] = []) {
+export function useCart(hotelId: string | undefined, menuItems: any[] = [], scopeKey?: string) {
     const [cart, setCart] = useState<Record<string, number>>({});
     const [isInitialized, setIsInitialized] = useState(false);
 
-    const STORAGE_KEY = `cart_${hotelId}`;
-    const SYNC_EVENT = `cart_updated_${hotelId}`;
+    const normalizedScopeKey = scopeKey?.trim() || "default";
+    const STORAGE_KEY = `cart_${hotelId}_${normalizedScopeKey}`;
+    const SYNC_EVENT = `cart_updated_${hotelId}_${normalizedScopeKey}`;
 
     const readCart = () => {
         if (!hotelId) return {};

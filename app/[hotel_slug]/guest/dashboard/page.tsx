@@ -60,9 +60,10 @@ export default function GuestDashboard() {
     const params = useParams();
     const hotelSlug = params?.hotel_slug as string;
     const { roomNumber, checkedInAt, orderMode } = useGuestRoom();
+    const sessionKey = `${roomNumber || "guest"}:${checkedInAt || "new"}`;
     const { branding, loading } = useHotelBranding(hotelSlug);
     const theme = useTheme(branding);
-    const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id);
+    const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id, [], sessionKey);
     const { menuItems } = useSupabaseMenuItems(branding?.id);
     const requests = useSupabaseRequests(branding?.id, roomNumber, checkedInAt);
     const { heroes } = useHeroes(branding?.id);

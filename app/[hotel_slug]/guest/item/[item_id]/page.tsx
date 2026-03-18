@@ -23,6 +23,7 @@ import { CATEGORY_THEMES, useTheme } from "@/utils/themes";
 import { getDirectImageUrl } from "@/utils/image";
 import { useAddEffectTrigger } from "@/components/AddEffect";
 import { MenuCard } from "@/components/MenuCard";
+import { useGuestRoom } from "../../GuestAuthWrapper";
 
 export default function ItemPage() {
     const params = useParams();
@@ -31,8 +32,10 @@ export default function ItemPage() {
     const itemId = params?.item_id as string;
 
     const { branding } = useHotelBranding(hotelSlug);
+    const { roomNumber, checkedInAt } = useGuestRoom();
+    const sessionKey = `${roomNumber || "guest"}:${checkedInAt || "new"}`;
     const { menuItems, loading } = useSupabaseMenuItems(branding?.id);
-    const { cart, updateQuantity, cartCount } = useCart(branding?.id);
+    const { cart, updateQuantity, cartCount } = useCart(branding?.id, [], sessionKey);
     const globalTheme = useTheme(branding);
     const triggerFly = useAddEffectTrigger();
 

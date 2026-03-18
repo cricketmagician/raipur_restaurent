@@ -41,11 +41,23 @@ export default function MenuPage() {
     const [editingCategory, setEditingCategory] = useState<Partial<MenuCategory> | null>(null);
     const [viewMode, setViewMode] = useState<'sections' | 'list' | 'strategy'>('sections');
     const [availabilityDrafts, setAvailabilityDrafts] = useState<Record<string, boolean>>({});
+    const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
 
     const categoryRecords = useMemo(() => {
         const activeCategories = categories.filter((category) => category.is_active !== false);
         return activeCategories.length > 0 ? activeCategories : deriveMenuCategories(menuItems);
     }, [categories, menuItems]);
+
+    useEffect(() => {
+        if (!activeCategoryId && categoryRecords.length > 0) {
+            setActiveCategoryId(categoryRecords[0].id);
+            return;
+        }
+
+        if (activeCategoryId && !categoryRecords.some((category) => category.id === activeCategoryId)) {
+            setActiveCategoryId(categoryRecords[0]?.id || null);
+        }
+    }, [activeCategoryId, categoryRecords]);
 
     const categoryLookup = useMemo(() => {
         return categoryRecords.reduce<Record<string, MenuCategory>>((acc, category) => {
@@ -91,7 +103,7 @@ export default function MenuPage() {
         });
     }, [menuItems]);
 
-    const { sections, loading: sectionsLoading, refresh: refreshSections } = useMenuSections(branding?.id);
+    const { sections, loading: sectionsLoading, refresh: refreshSections } = useMenuSections(branding?.id, { includeInactive: true });
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -164,6 +176,18 @@ export default function MenuPage() {
         }
     };
 
+    const scrollToCategorySection = (categoryId: string) => {
+        setViewMode("sections");
+        setActiveCategoryId(categoryId);
+
+        window.requestAnimationFrame(() => {
+            window.setTimeout(() => {
+                const target = document.getElementById(`category-section-${categoryId}`);
+                target?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 60);
+        });
+    };
+
     return (
         <div className="p-10 max-w-[1600px] mx-auto min-h-screen bg-[#FDFCFB]">
             {/* Header Section */}
@@ -229,6 +253,88 @@ export default function MenuPage() {
                     </button>
                 </div>
             </div>
+
+            <section className="mb-12 rounded-[2.5rem] border border-white/60 bg-[#0F3D2E] p-5 md:p-6 shadow-[0_30px_90px_-38px_rgba(15,61,46,0.65)] text-white overflow-hidden">
+                <div className="flex items-start justify-between gap-4 mb-5">
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.36em] text-white/45 mb-2">Category Bar</p>
+                        <h2 className="text-2xl md:text-3xl font-serif italic tracking-tight">Browse like a flagship cafe</h2>
+                        <p className="mt-2 text-sm md:text-[15px] font-medium text-white/70 max-w-2xl">
+                            Create and organize categories here, then let the menu flow feel premium at the top of the page.
+                        </p>
+                    </div>
+                    <div className="hidden md:flex flex-col items-end text-right">
+                        <span className="text-[10px] font-black uppercase tracking-[0.28em] text-white/45">Live Categories</span>
+                        <span className="mt-2 text-2xl font-black">{categoryRecords.length}</span>
+                    </div>
+                </div>
+
+                <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1">
+                    {categoryRecords.map((category) => {
+                        const categoryKey = normalizeCategoryKey(category.slug || category.name);
+                        const itemCount = itemCountByCategory[categoryKey] || 0;
+                        const isActive = activeCategoryId === category.id;
+
+                        return (
+                            <button
+                                key={category.id}
+                                onClick={() => scrollToCategorySection(category.id)}
+                                className={`relative min-w-[250px] h-[160px] overflow-hidden rounded-[2rem] snap-center border text-left shadow-[0_18px_50px_-26px_rgba(0,0,0,0.55)] transition-all duration-300 active:scale-[0.98] ${isActive ? "border-[#F59E0B]/80 ring-2 ring-[#F59E0B]/30" : "border-white/10 hover:border-white/25"}`}
+                            >
+                                {category.image_url ? (
+                                    <img
+                                        src={getDirectImageUrl(category.image_url)}
+                                        alt={category.name}
+                                        className="absolute inset-0 h-full w-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.35),transparent_30%),linear-gradient(160deg,rgba(255,255,255,0.08),rgba(15,61,46,0.98))]" />
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/28 to-black/18" />
+
+                                <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.24em] text-white backdrop-blur-md border border-white/10">
+                                    <span className="text-base leading-none">{category.icon_emoji || "🍽️"}</span>
+                                    <span>{itemCount} items</span>
+                                </div>
+
+                                <div className="absolute inset-x-4 bottom-4">
+                                    <p className="text-[9px] font-black uppercase tracking-[0.28em] text-white/55 mb-1">
+                                        {category.description || "Curated shelf"}
+                                    </p>
+                                    <h3 className="text-[1.45rem] font-black leading-none text-white line-clamp-1">
+                                        {category.name}
+                                    </h3>
+                                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white text-[#0F3D2E] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] shadow-lg">
+                                        Open Shelf
+                                        <span className="text-[#F59E0B]">→</span>
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    })}
+
+                    <button
+                        onClick={() => {
+                            setEditingCategory({
+                                name: "",
+                                icon_emoji: "🍽️",
+                                sort_order: categoryRecords.length,
+                                is_active: true,
+                            });
+                            setIsCategoryModalOpen(true);
+                        }}
+                        className="min-w-[250px] h-[160px] snap-center rounded-[2rem] border border-dashed border-white/20 bg-white/8 backdrop-blur-md flex flex-col items-center justify-center text-center shadow-[0_18px_50px_-26px_rgba(0,0,0,0.35)] transition-all hover:bg-white/12 active:scale-[0.98]"
+                    >
+                        <div className="w-14 h-14 rounded-full bg-white text-[#0F3D2E] flex items-center justify-center shadow-lg mb-3">
+                            <Plus className="w-6 h-6" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.32em] text-white/72">Create Category</span>
+                        <span className="mt-2 text-sm font-medium text-white/50 max-w-[16ch]">
+                            Add a new shelf for the top menu
+                        </span>
+                    </button>
+                </div>
+            </section>
 
             {(loading || categoriesLoading) ? (
                 <div className="flex flex-col items-center justify-center h-[50vh] text-slate-300">
@@ -322,7 +428,7 @@ export default function MenuPage() {
                     {categoryRecords.map((category) => {
                         const categoryKey = normalizeCategoryKey(category.slug || category.name);
                         return (
-                        <div key={category.id} className="space-y-8">
+                        <div key={category.id} id={`category-section-${category.id}`} className="space-y-8 scroll-mt-32">
                             <div className="flex items-center space-x-4 px-2">
                                 <div className="w-12 h-12 rounded-2xl bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
                                     {category.image_url ? (

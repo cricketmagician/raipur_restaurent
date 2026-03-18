@@ -1657,10 +1657,6 @@ export async function saveMenuCategory(hotelId: string, category: Partial<MenuCa
         description: category.description || null,
         image_url: category.image_url || null,
         icon_emoji: category.icon_emoji || null,
-        icon_url: category.icon_url || null,
-        display_style: category.display_style || 'pill',
-        is_highlighted: category.is_highlighted ?? false,
-        active_hours: category.active_hours || null,
         sort_order: category.sort_order ?? 0,
         is_active: category.is_active ?? true,
     };

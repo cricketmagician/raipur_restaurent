@@ -133,7 +133,7 @@ export function QuickActionFAB() {
                                 >
                                     <button
                                         onClick={() => handleAction(action)}
-                                        className={`w-full p-4 rounded-3xl backdrop-blur-2xl border flex items-center justify-between group transition-all duration-500 shadow-2xl ${
+                                        className={`w-full p-4 rounded-3xl bg-white border flex items-center justify-between group transition-all duration-500 shadow-2xl ${
                                             confirming === action.id 
                                                 ? 'bg-slate-900 border-slate-800' 
                                                 : 'bg-white/80 border-white/50'
@@ -205,7 +205,7 @@ export function QuickActionFAB() {
                             setIsOpen(false);
                             setConfirming(null);
                         }}
-                        className="fixed inset-0 bg-slate-900/20 backdrop-blur-[4px] z-[105]"
+                        className="fixed inset-0 bg-slate-900/60 z-[105]"
                     />
                 )}
             </AnimatePresence>

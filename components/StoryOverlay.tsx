@@ -103,7 +103,7 @@ export function StoryOverlay({ stories, initialIndex, isVisible, onClose, onOrde
                     {/* Header: Close Button */}
                     <button 
                         onClick={onClose}
-                        className="absolute top-16 right-6 z-50 w-12 h-12 bg-black/20 backdrop-blur-xl rounded-full flex items-center justify-center text-white active:scale-90 transition-all"
+                        className="absolute top-16 right-6 z-50 w-12 h-12 bg-black/40 rounded-full flex items-center justify-center text-white active:scale-90 transition-all border border-white/20"
                     >
                         <X className="w-6 h-6" />
                     </button>

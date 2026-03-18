@@ -64,7 +64,7 @@ export function CartOverlay({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 backdrop-blur-xl z-[120] bg-[#0F3D2E]/40"
+                        className="fixed inset-0 z-[120] bg-[#0F3D2E]/80"
                     />
                     <motion.div
                         initial={{ y: "100%" }}

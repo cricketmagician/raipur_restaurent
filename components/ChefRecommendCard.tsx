@@ -33,7 +33,7 @@ export function ChefRecommendCard({ item, onAdd, onRemove, onClick, theme, quant
             
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-            <div className="absolute top-6 left-6 flex items-center bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full">
+            <div className="absolute top-6 left-6 flex items-center bg-black/40 border border-white/20 px-4 py-2 rounded-full">
                 <Sparkles className="w-3 h-3 text-yellow-400 mr-2" />
                 <span className="text-[8px] font-black italic text-white uppercase tracking-widest">Chef Recommends</span>
             </div>
@@ -46,7 +46,7 @@ export function ChefRecommendCard({ item, onAdd, onRemove, onClick, theme, quant
                     <span className="text-lg font-black tracking-tighter">₹{item.price}</span>
                     {quantity > 0 ? (
                         <div
-                            className="flex items-center justify-between rounded-full p-1.5 bg-white/15 backdrop-blur-md border border-white/15 shadow-lg min-w-[132px]"
+                            className="flex items-center justify-between rounded-full p-1.5 bg-black/40 border border-white/15 shadow-lg min-w-[132px]"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <button

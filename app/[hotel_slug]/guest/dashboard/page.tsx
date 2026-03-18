@@ -20,7 +20,9 @@ import {
     Bell,
     Droplets,
     UtensilsCrossed,
-    MapPin
+    MapPin,
+    Home,
+    ShoppingBag as CartIcon
 } from "lucide-react";
 import { getDirectImageUrl } from "@/utils/image";
 import { useRouter, useParams } from "next/navigation";
@@ -192,7 +194,7 @@ export default function GuestDashboard() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[200] flex items-center justify-center bg-[#0F3D2E]/90 backdrop-blur-2xl px-8"
+                        className="fixed inset-0 z-[200] flex items-center justify-center bg-[#0F3D2E] px-8"
                     >
                         <motion.div 
                             initial={{ scale: 0.8, y: 20 }}
@@ -214,7 +216,7 @@ export default function GuestDashboard() {
             </AnimatePresence>
 
             {/* 1. FLOATING UTILITY BAR (Sticky Navigation) */}
-            <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${scrolled ? 'py-3 backdrop-blur-2xl bg-white/60 border-b border-black/5 shadow-[0_8px_32px_rgba(0,0,0,0.05)]' : 'py-6 bg-transparent'}`}>
+            <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${scrolled ? 'py-3 bg-white border-b border-black/5 shadow-lg' : 'py-6 bg-transparent'}`}>
                 <div className="max-w-md mx-auto px-6 flex items-center justify-between">
                     <div className="flex-1">
                         <h1 className={`text-lg font-black italic tracking-tighter truncate transition-colors duration-500 ${scrolled ? 'text-[#0F3D2E]' : 'text-white drop-shadow-md'}`}>
@@ -223,7 +225,7 @@ export default function GuestDashboard() {
                     </div>
                     
                     <div className="flex items-center gap-3">
-                        <div className={`flex rounded-full p-1 border transition-colors duration-500 ${scrolled ? 'bg-black/5 border-black/10' : 'bg-white/10 border-white/20 backdrop-blur-md'}`}>
+                        <div className={`flex rounded-full p-1 border transition-colors duration-500 ${scrolled ? 'bg-black/5 border-black/10' : 'bg-black/20 border-white/20'}`}>
                             <button 
                                 onClick={switchToDineIn} 
                                 className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${orderMode === 'dine-in' ? 'bg-[#C8A96A] text-white shadow-lg' : scrolled ? 'text-black/40' : 'text-white/60'}`}
@@ -239,10 +241,19 @@ export default function GuestDashboard() {
                         </div>
                         
                         <button 
-                            onClick={() => setShowServiceHub(true)} 
-                            className={`relative w-12 h-12 rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all ${scrolled ? 'bg-[#0F3D2E] text-white' : 'bg-white/20 border border-white/30 backdrop-blur-xl text-white'}`}
+                            onClick={() => setShowCart(true)} 
+                            className={`relative w-12 h-12 rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all ${scrolled ? 'bg-[#0F3D2E] text-white' : 'bg-white/20 border border-white/30 text-white'}`}
                         >
-                            <Bell className="w-5 h-5" />
+                            <ShoppingBag className="w-5 h-5" />
+                            {cartCount > 0 && (
+                                <motion.span 
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="absolute -top-1 -right-1 w-5 h-5 bg-[#C8A96A] text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-lg border-2 border-white"
+                                >
+                                    {cartCount}
+                                </motion.span>
+                            )}
                         </button>
                     </div>
                 </div>
@@ -279,7 +290,7 @@ export default function GuestDashboard() {
                         <div className="pt-8">
                             <motion.button 
                                 whileTap={{ scale: 0.96 }}
-                                className="bg-white/20 backdrop-blur-xl border border-white/40 px-8 py-4 rounded-full text-white text-xs font-black uppercase tracking-[0.3em] shadow-2xl"
+                                className="bg-white/20 border border-white/40 px-8 py-4 rounded-full text-white text-xs font-black uppercase tracking-[0.3em] shadow-2xl"
                                 onClick={() => window.scrollTo({ top: window.innerHeight * 0.8, behavior: 'smooth' })}
                             >
                                 Explore Menu →
@@ -301,7 +312,7 @@ export default function GuestDashboard() {
                                 className={`flex items-center gap-3 px-6 py-4 rounded-full transition-all duration-500 shrink-0 shadow-lg ${
                                     activeCategory === cat.id 
                                     ? "bg-[#0F3D2E] text-white scale-105 shadow-[#0F3D2E]/20" 
-                                    : "bg-white/80 backdrop-blur-xl border border-black/5 text-[#0F3D2E]/60 hover:bg-white"
+                                    : "bg-white border border-black/5 text-[#0F3D2E]/60 hover:bg-white"
                                 }`}
                             >
                                 <span className="text-lg">{cat.icon}</span>
@@ -341,7 +352,7 @@ export default function GuestDashboard() {
                                     <p className="text-white/60 text-[11px] font-medium leading-relaxed italic opacity-80">"Rich. Creamy. Unforgettable."</p>
                                     <div className="pt-4 flex items-center justify-between">
                                         <span className="text-xl font-black text-white">₹{item.price}</span>
-                                        <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30 text-white text-[10px] font-black uppercase tracking-widest">
+                                        <div className="bg-black/40 px-4 py-2 rounded-full border border-white/30 text-white text-[10px] font-black uppercase tracking-widest">
                                             + Explore
                                         </div>
                                     </div>
@@ -432,7 +443,7 @@ export default function GuestDashboard() {
                             <motion.button 
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => setSelectedProduct(null)}
-                                className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl flex items-center justify-center text-white"
+                                className="w-12 h-12 rounded-full bg-black/60 flex items-center justify-center text-white"
                             >
                                 <X className="w-6 h-6" />
                             </motion.button>
@@ -526,6 +537,30 @@ export default function GuestDashboard() {
                 )}
             </AnimatePresence>
 
+            {/* Footer Navigation Hub */}
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-md">
+                <div className="bg-[#0F3D2E] rounded-[2.5rem] shadow-2xl p-2 flex items-center justify-between">
+                    <button className="flex-1 flex flex-col items-center gap-1 text-white/40 py-3">
+                        <Home className="w-5 h-5" />
+                        <span className="text-[8px] font-black uppercase tracking-widest">Home</span>
+                    </button>
+                    <button 
+                        onClick={() => setShowServiceHub(true)}
+                        className="w-16 h-16 bg-[#C8A96A] rounded-full flex items-center justify-center text-white shadow-xl -mt-8 border-4 border-[#F5F1E8] active:scale-90 transition-all"
+                    >
+                        <Bell className="w-7 h-7" />
+                    </button>
+                    <button 
+                        onClick={() => setShowCart(true)}
+                        className="flex-1 flex flex-col items-center gap-1 text-white/40 py-3 relative"
+                    >
+                        <CartIcon className="w-5 h-5" />
+                        <span className="text-[8px] font-black uppercase tracking-widest">Bag</span>
+                        {cartCount > 0 && <span className="absolute top-2 right-8 w-2 h-2 bg-[#C8A96A] rounded-full" />}
+                    </button>
+                </div>
+            </div>
+
             {/* Service Hub Overlay */}
             <AnimatePresence>
                 {showServiceHub && (
@@ -540,7 +575,7 @@ export default function GuestDashboard() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => { setShowServiceHub(false); setServiceAction(null); }}
-                            className="absolute inset-0 bg-black/40 backdrop-blur-md"
+                            className="absolute inset-0 bg-black/60"
                         />
                         
                         <motion.div 

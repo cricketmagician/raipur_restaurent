@@ -55,7 +55,7 @@ export function GlobalHeader() {
                     <div className="flex-shrink-0 relative">
                         <button 
                             onClick={() => setShowUtility(!showUtility)}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 border border-white/40 shadow-sm backdrop-blur-md`}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 border border-white/40 shadow-sm bg-black/20`}
                             style={{ 
                                 backgroundColor: showUtility ? theme.primary : (scrolled ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)"),
                                 color: "white"
@@ -70,7 +70,7 @@ export function GlobalHeader() {
                                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    className="absolute top-12 left-0 w-52 bg-white/90 backdrop-blur-3xl rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/50 overflow-hidden py-2 z-[110]"
+                                    className="absolute top-12 left-0 w-52 bg-white rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-200 overflow-hidden py-2 z-[110]"
                                 >
                                     <div className="px-5 py-3 border-b border-black/5 mb-1.5">
                                         <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">Guest Selection</p>
@@ -102,7 +102,7 @@ export function GlobalHeader() {
 
                     {/* Center: Compact Mode Toggle (Fix #8) */}
                     <div className="flex-1 flex justify-center">
-                        <div className="flex bg-white/20 p-1 rounded-full border border-white/40 backdrop-blur-xl shadow-inner relative">
+                        <div className="flex bg-black/10 p-1 rounded-full border border-white/40 shadow-inner relative">
                             {/* Sliding Highlight */}
                             <motion.div 
                                 animate={{ x: orderMode === "dine-in" ? 0 : "100%" }}
@@ -136,7 +136,7 @@ export function GlobalHeader() {
                         <button 
                             id="header-cart-button"
                             onClick={() => window.dispatchEvent(new CustomEvent('open_cart'))}
-                            className={`relative overflow-hidden flex items-center justify-center shadow-[0_18px_40px_-18px_rgba(0,0,0,0.28)] border border-white/80 active:scale-95 transition-all backdrop-blur-xl ${
+                            className={`relative overflow-hidden flex items-center justify-center shadow-[0_18px_40px_-18px_rgba(0,0,0,0.28)] border border-white/80 active:scale-95 transition-all bg-white/20 ${
                                 cartCount > 0 ? "h-11 min-w-[68px] px-2.5 rounded-[1.3rem] gap-2" : "w-11 h-11 rounded-full"
                             }`}
                             style={{

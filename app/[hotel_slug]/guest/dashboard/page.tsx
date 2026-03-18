@@ -243,7 +243,7 @@ export default function GuestDashboard() {
             </AnimatePresence>
 
             {/* 2. MINIMAL AUTO-CAROUSEL HERO */}
-            <section className="relative h-[40vh] w-full overflow-hidden">
+            <section className="relative h-[60vh] w-full overflow-hidden">
                 <AnimatePresence mode="wait">
                     <motion.div 
                         key={currentHeroIndex}

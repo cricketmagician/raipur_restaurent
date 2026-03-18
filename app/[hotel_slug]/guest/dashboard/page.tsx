@@ -16,7 +16,11 @@ import {
     HandPlatter,
     Info,
     CheckCircle2,
-    X
+    X,
+    Bell,
+    Droplets,
+    UtensilsCrossed,
+    MapPin
 } from "lucide-react";
 import { getDirectImageUrl } from "@/utils/image";
 import { useRouter, useParams } from "next/navigation";
@@ -55,6 +59,8 @@ export default function GuestDashboard() {
 
     const [activeCategory, setActiveCategory] = useState("all");
     const [showCart, setShowCart] = useState(false);
+    const [showServiceHub, setShowServiceHub] = useState(false);
+    const [serviceAction, setServiceAction] = useState<'water' | 'waiter' | null>(null);
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
     const [isOrdering, setIsOrdering] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -233,19 +239,10 @@ export default function GuestDashboard() {
                         </div>
                         
                         <button 
-                            onClick={() => setShowCart(true)} 
+                            onClick={() => setShowServiceHub(true)} 
                             className={`relative w-12 h-12 rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all ${scrolled ? 'bg-[#0F3D2E] text-white' : 'bg-white/20 border border-white/30 backdrop-blur-xl text-white'}`}
                         >
-                            <ShoppingBag className="w-6 h-6" />
-                            {cartCount > 0 && (
-                                <motion.span 
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    className="absolute -top-1 -right-1 w-6 h-6 bg-[#C8A96A] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border-2 border-white"
-                                >
-                                    {cartCount}
-                                </motion.span>
-                            )}
+                            <Bell className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
@@ -294,24 +291,6 @@ export default function GuestDashboard() {
 
             <main className="max-w-md mx-auto relative z-10 -mt-20">
                 
-                {/* 3. BRANDING SHOWROOM (Storytelling Logo) */}
-                <section className="px-6 flex flex-col items-center gap-6 mb-16">
-                    {branding?.logo && (
-                        <motion.div 
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            whileInView={{ scale: 1, opacity: 1 }}
-                            viewport={{ once: true }}
-                            className="w-28 h-28 rounded-[3rem] bg-white p-6 border border-black/5 shadow-2xl flex items-center justify-center"
-                        >
-                            <img src={getDirectImageUrl(branding.logo)} className="w-full h-full object-contain" alt="Hotel Logo" />
-                        </motion.div>
-                    )}
-                    <div className="text-center space-y-1">
-                        <h3 className="text-3xl font-black italic tracking-tighter text-[#0F3D2E]">{branding?.name || "Hutgood"}</h3>
-                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C8A96A] opacity-80">Premium Experience</p>
-                    </div>
-                </section>
-
                 {/* 4. LIQUID CATEGORY NAV (Floating Pills) */}
                 <section className="sticky top-[80px] z-50 mb-12">
                     <div className="flex gap-4 overflow-x-auto no-scrollbar px-6 py-4">
@@ -547,7 +526,132 @@ export default function GuestDashboard() {
                 )}
             </AnimatePresence>
 
-            {/* Premium Overlays */}
+            {/* Service Hub Overlay */}
+            <AnimatePresence>
+                {showServiceHub && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[200] flex items-end justify-center px-4 pb-10"
+                    >
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => { setShowServiceHub(false); setServiceAction(null); }}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-md"
+                        />
+                        
+                        <motion.div 
+                            initial={{ y: "100%" }}
+                            animate={{ y: 0 }}
+                            exit={{ y: "100%" }}
+                            className="relative w-full max-w-md bg-white rounded-[3rem] shadow-2xl overflow-hidden p-8 space-y-8"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#C8A96A] mb-1">Guest Assistance</p>
+                                    <h3 className="text-2xl font-black italic tracking-tighter text-[#0F3D2E]">Service Hub</h3>
+                                </div>
+                                <button onClick={() => setShowServiceHub(false)} className="p-3 bg-black/5 rounded-full"><X className="w-5 h-5" /></button>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4">
+                                <button 
+                                    onClick={() => setServiceAction('water')}
+                                    className={`p-6 rounded-[2rem] border transition-all flex items-center justify-between group ${serviceAction === 'water' ? 'bg-[#0F3D2E] border-[#0F3D2E] text-white' : 'bg-slate-50 border-slate-100 text-[#0F3D2E] hover:bg-white hover:border-[#0F3D2E]/20'}`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-3 rounded-2xl ${serviceAction === 'water' ? 'bg-white/10' : 'bg-white shadow-sm'}`}>
+                                            <Droplets className="w-6 h-6" />
+                                        </div>
+                                        <div className="text-left">
+                                            <h4 className="font-black italic tracking-tighter">Order Mineral Water</h4>
+                                            <p className={`text-[10px] font-bold uppercase tracking-widest ${serviceAction === 'water' ? 'text-white/60' : 'text-slate-400'}`}>Stay Hydrated • ₹45</p>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${serviceAction === 'water' ? 'rotate-90' : ''}`} />
+                                </button>
+
+                                <button 
+                                    onClick={() => setServiceAction('waiter')}
+                                    className={`p-6 rounded-[2rem] border transition-all flex items-center justify-between group ${serviceAction === 'waiter' ? 'bg-[#0F3D2E] border-[#0F3D2E] text-white' : 'bg-slate-50 border-slate-100 text-[#0F3D2E] hover:bg-white hover:border-[#0F3D2E]/20'}`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-3 rounded-2xl ${serviceAction === 'waiter' ? 'bg-white/10' : 'bg-white shadow-sm'}`}>
+                                            <UtensilsCrossed className="w-6 h-6" />
+                                        </div>
+                                        <div className="text-left">
+                                            <h4 className="font-black italic tracking-tighter">Call Service Waiter</h4>
+                                            <p className={`text-[10px] font-bold uppercase tracking-widest ${serviceAction === 'waiter' ? 'text-white/60' : 'text-slate-400'}`}>For help or payment</p>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${serviceAction === 'waiter' ? 'rotate-90' : ''}`} />
+                                </button>
+
+                                {/* Moving Cart Trigger here to ensure bag replacement still allows checkout */}
+                                <button 
+                                    onClick={() => { setShowServiceHub(false); setShowCart(true); }}
+                                    className="p-6 bg-[#C8A96A] rounded-[2rem] text-white flex items-center justify-between group shadow-xl active:scale-95 transition-all"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-white/20 rounded-2xl">
+                                            <ShoppingBag className="w-6 h-6" />
+                                        </div>
+                                        <div className="text-left">
+                                            <h4 className="font-black italic tracking-tighter">View Your Bag</h4>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">{cartCount} items • Processed Now</p>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1" />
+                                </button>
+                            </div>
+
+                            {/* Friction Confirmation Section */}
+                            <AnimatePresence>
+                                {serviceAction && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="pt-6 border-t border-slate-100"
+                                    >
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4 text-center">Slide to Confirm Service</p>
+                                        <div className="relative h-16 bg-slate-100 rounded-full p-1 overflow-hidden">
+                                            <motion.div 
+                                                drag="x"
+                                                dragConstraints={{ left: 0, right: 300 }}
+                                                onDragEnd={async (_, info) => {
+                                                    if (info.offset.x > 200) {
+                                                        const type = serviceAction === 'water' ? 'Mineral Water' : 'Waiter Call';
+                                                        await addSupabaseRequest(branding!.id, {
+                                                            room: tableNumber,
+                                                            type: type,
+                                                            status: 'Pending',
+                                                            notes: `Requested via Service Hub`
+                                                        });
+                                                        setToast({ message: `${type} requested!`, type: 'success', isVisible: true });
+                                                        setShowServiceHub(false);
+                                                        setServiceAction(null);
+                                                    }
+                                                }}
+                                                className="absolute left-1 top-1 bottom-1 aspect-square bg-[#0F3D2E] rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing text-white shadow-lg"
+                                            >
+                                                <ChevronRight className="w-6 h-6" />
+                                            </motion.div>
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F3D2E]/40">Confirm {serviceAction}</span>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <CartOverlay 
                 isOpen={showCart}
                 onClose={() => setShowCart(false)}

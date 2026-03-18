@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Inbox, Hotel, Utensils, Settings, Users, BarChart3, Receipt, Shirt, ConciergeBell, ShieldAlert, Loader2, Sparkles } from "lucide-react";
+import { LayoutDashboard, Inbox, Hotel, Utensils, Settings, Users, BarChart3, Receipt, Shirt, ConciergeBell, ShieldAlert, Loader2, Sparkles, Zap } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useAuth, getUserProfile, UserProfile, useHotelBranding, normalizeUserRole } from "@/utils/store";
@@ -58,6 +58,7 @@ export default function AdminLayout({
 
     const navItems = [
         { id: 'dashboard', name: "Dashboard", href: `/${hotelSlug}/admin/dashboard`, icon: <Inbox className="w-5 h-5" />, roles: ['admin', 'reception', 'kitchen', 'housekeeping', 'waiter'] },
+        { id: 'experience', name: "Experience Hub", href: `/${hotelSlug}/admin/experience`, icon: <Zap className="w-5 h-5" />, roles: ['admin'] },
         { id: 'homepage', name: "Homepage Settings", href: `/${hotelSlug}/admin/homepage`, icon: <LayoutDashboard className="w-5 h-5" />, roles: ['admin'] },
         { id: 'analytics', name: "Analytics", href: `/${hotelSlug}/admin/analytics`, icon: <BarChart3 className="w-5 h-5" />, roles: ['admin'] },
         { id: 'rooms', name: "Tables & QR", href: `/${hotelSlug}/admin/rooms`, icon: <Hotel className="w-5 h-5" />, roles: ['admin', 'reception'] },

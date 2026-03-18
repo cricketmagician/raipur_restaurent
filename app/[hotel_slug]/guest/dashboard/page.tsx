@@ -34,7 +34,7 @@ import {
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { useTheme } from "@/utils/themes";
 import { getDirectImageUrl } from "@/utils/image";
-import { DISCOVERY_MOODS } from "@/utils/guestDiscovery";
+import { DISCOVERY_MOODS, categoryMatchesMood, getDiscoveryMood, textMatchesMood } from "@/utils/guestDiscovery";
 
 type LoyaltyProfile = {
     phone: string;
@@ -76,6 +76,7 @@ export default function GuestDashboard() {
     const [activeHeroIndex, setActiveHeroIndex] = React.useState(0);
     const [activeStoryIndex, setActiveStoryIndex] = React.useState(0);
     const [isStoryOverlayOpen, setIsStoryOverlayOpen] = React.useState(false);
+    const moodPicksRef = React.useRef<HTMLDivElement>(null);
     const [toast, setToast] = React.useState<{ message: string; type: "success" | "error"; isVisible: boolean }>({
         message: "",
         type: "success",
@@ -91,6 +92,10 @@ export default function GuestDashboard() {
     const availableMenuItems = React.useMemo(
         () => menuItems.filter((item) => item.is_available !== false),
         [menuItems]
+    );
+    const activeMood = React.useMemo(
+        () => moods.find((mood) => mood.id === activeMoodId) || null,
+        [activeMoodId, moods]
     );
     const activeStories = React.useMemo(
         () => stories.filter((story) => story.is_active !== false),
@@ -132,14 +137,17 @@ export default function GuestDashboard() {
                 .slice(0, 8),
         [availableMenuItems]
     );
+    const moodPickItems = React.useMemo(() => {
+        if (!activeMood) return [];
 
-    const resolveMoodForMenu = React.useCallback((moodName?: string, tagLinked?: string) => {
-        const source = `${moodName || ""} ${tagLinked || ""}`.toLowerCase();
-        if (source.includes("sweet") || source.includes("dessert") || source.includes("choco")) return "sweet";
-        if (source.includes("spicy") || source.includes("hot") || source.includes("peri") || source.includes("masala")) return "spicy";
-        if (source.includes("light") || source.includes("fresh") || source.includes("salad") || source.includes("healthy")) return "light";
-        return "filling";
-    }, []);
+        return availableMenuItems
+            .filter((item) =>
+                categoryMatchesMood(`${item.category} ${item.title} ${item.description || ""}`, activeMood.id) ||
+                textMatchesMood(`${item.category} ${item.title} ${item.description || ""}`, activeMood.id)
+            )
+            .slice(0, 6);
+    }, [activeMood, availableMenuItems]);
+    const moodPicksLabel = activeMood ? (getDiscoveryMood(activeMood.id)?.label || activeMood.name) : null;
 
     React.useEffect(() => {
         if (activeHeroes.length <= 1) {
@@ -163,6 +171,14 @@ export default function GuestDashboard() {
 
         soldOutIds.forEach((id) => updateQuantity(id, 0));
     }, [menuItems, cart, updateQuantity]);
+
+    React.useEffect(() => {
+        if (!activeMoodId || !moodPicksRef.current) return;
+
+        requestAnimationFrame(() => {
+            moodPicksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+    }, [activeMoodId, moodPickItems.length]);
 
     const handleLoyaltySignIn = async (phone: string, name: string) => {
         const profile = { phone, name, lastVisitAt: new Date().toISOString() };
@@ -454,32 +470,18 @@ export default function GuestDashboard() {
                         transition={{ delay: 0.08 }}
                         className="px-1"
                     >
-                        <div className="mb-3 flex items-center justify-between gap-3 px-4">
-                            <div>
-                                <p className="mb-1 text-[10px] font-black uppercase tracking-[0.24em] opacity-45" style={{ color: theme.primary }}>
-                                    Eat by mood
-                                </p>
-                                <h3 className="text-lg font-black tracking-tight" style={{ color: theme.primary }}>
-                                    Pick your vibe and jump to menu.
-                                </h3>
-                            </div>
-                            <button
-                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                                className="shrink-0 rounded-full border px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.24em] transition-all active:scale-95"
-                                style={{ color: theme.primary, borderColor: `${theme.primary}12`, backgroundColor: "rgba(255,255,255,0.7)" }}
-                            >
-                                Open Menu
-                            </button>
-                        </div>
-
                         <EatByMoodSection
                             moods={moods.filter((mood) => mood.is_active !== false)}
                             activeMoodId={activeMoodId}
                             onMoodSelect={(moodId) => {
                                 setActiveMoodId(moodId);
                                 const selectedMood = moods.find((mood) => mood.id === moodId);
-                                const normalizedMood = resolveMoodForMenu(selectedMood?.name, selectedMood?.tag_linked);
-                                router.push(`/${hotelSlug}/guest/restaurant?mood=${normalizedMood}`);
+                                window.dispatchEvent(new CustomEvent("guest_show_toast", {
+                                    detail: {
+                                        type: "success",
+                                        message: `${selectedMood?.name || "Mood"} picks ready.`,
+                                    },
+                                }));
                             }}
                         />
                         {moods.filter((mood) => mood.is_active !== false).length === 0 && (
@@ -510,6 +512,67 @@ export default function GuestDashboard() {
                                 ))}
                             </div>
                         )}
+
+                        {activeMood && moodPickItems.length > 0 && (
+                            <motion.div
+                                ref={moodPicksRef}
+                                initial={{ opacity: 0, y: 14 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.35 }}
+                                className="mt-4 rounded-[1.6rem] border p-4 shadow-[0_18px_45px_rgba(0,0,0,0.08)]"
+                                style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}
+                            >
+                                <div className="mb-3 flex items-end justify-between gap-3">
+                                    <div>
+                                        <p className="mb-1 text-[10px] font-black uppercase tracking-[0.24em] opacity-45" style={{ color: theme.primary }}>
+                                            {moodPicksLabel} picks
+                                        </p>
+                                        <h4 className="text-lg font-black tracking-tight" style={{ color: theme.primary }}>
+                                            What fits your vibe best.
+                                        </h4>
+                                    </div>
+                                    <span className="rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: theme.primary, borderColor: `${theme.primary}12` }}>
+                                        Now showing
+                                    </span>
+                                </div>
+
+                                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                                    {moodPickItems.map((item) => (
+                                        <motion.button
+                                            key={item.id}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
+                                            className="min-w-[168px] overflow-hidden rounded-[1.2rem] border text-left shadow-[0_14px_30px_rgba(0,0,0,0.08)]"
+                                            style={{ backgroundColor: "rgba(255,255,255,0.75)", borderColor: `${theme.primary}08` }}
+                                        >
+                                            <div className="h-28 overflow-hidden">
+                                                <img
+                                                    src={getDirectImageUrl(item.image_url)}
+                                                    alt={item.title}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            </div>
+                                            <div className="space-y-1 p-3">
+                                                <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-45" style={{ color: theme.primary }}>
+                                                    {item.category}
+                                                </p>
+                                                <h5 className="line-clamp-1 text-[13px] font-black tracking-tight" style={{ color: theme.primary }}>
+                                                    {item.title}
+                                                </h5>
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="text-[11px] font-black" style={{ color: theme.primary }}>
+                                                        ₹{item.price}
+                                                    </span>
+                                                    <span className="rounded-full px-2 py-1 text-[8px] font-black uppercase tracking-[0.18em] text-white" style={{ backgroundColor: "#F59E0B" }}>
+                                                        View
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </motion.button>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
                     </motion.section>
 
                     {cartCount > 0 ? (
@@ -517,7 +580,7 @@ export default function GuestDashboard() {
                             initial={{ opacity: 0, y: 18 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.12 }}
-                            className="rounded-[2rem] border p-5 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.22)]"
+                            className="rounded-[1.35rem] border p-4 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.22)]"
                             style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}
                         >
                             <div className="flex items-center justify-between gap-4">

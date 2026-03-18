@@ -359,6 +359,48 @@ export default function RestaurantPage() {
                                                 {selectedItem.description || "A masterpiece of flavors, handcrafted for the ultimate indulgence."}
                                             </p>
                                         </div>
+
+                                        {/* SMART COMBO SUGGESTIONS */}
+                                        {selectedItem.upsell_items && selectedItem.upsell_items.length > 0 && (
+                                            <div className="space-y-4 pb-4">
+                                                <div className="flex items-center justify-between px-2">
+                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0F3D2E]/40">Complete Your Meal</h4>
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C8A96A]">Special Combo</span>
+                                                </div>
+                                                <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-2 px-2">
+                                                    {availableItems
+                                                        .filter(item => selectedItem.upsell_items?.includes(item.id))
+                                                        .map(upsell => (
+                                                            <motion.div 
+                                                                key={upsell.id}
+                                                                whileTap={{ scale: 0.95 }}
+                                                                className="shrink-0 w-48 bg-white/60 backdrop-blur-md rounded-[2rem] p-4 border border-white/80 shadow-sm flex flex-col gap-3"
+                                                            >
+                                                                <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-inner">
+                                                                    <img src={getDirectImageUrl(upsell.image_url)} className="w-full h-full object-cover" alt={upsell.title} />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <h5 className="font-black italic text-xs text-[#0F3D2E] line-clamp-1">{upsell.title}</h5>
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className="text-[10px] font-black text-[#C8A96A]">₹{upsell.price}</span>
+                                                                        <button 
+                                                                            onClick={() => updateQuantity(upsell.id, (cart[upsell.id] || 0) + 1)}
+                                                                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${cart[upsell.id] ? 'bg-[#0F3D2E] text-white' : 'bg-[#C8A96A] text-white'}`}
+                                                                        >
+                                                                            {cart[upsell.id] ? (
+                                                                                <span className="text-[10px] font-black">{cart[upsell.id]}</span>
+                                                                            ) : (
+                                                                                <Plus className="w-4 h-4" />
+                                                                            )}
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </motion.div>
+                                                        ))
+                                                    }
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

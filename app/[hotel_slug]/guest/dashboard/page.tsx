@@ -215,50 +215,6 @@ export default function GuestDashboard() {
                 )}
             </AnimatePresence>
 
-            {/* 1. FLOATING UTILITY BAR (Sticky Navigation) */}
-            <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${scrolled ? 'py-3 bg-white border-b border-black/5 shadow-lg' : 'py-6 bg-transparent'}`}>
-                <div className="max-w-md mx-auto px-6 flex items-center justify-between">
-                    <div className="flex-1">
-                        <h1 className={`text-lg font-black italic tracking-tighter truncate transition-colors duration-500 ${scrolled ? 'text-[#0F3D2E]' : 'text-white drop-shadow-md'}`}>
-                            {branding?.name}
-                        </h1>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                        <div className={`flex rounded-full p-1 border transition-colors duration-500 ${scrolled ? 'bg-black/5 border-black/10' : 'bg-black/20 border-white/20'}`}>
-                            <button 
-                                onClick={switchToDineIn} 
-                                className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${orderMode === 'dine-in' ? 'bg-[#C8A96A] text-white shadow-lg' : scrolled ? 'text-black/40' : 'text-white/60'}`}
-                            >
-                                Dine-in
-                            </button>
-                            <button 
-                                onClick={switchToTakeaway} 
-                                className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${orderMode === 'takeaway' ? 'bg-[#C8A96A] text-white shadow-lg' : scrolled ? 'text-black/40' : 'text-white/60'}`}
-                            >
-                                Takeaway
-                            </button>
-                        </div>
-                        
-                        <button 
-                            onClick={() => setShowCart(true)} 
-                            className={`relative w-12 h-12 rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all ${scrolled ? 'bg-[#0F3D2E] text-white' : 'bg-white/20 border border-white/30 text-white'}`}
-                        >
-                            <ShoppingBag className="w-5 h-5" />
-                            {cartCount > 0 && (
-                                <motion.span 
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    className="absolute -top-1 -right-1 w-5 h-5 bg-[#C8A96A] text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-lg border-2 border-white"
-                                >
-                                    {cartCount}
-                                </motion.span>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </header>
-
             {/* 2. CINEMATIC HERO (Entry Experience) */}
             <section className="relative h-[90vh] w-full overflow-hidden">
                 <motion.div 

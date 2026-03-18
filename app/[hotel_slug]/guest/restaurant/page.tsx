@@ -145,37 +145,17 @@ export default function RestaurantPage() {
                 scrolled={scrolled || activeCategory !== 'all'} 
             />
 
-            <div className="max-w-md mx-auto px-6 pt-4">
-                {/* 3. SUB-HEADER (Back & Search) */}
-                <div className="flex items-center gap-4 mb-6">
-                    {activeCategory !== 'all' ? (
-                        <motion.button 
-                            initial={{ x: -10, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            onClick={() => setActiveCategory('all')} 
-                            className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#0F3D2E] border border-[#0F3D2E]/5"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </motion.button>
-                    ) : (
-                        <button 
-                            onClick={() => router.back()} 
-                            className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#0F3D2E]/60 border border-[#0F3D2E]/5"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-                    )}
-                    
-                    <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0F3D2E]/30" />
-                        <input 
-                            type="text" 
-                            placeholder="Search flavors..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-white border border-[#0F3D2E]/5 shadow-sm rounded-2xl py-3.5 pl-11 pr-4 text-xs font-semibold focus:ring-2 focus:ring-[#C8A96A]/20 transition-all placeholder:text-[#0F3D2E]/20 text-[#0F3D2E]"
-                        />
-                    </div>
+            <div className="max-w-md mx-auto px-6 pt-6">
+                {/* 3. SEARCH BAR */}
+                <div className="relative w-full mb-8">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0F3D2E]/30" />
+                    <input 
+                        type="text" 
+                        placeholder="Search flavors..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-white border border-[#0F3D2E]/5 shadow-sm rounded-2xl py-3.5 pl-11 pr-4 text-xs font-semibold focus:ring-2 focus:ring-[#C8A96A]/20 transition-all placeholder:text-[#0F3D2E]/20 text-[#0F3D2E]"
+                    />
                 </div>
                 <AnimatePresence mode="wait">
                     {searchTerm ? (
@@ -213,16 +193,8 @@ export default function RestaurantPage() {
                             exit={{ opacity: 0 }}
                             className="space-y-6"
                         >
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4 text-[#C8A96A] fill-[#C8A96A]" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C8A96A]">Curated Collections</span>
-                                </div>
-                                <h2 className="text-5xl font-black italic tracking-tighter text-[#0F3D2E] leading-none">Explore Our World</h2>
-                                <p className="text-[#0F3D2E]/40 text-sm font-medium italic">Discover flavors handcrafted for your mood.</p>
-                            </div>
-
-                            <div className="flex flex-wrap justify-between gap-y-12">
+                            {/* Category Cards Section */}
+                            <div className="flex flex-wrap justify-between gap-y-12 mt-6">
                                 {categories.filter(c => c.id !== "all").map((cat, idx) => (
                                     <motion.div
                                         key={cat.id}

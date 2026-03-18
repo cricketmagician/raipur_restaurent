@@ -55,10 +55,10 @@ export function CategoryScrollNav({ categories, activeCategory, onCategoryClick,
                             onClick={() => onCategoryClick(cat.id)}
                             className="flex flex-col items-center gap-3 shrink-0 group"
                         >
-                            <div className={`relative w-20 h-20 rounded-full transition-all duration-500 overflow-hidden ${
+                            <div className={`relative w-16 h-16 rounded-full transition-all duration-500 overflow-hidden shadow-[0_4px_10px_rgba(0,0,0,0.06)] ${
                                 isActive 
-                                    ? "ring-4 ring-orange-500 ring-offset-2 scale-110 shadow-xl" 
-                                    : "ring-2 ring-black/5 group-hover:ring-black/10"
+                                    ? "ring-2 ring-orange-500 ring-offset-2 scale-105" 
+                                    : "group-hover:scale-105"
                             }`}>
                                 {imageUrl ? (
                                     <img 

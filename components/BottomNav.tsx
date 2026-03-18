@@ -52,15 +52,13 @@ export function BottomNav() {
                                 key={item.id}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => item.onClick ? item.onClick() : router.push(item.path)}
-                                className={`flex flex-col items-center justify-center relative transition-all duration-300 ${
-                                    isService 
-                                        ? 'w-16 h-16 bg-[#C8A96A] rounded-full -mt-12 border-4 border-[#F5F1E8] shadow-xl' 
-                                        : 'flex-1 py-1'
-                                }`}
+                                className="flex flex-col items-center justify-center relative transition-all duration-300 flex-1 py-1"
                             >
                                 <item.icon 
-                                    className={`${isService ? 'w-7 h-7' : 'w-5 h-5'} transition-all duration-300 ${
-                                        isActive || isService ? 'text-white' : 'text-white/40'
+                                    className={`transition-all duration-300 ${
+                                        isService ? 'w-6 h-6' : 'w-5 h-5'
+                                    } ${
+                                        isActive ? 'text-[#C8A96A]' : 'text-white/40'
                                     }`} 
                                     strokeWidth={isActive ? 2.5 : 2}
                                 />
@@ -68,6 +66,11 @@ export function BottomNav() {
                                     <span className={`text-[8px] font-black uppercase tracking-[0.1em] mt-1 transition-colors ${
                                         isActive ? 'text-[#C8A96A]' : 'text-white/40'
                                     }`}>
+                                        {item.label}
+                                    </span>
+                                )}
+                                {isService && (
+                                    <span className="text-[8px] font-black uppercase tracking-[0.1em] mt-1 text-white/40 transition-colors">
                                         {item.label}
                                     </span>
                                 )}

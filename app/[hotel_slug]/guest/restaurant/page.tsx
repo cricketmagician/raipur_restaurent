@@ -3,11 +3,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MenuCard } from "@/components/MenuCard";
 import { CheckCircle, Sparkles, TrendingUp, Gift } from "lucide-react";
-import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, useGuestLoyalty, saveGuestLoyaltySession, addLoyaltyPoints, getRoomAccessState, type MenuItem, useMenuSections } from "@/utils/store";
+import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, useGuestLoyalty, saveGuestLoyaltySession, addLoyaltyPoints, getRoomAccessState, type MenuItem, useMenuSections, useSeasonalStories, buildStandaloneSeasonalStoryItems } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { BottomNav } from "@/components/BottomNav";
 import { CartOverlay } from "@/components/CartOverlay";
 import { CATEGORY_THEMES, useTheme } from "@/utils/themes";
 import { CategoryDiscoveryGrid } from "@/components/CategoryDiscoveryGrid";
@@ -177,6 +176,7 @@ export default function RestaurantPage() {
     const { branding } = useHotelBranding(hotelSlug);
     const { categories: menuCategories } = useMenuCategories(branding?.id);
     const { sections: menuSections } = useMenuSections(branding?.id);
+    const { stories } = useSeasonalStories(branding?.id);
     const { roomNumber, orderMode } = useGuestRoom();
     const { cart, updateQuantity, clearCart } = useCart(branding?.id);
     const theme = useTheme(branding);
@@ -221,6 +221,13 @@ export default function RestaurantPage() {
     const availableItems = useMemo(
         () => effectiveItems.filter((item) => item.is_available !== false),
         [effectiveItems]
+    );
+    const cartCatalogItems = useMemo(
+        () => [
+            ...effectiveItems,
+            ...buildStandaloneSeasonalStoryItems((stories || []).filter((story) => story.is_active !== false)),
+        ],
+        [effectiveItems, stories]
     );
     const categoryRecords = menuCategories.filter((category) => category.is_active !== false).length > 0
         ? menuCategories.filter((category) => category.is_active !== false)
@@ -343,6 +350,14 @@ export default function RestaurantPage() {
     const comboItems = useMemo(() => filteredItems.filter((item) => item.is_combo && !item.is_recommended), [filteredItems]);
     const popularItems = useMemo(() => filteredItems.filter((item) => item.is_popular && !item.is_recommended && !item.is_combo), [filteredItems]);
     const normalItems = useMemo(() => filteredItems.filter((item) => !item.is_recommended && !item.is_popular && !item.is_combo), [filteredItems]);
+    const featuredCategoryItem = useMemo(
+        () => filteredItems.find((item) => item.is_recommended) || filteredItems.find((item) => item.is_popular) || filteredItems[0] || null,
+        [filteredItems]
+    );
+    const categoryHeroImage = useMemo(
+        () => getDirectImageUrl(activeCategoryRecord?.image_url) || getDirectImageUrl(featuredCategoryItem?.image_url) || currentCategoryTheme.image,
+        [activeCategoryRecord?.image_url, featuredCategoryItem?.image_url, currentCategoryTheme.image]
+    );
     const strategySourceItems = useMemo(
         () => (activeCategory === "all" ? availableItems : filteredItems),
         [activeCategory, availableItems, filteredItems]
@@ -446,14 +461,12 @@ export default function RestaurantPage() {
     };
 
     const cartItems = Object.entries(cart).map(([id, q]) => {
-        const item = effectiveItems.find(m => m.id === id);
+        const item = cartCatalogItems.find(m => m.id === id);
         if (!item) return null;
         return { ...item, quantity: q };
-    }).filter((item): item is (typeof effectiveItems[0] & { quantity: number }) => item !== null);
+    }).filter((item): item is (typeof cartCatalogItems[number] & { quantity: number }) => item !== null);
 
     const cartTotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
-    const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);
-
     const renderInlineUpsellSection = (anchorId: string) => {
         if (!shouldShowInlineUpsell || inlineUpsellAnchorId !== anchorId || !inlineUpsellContent) {
             return null;
@@ -474,7 +487,7 @@ export default function RestaurantPage() {
     };
 
     const renderMenuItemStack = (items: MenuItem[]) => (
-        <div className="space-y-12">
+        <div className="space-y-8">
             {items.map((item) => (
                 <React.Fragment key={item.id}>
                     <MenuCard
@@ -506,6 +519,38 @@ export default function RestaurantPage() {
 
         soldOutIds.forEach((id) => updateQuantity(id, 0));
     }, [menuItems, cart, updateQuantity]);
+
+    const renderSectionTitle = (
+        title: string,
+        options?: {
+            eyebrow?: string;
+            detail?: string | null;
+            icon?: React.ReactNode;
+            emphasized?: boolean;
+        }
+    ) => (
+        <div className="space-y-2 px-1">
+            <div className="flex items-center gap-2.5">
+                {options?.icon}
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] opacity-45" style={{ color: theme.primary }}>
+                    {options?.eyebrow || title}
+                </p>
+            </div>
+            {options?.emphasized && (
+                <h3
+                    className="text-[1.8rem] font-black tracking-[-0.04em]"
+                    style={{ color: theme.primary, fontFamily: theme.fontSerif }}
+                >
+                    {title}
+                </h3>
+            )}
+            {options?.detail && (
+                <p className="max-w-[28ch] text-[13px] font-medium leading-5 opacity-60" style={{ color: theme.primary }}>
+                    {options.detail}
+                </p>
+            )}
+        </div>
+    );
 
     const handleLoyaltySignIn = async (phone: string, name: string) => {
         const profile = { phone, name, lastVisitAt: new Date().toISOString() };
@@ -559,7 +604,7 @@ export default function RestaurantPage() {
 
         const cartItemsData = Object.entries(cart)
             .map(([id, q]) => {
-                const item = effectiveItems.find(m => m.id === id);
+                const item = cartCatalogItems.find(m => m.id === id);
                 return {
                     id,
                     title: item?.title || 'Unknown Item',
@@ -621,7 +666,7 @@ export default function RestaurantPage() {
 
     return (
         <div 
-            className="pb-40 pt-10 px-6 min-h-screen w-full max-w-[500px] mx-auto overflow-x-hidden transition-colors duration-500"
+            className="pb-40 pt-4 px-6 min-h-screen w-full max-w-[500px] mx-auto overflow-x-hidden transition-colors duration-500"
             style={{ backgroundColor: theme.background, fontFamily: theme.fontSans, color: theme.text }}
         >
             <div className="relative z-10">
@@ -651,11 +696,12 @@ export default function RestaurantPage() {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            className="space-y-12"
+                            className="space-y-8"
                         >
                             <CategoryHeroHeader 
                                 name={activeCategoryRecord?.name || formatCategoryName(activeCategory)} 
                                 tagline={activeCategoryRecord?.description || currentCategoryTheme.tagline}
+                                heroImage={categoryHeroImage}
                                 theme={theme}
                                 onBack={() => setView('discovery')}
                             />
@@ -667,30 +713,37 @@ export default function RestaurantPage() {
                                             ref={section.type === "bestseller" ? recommendSectionRef : undefined}
                                             className="space-y-6"
                                         >
-                                            <div className="flex items-center space-x-3 px-1">
-                                                {section.type === "bestseller" && <TrendingUp className="w-4 h-4 text-orange-500" />}
-                                                {section.type === "category" && <Sparkles className="w-4 h-4 text-sky-500" />}
-                                                {section.type === "tag" && <Sparkles className="w-4 h-4 text-emerald-500" />}
-                                                {section.type === "upsell" && <Gift className="w-4 h-4 text-purple-500" />}
-                                                <div>
-                                                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
-                                                        {section.title}
-                                                    </h3>
-                                                    {section.detail && (
-                                                        <p className="mt-1 text-[11px] font-medium text-slate-400">
-                                                            {section.detail}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
+                                            {renderSectionTitle(section.title, {
+                                                eyebrow:
+                                                    section.type === "bestseller"
+                                                        ? "Chef's picks"
+                                                        : section.type === "upsell"
+                                                            ? "Smart pairings"
+                                                            : section.type === "tag"
+                                                                ? "Curated cluster"
+                                                                : section.type === "category"
+                                                                    ? "Category flow"
+                                                                    : "Section",
+                                                detail: section.detail,
+                                                icon:
+                                                    section.type === "bestseller" ? <TrendingUp className="h-4 w-4 text-orange-500" /> :
+                                                    section.type === "upsell" ? <Gift className="h-4 w-4 text-purple-500" /> :
+                                                    section.type === "tag" ? <Sparkles className="h-4 w-4 text-emerald-500" /> :
+                                                    section.type === "category" ? <Sparkles className="h-4 w-4 text-sky-500" /> :
+                                                    undefined,
+                                                emphasized: section.type === "bestseller",
+                                            })}
 
                                             {section.type === "static" ? (
-                                                <div className="rounded-[2rem] border border-white/70 bg-white/60 px-5 py-4 text-sm font-medium text-slate-500 shadow-sm backdrop-blur-xl">
+                                                <div
+                                                    className="border-l-2 pl-4 text-sm font-medium leading-6 opacity-65"
+                                                    style={{ borderColor: `${theme.accent}90`, color: theme.primary }}
+                                                >
                                                     {section.title}
                                                 </div>
                                             ) : section.type === "bestseller" ? (
                                                 <>
-                                                    <div className="flex space-x-6 overflow-x-auto no-scrollbar -mx-6 px-6 pb-6">
+                                                    <div className="flex space-x-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
                                                         {section.items.map((item) => (
                                                             <ChefRecommendCard
                                                                 key={item.id}
@@ -712,10 +765,10 @@ export default function RestaurantPage() {
                                     ))}
 
                                     {strategyResult.remainingItems.length > 0 && (
-                                        <section className="space-y-8">
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 px-1">
-                                                More to explore
-                                            </h3>
+                                        <section className="space-y-6">
+                                            {renderSectionTitle("More to explore", {
+                                                eyebrow: "Continue browsing",
+                                            })}
                                             {renderMenuItemStack(strategyResult.remainingItems)}
                                         </section>
                                     )}
@@ -724,13 +777,13 @@ export default function RestaurantPage() {
                                 <>
                                     {recommendedItems.length > 0 && (
                                         <section ref={recommendSectionRef} className="space-y-6">
-                                            <div className="flex items-center space-x-3 px-1">
-                                                <Sparkles className="w-4 h-4 text-[#F59E0B]" />
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
-                                                    Chef Recommends
-                                                </h3>
-                                            </div>
-                                            <div className="flex space-x-6 overflow-x-auto no-scrollbar -mx-6 px-6 pb-6">
+                                            {renderSectionTitle("Chef’s Picks", {
+                                                eyebrow: "Kitchen spotlight",
+                                                detail: "The strongest category picks with the most visual pull.",
+                                                icon: <Sparkles className="h-4 w-4 text-[#F59E0B]" />,
+                                                emphasized: true,
+                                            })}
+                                            <div className="flex space-x-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
                                                 {recommendedItems.map(item => (
                                                     <ChefRecommendCard 
                                                         key={item.id} 
@@ -748,33 +801,32 @@ export default function RestaurantPage() {
                                     )}
 
                                     {comboItems.length > 0 && (
-                                        <section className="space-y-8">
-                                            <div className="flex items-center space-x-3 px-1">
-                                                <Gift className="w-4 h-4 text-purple-500" />
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
-                                                    Combo Deals
-                                                </h3>
-                                            </div>
+                                        <section className="space-y-6">
+                                            {renderSectionTitle("Combo Deals", {
+                                                eyebrow: "Bundled value",
+                                                icon: <Gift className="h-4 w-4 text-purple-500" />,
+                                            })}
                                             {renderMenuItemStack(comboItems)}
                                         </section>
                                     )}
 
                                     {popularItems.length > 0 && (
-                                        <section className="space-y-8">
-                                            <div className="flex items-center space-x-3 px-1">
-                                                <TrendingUp className="w-4 h-4 text-orange-500" />
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
-                                                    Best Sellers
-                                                </h3>
-                                            </div>
+                                        <section className="space-y-6">
+                                            {renderSectionTitle("Best Sellers", {
+                                                eyebrow: "Fast movers",
+                                                icon: <TrendingUp className="h-4 w-4 text-orange-500" />,
+                                            })}
                                             {renderMenuItemStack(popularItems)}
                                         </section>
                                     )}
 
-                                    <section className="space-y-8">
-                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 px-1">
-                                            {activeCategory === 'all' ? 'Full Menu' : `Other ${activeCategoryRecord?.name || formatCategoryName(activeCategory)}`}
-                                        </h3>
+                                    <section className="space-y-6">
+                                        {renderSectionTitle(
+                                            activeCategory === 'all' ? 'Full Menu' : `Other ${activeCategoryRecord?.name || formatCategoryName(activeCategory)}`,
+                                            {
+                                                eyebrow: "Everything else",
+                                            }
+                                        )}
                                         {renderMenuItemStack(normalItems)}
                                     </section>
                                 </>
@@ -792,7 +844,7 @@ export default function RestaurantPage() {
                     isOrdering={isOrdering}
                     onOrder={handleOrder}
                     hotelId={branding?.id}
-                    menuItems={menuItems}
+                    menuItems={cartCatalogItems}
                 />
                 <LoyaltySignIn
                     isOpen={isLoyaltyOpen}
@@ -802,7 +854,6 @@ export default function RestaurantPage() {
                     guestPhone={loyaltyProfile?.phone || ""}
                     lastVisitAt={loyaltyProfile?.lastVisitAt || realLoyalty?.last_visit_at || null}
                 />
-                <BottomNav />
             </div>
         </div>
     );

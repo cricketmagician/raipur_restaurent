@@ -9,8 +9,12 @@ import { QuickActionFAB } from "@/components/QuickActionFAB";
 import { useEffect } from "react";
 import { initAudioContext } from "@/utils/audio";
 import { GuestAuthWrapper } from "./GuestAuthWrapper";
-import { useHotelBranding } from "@/utils/store";
 import { useParams } from "next/navigation";
+import { useState } from "react";
+import { useHotelBranding, useCart } from "@/utils/store";
+import { ServiceHubOverlay } from "@/components/ServiceHubOverlay";
+import { Toast } from "@/components/Toast";
+import { useGuestRoom } from "./GuestAuthWrapper";
 
 import { useTheme } from "@/utils/themes";
 
@@ -25,6 +29,29 @@ export default function GuestLayout({
     const { branding } = useHotelBranding(hotelSlug);
     const theme = useTheme(branding);
     const isDashboard = pathname?.endsWith("/dashboard");
+    const { cartCount } = useCart(branding?.id);
+    const { roomNumber: tableNumber } = useGuestRoom();
+    
+    const [showServiceHub, setShowServiceHub] = useState(false);
+    const [toast, setToast] = useState<{ message: string; type: "success" | "error"; isVisible: boolean }>({
+        message: "",
+        type: "success",
+        isVisible: false
+    });
+
+    useEffect(() => {
+        const handleOpenService = () => setShowServiceHub(true);
+        const handleShowToast = (e: any) => {
+            const { message, type } = e.detail;
+            setToast({ message, type: type || 'success', isVisible: true });
+        };
+        window.addEventListener("guest_open_service_hub", handleOpenService);
+        window.addEventListener("guest_show_toast", handleShowToast);
+        return () => {
+            window.removeEventListener("guest_open_service_hub", handleOpenService);
+            window.removeEventListener("guest_show_toast", handleShowToast);
+        };
+    }, []);
 
     useEffect(() => {
         const unlock = () => {
@@ -41,7 +68,7 @@ export default function GuestLayout({
 
     return (
         <div 
-            className={`flex flex-col min-h-[100dvh] text-slate-900 antialiased ${isDashboard ? 'pb-0' : 'pb-[88px]'} overflow-x-hidden pt-safe transition-colors duration-500`}
+            className={`flex flex-col min-h-[100dvh] antialiased pb-[88px] overflow-x-hidden pt-safe transition-colors duration-500`}
             style={{ backgroundColor: isDashboard ? 'transparent' : theme.background }}
         >
             <GuestAuthWrapper>
@@ -71,7 +98,19 @@ export default function GuestLayout({
                     </AnimatePresence>
                 </main>
 
-                {!isDashboard && <BottomNav />}
+                <BottomNav />
+
+                <ServiceHubOverlay 
+                    isOpen={showServiceHub}
+                    onClose={() => setShowServiceHub(false)}
+                    branding={branding}
+                    tableNumber={tableNumber}
+                    cartCount={cartCount}
+                    onShowBag={() => window.dispatchEvent(new CustomEvent('open_cart'))}
+                    setToast={setToast}
+                />
+
+                <Toast {...toast} onClose={() => setToast({ ...toast, isVisible: false })} />
             </GuestAuthWrapper>
         </div>
     );

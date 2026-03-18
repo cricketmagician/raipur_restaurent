@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { useHotelBranding, useSupabaseMenuItems, useCart, normalizeCategoryKey, formatCategoryName } from "@/utils/store";
 import { CATEGORY_THEMES, useTheme } from "@/utils/themes";
-import { BottomNav } from "@/components/BottomNav";
 import { getDirectImageUrl } from "@/utils/image";
 import { useAddEffectTrigger } from "@/components/AddEffect";
 import { MenuCard } from "@/components/MenuCard";
@@ -395,7 +394,6 @@ export default function ItemPage() {
                 </div>
             </div>
 
-            <BottomNav />
         </div>
     );
 }

@@ -18,7 +18,7 @@ export default function BrandingSettingsPage() {
         logoImage: "",
         primaryColor: "#3C2A21", // Coffee Brown default
         accentColor: "#8B4513", // Warm Wood default
-        bgPattern: "",
+        heroImage: "",
         guestTheme: "CAFE" as "CAFE" | "FINE_DINE"
     });
 
@@ -33,7 +33,7 @@ export default function BrandingSettingsPage() {
                 logoImage: branding.logoImage || "",
                 primaryColor: branding.primaryColor || "#2563eb",
                 accentColor: branding.accentColor || "#4f46e5",
-                bgPattern: branding.bgPattern || "",
+                heroImage: branding.heroImage || branding.bgPattern || "",
                 guestTheme: (branding.guestTheme as any) || "CAFE"
             });
         }
@@ -55,7 +55,7 @@ export default function BrandingSettingsPage() {
                     logo_image: formData.logoImage,
                     primary_color: formData.primaryColor,
                     accent_color: formData.accentColor,
-                    bg_pattern: formData.bgPattern,
+                    hero_image: formData.heroImage,
                     guest_theme: formData.guestTheme
                 })
                 .eq("id", branding.id);
@@ -229,16 +229,16 @@ export default function BrandingSettingsPage() {
                                         <button
                                             key={preset.id}
                                             type="button"
-                                            onClick={() => setFormData({...formData, bgPattern: preset.url})}
+                                            onClick={() => setFormData({...formData, heroImage: preset.url})}
                                             className={`group relative aspect-video rounded-2xl overflow-hidden border-2 transition-all ${
-                                                formData.bgPattern === preset.url ? 'border-indigo-600 ring-4 ring-indigo-500/10' : 'border-slate-100 hover:border-slate-300'
+                                                formData.heroImage === preset.url ? 'border-indigo-600 ring-4 ring-indigo-500/10' : 'border-slate-100 hover:border-slate-300'
                                             }`}
                                         >
                                             <img src={getDirectImageUrl(preset.url)} alt={preset.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-3">
                                                 <span className="text-[8px] font-black text-white uppercase tracking-widest">{preset.name}</span>
                                             </div>
-                                            {formData.bgPattern === preset.url && (
+                                            {formData.heroImage === preset.url && (
                                                 <div className="absolute top-2 right-2 bg-indigo-600 text-white p-1 rounded-full">
                                                     <CheckCircle className="w-3 h-3" />
                                                 </div>
@@ -249,8 +249,8 @@ export default function BrandingSettingsPage() {
 
                                 <input
                                     type="url"
-                                    value={formData.bgPattern}
-                                    onChange={(e) => setFormData({...formData, bgPattern: e.target.value})}
+                                    value={formData.heroImage}
+                                    onChange={(e) => setFormData({...formData, heroImage: e.target.value})}
                                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all"
                                     placeholder="Or paste custom image URL here..."
                                 />
@@ -331,15 +331,15 @@ export default function BrandingSettingsPage() {
                             </span>
                         </div>
 
-                        <div 
-                            className="aspect-[9/16] rounded-[3rem] shadow-2xl relative overflow-hidden border-[8px] border-slate-900"
-                            style={{ 
-                                backgroundColor: formData.primaryColor,
-                                backgroundImage: formData.bgPattern ? `url(${getDirectImageUrl(formData.bgPattern)})` : 'none',
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center'
-                            }}
-                        >
+                            <div 
+                                className="aspect-[9/16] rounded-[3rem] shadow-2xl relative overflow-hidden border-[8px] border-slate-900"
+                                style={{ 
+                                    backgroundColor: formData.primaryColor,
+                                    backgroundImage: formData.heroImage ? `url(${getDirectImageUrl(formData.heroImage)})` : 'none',
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center'
+                                }}
+                            >
                             {/* Overlay */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/80" />
 

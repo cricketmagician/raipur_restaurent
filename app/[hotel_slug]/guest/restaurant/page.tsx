@@ -7,7 +7,6 @@ import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, us
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { BottomNav } from "@/components/BottomNav";
 import { CartOverlay } from "@/components/CartOverlay";
 import { CATEGORY_THEMES, useTheme } from "@/utils/themes";
 import { CategoryDiscoveryGrid } from "@/components/CategoryDiscoveryGrid";
@@ -133,7 +132,7 @@ const matchesUpsellKeywords = (item: Pick<MenuItem, "category" | "title">, keywo
 
 const buildInlineUpsellContent = (anchorItem: MenuItem, items: MenuItem[]) => {
     const explicitItems = (anchorItem.upsell_items || [])
-        .map((upsellId) => items.find((item) => item.id === upsellId))
+        .map((upsellId) => items.find((item) => item && item.id === upsellId))
         .filter((item): item is MenuItem => Boolean(item) && item.id !== anchorItem.id && item.is_available !== false);
 
     const rule = resolveUpsellRule(anchorItem);
@@ -672,7 +671,6 @@ export default function RestaurantPage() {
                     menuItems={menuItems}
                 />
                 {/* Loyalty removed */}
-                <BottomNav />
             </div>
         </div>
     );

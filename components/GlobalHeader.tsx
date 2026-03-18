@@ -39,7 +39,7 @@ export function GlobalHeader() {
         <motion.header 
             initial={{ y: -100 }}
             animate={{ y: 0 }}
-            className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 py-3 ${scrolled ? 'bg-white border-b border-black/5 shadow-lg' : 'bg-transparent'}`}
+            className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 py-3 ${scrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/5 shadow-2xl' : 'bg-transparent'}`}
         >
             <div className="flex flex-col gap-4">
                 {/* Row 1: Menu (Left), Branding (Center), Cart (Right) */}
@@ -95,7 +95,7 @@ export function GlobalHeader() {
 
                     {/* Center: Hotel Name */}
                     <div className="flex-1 text-center truncate px-2">
-                        <h1 className={`text-base font-black italic tracking-tighter truncate transition-colors duration-500 ${scrolled ? 'text-[#0F3D2E]' : 'text-white shadow-sm'}`}>
+                        <h1 className={`text-base font-black italic tracking-tighter truncate transition-colors duration-500 ${scrolled ? 'text-white' : 'text-white shadow-sm'}`}>
                             {branding?.name}
                         </h1>
                     </div>
@@ -105,7 +105,7 @@ export function GlobalHeader() {
                         <button 
                             id="header-cart-button"
                             onClick={() => window.dispatchEvent(new CustomEvent('open_cart'))}
-                            className={`relative w-10 h-10 rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all border border-white/40 ${scrolled ? 'bg-[#0F3D2E] text-white' : 'bg-white/20 text-white'}`}
+                            className={`relative w-10 h-10 rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all border border-white/40 ${scrolled ? 'bg-[#C8A96A] text-white' : 'bg-white/20 text-white'}`}
                         >
                             <ShoppingBag className="w-5 h-5" />
                             {cartCount > 0 && (
@@ -135,7 +135,7 @@ export function GlobalHeader() {
                         <button 
                             onClick={switchToDineIn}
                             className={`relative z-10 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors duration-300 flex items-center gap-2 ${
-                                orderMode === "dine-in" ? 'text-white' : (scrolled ? 'text-black/40' : 'text-white/60')
+                                orderMode === "dine-in" ? 'text-white' : (scrolled ? 'text-white/40' : 'text-white/60')
                             }`}
                         >
                             <MapPin className="w-3 h-3" />
@@ -144,7 +144,7 @@ export function GlobalHeader() {
                         <button 
                             onClick={switchToTakeaway}
                             className={`relative z-10 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors duration-300 flex items-center gap-2 ${
-                                orderMode === "takeaway" ? 'text-white' : (scrolled ? 'text-black/40' : 'text-white/60')
+                                orderMode === "takeaway" ? 'text-white' : (scrolled ? 'text-white/40' : 'text-white/60')
                             }`}
                         >
                             <ShoppingBag className="w-3 h-3" />

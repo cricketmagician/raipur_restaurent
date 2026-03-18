@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Plus, Edit, Trash2, Utensils, Palette, X, RefreshCw, Check, Image as ImageIcon, Sparkles, LayoutGrid, List, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Utensils, Palette, X, RefreshCw, Check, Image as ImageIcon, Sparkles, LayoutGrid, List, Eye, Shuffle, Tags } from "lucide-react";
 import {
     useHotelBranding,
     useSupabaseMenuItems,
@@ -16,7 +16,10 @@ import {
     deriveMenuCategories,
     normalizeCategoryKey,
     formatCategoryName,
+    useMenuSections,
+    MenuSection
 } from "@/utils/store";
+import { MenuStrategy } from "@/components/admin/MenuStrategy";
 import { motion, AnimatePresence } from "framer-motion";
 import { MenuCard } from "@/components/MenuCard";
 import { CATEGORY_THEMES } from "@/utils/themes";
@@ -36,7 +39,7 @@ export default function MenuPage() {
     const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
     const [editingItem, setEditingItem] = useState<Partial<MenuItem> | null>(null);
     const [editingCategory, setEditingCategory] = useState<Partial<MenuCategory> | null>(null);
-    const [viewMode, setViewMode] = useState<'sections' | 'list'>('sections');
+    const [viewMode, setViewMode] = useState<'sections' | 'list' | 'strategy'>('sections');
     const [availabilityDrafts, setAvailabilityDrafts] = useState<Record<string, boolean>>({});
 
     const categoryRecords = useMemo(() => {
@@ -87,6 +90,8 @@ export default function MenuPage() {
             return next;
         });
     }, [menuItems]);
+
+    const { sections, loading: sectionsLoading, refresh: refreshSections } = useMenuSections(branding?.id);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -188,6 +193,13 @@ export default function MenuPage() {
                         >
                             <List className="w-4 h-4" />
                             <span className="text-[10px] font-black uppercase tracking-widest">Master List</span>
+                        </button>
+                        <button 
+                            onClick={() => setViewMode('strategy')}
+                            className={`px-4 py-2 rounded-xl flex items-center space-x-2 transition-all ${viewMode === 'strategy' ? 'bg-[#3E2723] text-white shadow-lg' : 'text-slate-400 hover:text-[#3E2723]'}`}
+                        >
+                            <Shuffle className="w-4 h-4" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Strategy</span>
                         </button>
                     </div>
 
@@ -435,6 +447,12 @@ export default function MenuPage() {
                         </div>
                     )})}
                 </div>
+            ) : viewMode === 'strategy' ? (
+                <MenuStrategy 
+                    sections={sections || []} 
+                    hotelId={branding?.id || ""} 
+                    onRefresh={refreshSections} 
+                />
             ) : (
                 <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                      <table className="w-full text-left border-collapse">
@@ -603,6 +621,20 @@ export default function MenuPage() {
                                             <ImageIcon className="absolute left-6 top-5 w-5 h-5 text-slate-300" />
                                         </div>
                                     </div>
+
+                                    <div className="space-y-3">
+                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Psychological Tags (Comma separated)</label>
+                                         <div className="relative">
+                                             <input
+                                                 type="text"
+                                                 value={editingItem?.tags?.join(", ") || ""}
+                                                 onChange={(e) => setEditingItem({ ...editingItem, tags: e.target.value.split(",").map(t => t.trim()).filter(Boolean) })}
+                                                 className="w-full bg-[#3E2723]/5 border-none rounded-2xl py-5 pl-14 pr-6 text-sm font-medium text-slate-600 focus:ring-2 transition-all outline-none"
+                                                 placeholder="Light, Quick, Premium, Dessert..."
+                                             />
+                                             <Tags className="absolute left-6 top-5 w-5 h-5 text-slate-300" />
+                                         </div>
+                                     </div>
 
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Smart Pairing (Impulse Links)</label>

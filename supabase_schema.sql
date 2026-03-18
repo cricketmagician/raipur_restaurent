@@ -123,6 +123,21 @@ CREATE TABLE IF NOT EXISTS menu_items (
     badges TEXT[] DEFAULT '{}', -- ['Bestseller', 'New', 'Premium']
     availability_hours JSONB,
     product_story JSONB DEFAULT '{"bullets": [], "ingredients": [], "story_text": ""}'::jsonb,
+    tags TEXT[] DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 6.2 Menu Sections Engine (Dynamic SaaS Core)
+CREATE TABLE IF NOT EXISTS menu_sections (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    hotel_id UUID REFERENCES hotels(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('static', 'bestseller', 'category', 'tag', 'upsell')),
+    category_id UUID REFERENCES menu_categories(id) ON DELETE SET NULL,
+    tags TEXT[] DEFAULT '{}',
+    rules JSONB DEFAULT '{}'::jsonb, -- For upsell logic or auto-rules
+    priority INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -232,5 +247,8 @@ CREATE POLICY "Allow public read special_offers" ON special_offers FOR SELECT US
 
 DROP POLICY IF EXISTS "Allow public read offers" ON offers;
 CREATE POLICY "Allow public read offers" ON offers FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read menu_sections" ON menu_sections;
+CREATE POLICY "Allow public read menu_sections" ON menu_sections FOR SELECT USING (true);
 
 -- Admin/Staff policies should be added here...

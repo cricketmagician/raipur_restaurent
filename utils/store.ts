@@ -187,6 +187,7 @@ export interface MenuItem {
     is_combo?: boolean;
     upsell_items?: string[];
     badges?: string[];
+    tags?: string[];
     availability_hours?: {
         start: string;
         end: string;
@@ -217,6 +218,19 @@ export interface MenuCategory {
     };
     sort_order?: number;
     is_active?: boolean;
+    created_at?: string;
+}
+
+export interface MenuSection {
+    id: string;
+    hotel_id: string;
+    title: string;
+    type: 'static' | 'bestseller' | 'category' | 'tag' | 'upsell';
+    category_id?: string;
+    tags?: string[];
+    rules?: any;
+    priority: number;
+    is_active: boolean;
     created_at?: string;
 }
 
@@ -1870,3 +1884,30 @@ export async function saveSeasonalStory(hotelId: string, story: Partial<Seasonal
 export async function deleteSeasonalStory(id: string) {
     return await supabase.from('seasonal_stories').delete().eq('id', id);
 }
+export function useMenuSections(hotelId?: string) {
+    const { data: sections, loading, syncStatus, fetchError, refresh } = useRealtimeCollection<MenuSection>({
+        table: 'menu_sections',
+        consumer: 'guest_menu',
+        scopeKey: hotelId || 'none',
+        enabled: !!hotelId,
+        fetchFilters: [
+            { column: 'hotel_id', value: hotelId || '' },
+            { column: 'is_active', value: true }
+        ],
+        orderBy: { column: 'priority', ascending: true }
+    });
+
+    return { sections, loading, syncStatus, fetchError, refresh };
+}
+
+export const addMenuSection = async (hotelId: string, section: Omit<MenuSection, 'id' | 'created_at'>) => {
+    return await supabase.from('menu_sections').insert([{ ...section, hotel_id: hotelId }]).select().single();
+};
+
+export const updateMenuSection = async (id: string, updates: Partial<MenuSection>) => {
+    return await supabase.from('menu_sections').update(updates).eq('id', id);
+};
+
+export const deleteMenuSection = async (id: string) => {
+    return await supabase.from('menu_sections').delete().eq('id', id);
+};

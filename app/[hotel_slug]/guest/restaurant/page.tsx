@@ -20,12 +20,9 @@ import { CartOverlay } from "@/components/CartOverlay";
 import { useTheme } from "@/utils/themes";
 import { CategoryScrollNav } from "@/components/CategoryScrollNav";
 import { CategorySectionHeader } from "@/components/CategorySectionHeader";
-import { ChefPicksSnapRail } from "@/components/ChefPicksSnapRail";
 import { MinimalMenuItemCard } from "@/components/MinimalMenuItemCard";
 import { FloatingCartBar } from "@/components/FloatingCartBar";
-import { PopularGrid } from "@/components/PopularGrid";
-import { IndulgeSection } from "@/components/IndulgeSection";
-import { Search, Sparkles } from "lucide-react";
+import { Search } from "lucide-react";
 
 export default function RestaurantPage() {
     const router = useRouter();
@@ -70,35 +67,12 @@ export default function RestaurantPage() {
         })),
     ]), [categoryRecords]);
 
-    // --- REVENUE ENGINE LOGIC ---
-    const chefPicks = useMemo(() => availableItems.filter(item => item.is_recommended).slice(0, 5), [availableItems]);
-    
-    const popularItems = useMemo(() => 
-        availableItems.filter(i => i.is_popular && !i.is_recommended).slice(0, 4), 
-    [availableItems]);
-
-    const lightItems = useMemo(() => 
-        availableItems.filter(i => i.price < 250 && !i.is_popular && !i.is_recommended).slice(0, 6), 
-    [availableItems]);
-
-    const indulgeItems = useMemo(() => 
-        availableItems.filter(i => 
-            i.category?.toLowerCase().includes("dessert") || 
-            (i.price > 400 && i.is_recommended)
-        ).slice(0, 2), 
-    [availableItems]);
-
-    const upsellItems = useMemo(() => {
-        const cartItemNames = Object.keys(cart).map(id => effectiveItems.find(i => i.id === id)?.title?.toLowerCase() || "");
-        const hasCoffee = cartItemNames.some(n => n.includes("coffee"));
-        const hasBurger = cartItemNames.some(n => n.includes("burger"));
-
-        return availableItems.filter(i => {
-            if (hasCoffee) return i.category?.toLowerCase().includes("dessert") || i.category?.toLowerCase().includes("cake");
-            if (hasBurger) return i.category?.toLowerCase().includes("sides") || i.title?.toLowerCase().includes("fries");
-            return i.is_popular; // Fallback
-        }).slice(0, 4);
-    }, [cart, availableItems, effectiveItems]);
+    // Derived Search Results
+    const filteredItems = useMemo(() => {
+        return availableItems.filter(i => 
+            (searchTerm === "" || i.title.toLowerCase().includes(searchTerm.toLowerCase()) || i.description?.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+    }, [availableItems, searchTerm]);
 
     // Scroll Logic: Sticky & Intersection
     useEffect(() => {
@@ -178,71 +152,60 @@ export default function RestaurantPage() {
             {/* 1. GLASS TOP BAR */}
             <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 px-6 py-4 flex items-center justify-between ${scrolled ? "bg-white/80 backdrop-blur-xl border-b border-slate-200" : "bg-transparent"}`}>
                 <button onClick={() => router.back()} className="text-[#0F3D2E]/40 text-[10px] font-black uppercase tracking-widest">← Back</button>
-                <h1 className="text-[#0F3D2E] text-sm font-semibold tracking-tight">Menu</h1>
-                <button onClick={() => setShowCart(true)} className="p-2"><Search className="w-5 h-5 text-[#0F3D2E]" /></button>
+                <h1 className="text-[#0F3D2E] text-sm font-semibold tracking-tight">Full Menu</h1>
+                <div className="relative flex-1 max-w-[150px] ml-4">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-[#0F3D2E]/40" />
+                    <input 
+                        type="text" 
+                        placeholder="Search..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-[#0F3D2E]/5 border-none rounded-full py-2 pl-9 pr-4 text-[10px] focus:ring-1 focus:ring-[#C8A96A] transition-all"
+                    />
+                </div>
             </header>
 
             {/* 2. CATEGORY NAV (STICKY) */}
             <CategoryScrollNav categories={categories} activeCategory={activeCategory} onCategoryClick={scrollToCategory} scrolled={scrolled} />
 
             <div className="max-w-md mx-auto px-6 space-y-12 pt-24">
-                {/* HERO */}
-                <CategorySectionHeader 
-                    name={activeCategory === "all" ? "Our Menu" : formatCategoryName(activeCategory)}
-                    tagline={activeCategory === "all" ? "Experience premium flavors." : (categories.find(c => c.id === activeCategory) as any)?.tagline}
-                    imageUrl={activeCategory === "all" ? branding?.hero_image : (categories.find(c => c.id === activeCategory) as any)?.imageUrl}
-                />
-
-                {/* FLOW 1: CHEF PICKS (TEMPTATION) */}
-                <ChefPicksSnapRail 
-                    items={chefPicks} cart={cart} 
-                    onAdd={(item) => updateQuantity(item.id, (cart[item.id] || 0) + 1)}
-                    onRemove={(item) => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))}
-                />
-
-                {/* FLOW 2: MORE TO EXPLORE (TRANSITION) */}
-                <div className="flex items-center gap-6 py-4">
-                    <div className="h-[1px] flex-1 bg-[#0F3D2E]/10" />
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#0F3D2E]/40">More to explore</h4>
-                    <div className="h-[1px] flex-1 bg-[#0F3D2E]/10" />
+                {/* HERO / SEARCH TITLE */}
+                <div className="space-y-2 pt-4">
+                    <h2 className="text-3xl font-black italic tracking-tighter text-[#0F3D2E]">
+                        {searchTerm ? "Results" : (activeCategory === "all" ? "Our Menu" : formatCategoryName(activeCategory))}
+                    </h2>
+                    <p className="text-[#0F3D2E]/40 text-xs font-medium italic">
+                        {searchTerm ? `${filteredItems.length} items found` : "Selection of the finest ingredients."}
+                    </p>
                 </div>
 
-                {/* FLOW 3: POPULAR RIGHT NOW (CONVERSION) */}
-                <PopularGrid items={popularItems} onAdd={(item) => updateQuantity(item.id, (cart[item.id] || 0) + 1)} />
+                {/* CATEGORY SECTIONS */}
+                {categories.filter(c => c.id !== "all" && (activeCategory === "all" || activeCategory === c.id)).map((cat: any) => {
+                    const catItems = filteredItems.filter((item: any) => normalizeCategoryKey(item.category) === cat.id);
+                    if (catItems.length === 0) return null;
 
-                {/* FLOW 4: MAIN CATEGORY ITEMS (CONTROL) */}
-                {categories.filter(c => c.id !== "all").map((cat: any) => (
-                    <section key={cat.id} id={cat.id} ref={(el) => { sectionRefs.current[cat.id] = el as HTMLDivElement; }} className="space-y-6">
-                        <CategorySectionHeader name={cat.name} tagline={cat.tagline || "Freshly prepared."} imageUrl={cat.imageUrl} />
-                        <div className="space-y-4">
-                            {availableItems.filter((item: any) => normalizeCategoryKey(item.category) === cat.id).map((item) => (
-                                <MinimalMenuItemCard key={item.id} item={item} quantity={cart[item.id] || 0} onAdd={() => updateQuantity(item.id, (cart[item.id] || 0) + 1)} onRemove={() => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))} />
-                            ))}
-                        </div>
-                    </section>
-                ))}
-
-                {/* FLOW 5: LIGHT & QUICK (GUIDANCE) */}
-                {lightItems.length > 0 && (
-                    <section className="space-y-6">
-                        <div className="flex items-center gap-2 px-1">
-                            <Sparkles className="w-4 h-4 text-emerald-500" />
-                            <h3 className="text-xl font-semibold tracking-tight text-[#0F3D2E]">Light & refreshing</h3>
-                        </div>
-                        <ChefPicksSnapRail items={lightItems} cart={cart} onAdd={(item) => updateQuantity(item.id, (cart[item.id] || 0) + 1)} onRemove={(item) => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))} />
-                    </section>
-                )}
-
-                {/* FLOW 6: INDULGE YOURSELF (EMOTIONAL TRIGGER) */}
-                <IndulgeSection items={indulgeItems} onAdd={(item) => updateQuantity(item.id, (cart[item.id] || 0) + 1)} />
-
-                {/* FLOW 7: PAIR WITH THIS (UPSELL) */}
-                {cartCount > 0 && (
-                    <section className="space-y-6">
-                        <h3 className="px-1 text-xl font-semibold tracking-tight text-[#0F3D2E]">Perfect with your order</h3>
-                        <PopularGrid items={upsellItems} onAdd={(item) => updateQuantity(item.id, (cart[item.id] || 0) + 1)} />
-                    </section>
-                )}
+                    return (
+                        <section 
+                            key={cat.id} 
+                            id={cat.id} 
+                            ref={(el) => { sectionRefs.current[cat.id] = el as HTMLDivElement; }} 
+                            className="space-y-6"
+                        >
+                            <CategorySectionHeader name={cat.name} tagline={cat.tagline || "Freshly prepared."} imageUrl={cat.imageUrl} />
+                            <div className="space-y-4">
+                                {catItems.map((item) => (
+                                    <MinimalMenuItemCard 
+                                        key={item.id} 
+                                        item={item} 
+                                        quantity={cart[item.id] || 0} 
+                                        onAdd={() => updateQuantity(item.id, (cart[item.id] || 0) + 1)} 
+                                        onRemove={() => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))} 
+                                    />
+                                ))}
+                            </div>
+                        </section>
+                    );
+                })}
             </div>
 
             <FloatingCartBar count={cartCount} total={cartTotal} onClick={() => setShowCart(true)} isVisible={!showCart} />

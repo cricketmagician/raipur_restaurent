@@ -35,10 +35,17 @@ import {
     useSupabaseMenuItems, 
     useMenuCategories, 
     deriveMenuCategories, 
-    normalizeCategoryKey, 
+    normalizeCategoryKey,
     getRoomAccessState,
-    useSpecialOffers
+    useSpecialOffers,
+    useMenuSections
 } from "@/utils/store";
+import { CategorySectionHeader } from "@/components/CategorySectionHeader";
+import { ChefPicksSnapRail } from "@/components/ChefPicksSnapRail";
+import { PopularGrid } from "@/components/PopularGrid";
+import { IndulgeSection } from "@/components/IndulgeSection";
+import { MinimalMenuItemCard } from "@/components/MinimalMenuItemCard";
+import { CategoryScrollNav } from "@/components/CategoryScrollNav";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { Toast } from "@/components/Toast";
 import { CartOverlay } from "@/components/CartOverlay";
@@ -67,6 +74,8 @@ export default function GuestDashboard() {
     const [scrolled, setScrolled] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState(false);
 
+    const sectionRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
+
     const triggerFly = useAddEffectTrigger();
 
     React.useEffect(() => {
@@ -76,7 +85,8 @@ export default function GuestDashboard() {
     }, []);
 
     const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
-    
+    const { sections, loading: sectionsLoading } = useMenuSections(branding?.id);
+
     // Derived Data
     const availableMenuItems = useMemo(
         () => menuItems.filter((item) => item.is_available !== false),
@@ -106,7 +116,7 @@ export default function GuestDashboard() {
     const cartTotal = useMemo(() => {
         return Object.entries(cart).reduce((sum, [id, q]) => {
             const item = availableMenuItems.find(m => m.id === id);
-            return sum + ((item?.price || 0) * q);
+            return sum + ((item?.price || 0) * (q as number));
         }, 0);
     }, [cart, availableMenuItems]);
 
@@ -143,7 +153,7 @@ export default function GuestDashboard() {
             total: cartTotal,
             items: Object.entries(cart).map(([id, q]) => {
                 const item = availableMenuItems.find(m => m.id === id);
-                return { id, title: item?.title, quantity: q, price: item?.price, total: (item?.price || 0) * q };
+                return { id, title: item?.title, quantity: q, price: item?.price, total: (item?.price || 0) * (q as number) };
             })
         });
 
@@ -165,6 +175,18 @@ export default function GuestDashboard() {
              i.description?.toLowerCase().includes(searchQuery.toLowerCase()))
         );
     }, [availableMenuItems, activeCategory, searchQuery]);
+
+    const scrollToCategory = (id: string) => {
+        if (id === "all") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+        }
+        const element = sectionRefs.current[id];
+        if (element) {
+            const offset = element.offsetTop - 120;
+            window.scrollTo({ top: offset, behavior: "smooth" });
+        }
+    };
 
     if (loading || menuLoading) return (
         <div className="min-h-screen bg-[#F5F1E8] flex items-center justify-center">
@@ -249,160 +271,149 @@ export default function GuestDashboard() {
                 </div>
             </section>
 
-            <main className="max-w-md mx-auto relative z-10 -mt-20 pb-32">
-                
+            {/* 3. CATEGORY NAV (STICKY) */}
+            <CategoryScrollNav 
+                categories={categories} 
+                activeCategory={activeCategory} 
+                onCategoryClick={scrollToCategory} 
+                scrolled={scrolled} 
+            />
 
-                {/* 5. CHEF'S PICKS (Instagram Reel Cards) */}
-                <section className="px-6 space-y-8 mb-16 pt-8">
-                    <div className="flex items-center justify-between">
-                        <h4 className="text-2xl font-black italic tracking-tight text-[#0F3D2E]">Chef's Picks</h4>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[#C8A96A]">For You</span>
-                    </div>
-                    
-                    <div className="flex gap-6 overflow-x-auto no-scrollbar -mx-6 px-6 pb-6">
-                        {mostOrderedItems.map((item) => (
-                            <motion.div 
-                                key={item.id}
-                                whileHover={{ y: -10 }}
-                                className="min-w-[80%] aspect-[3/4] rounded-[2.5rem] overflow-hidden relative shadow-2xl group border border-black/5 cursor-pointer"
-                                onClick={() => setSelectedProduct(item)}
-                            >
-                                <img src={getDirectImageUrl(item.image_url)} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s]" alt={item.title} />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/20" />
-                                
-                                <div className="absolute inset-0 p-8 flex flex-col justify-end gap-2">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-[2px] bg-[#C8A96A]" />
-                                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#C8A96A]">Recommended</span>
+            <main className="max-w-md mx-auto px-6 space-y-12 pt-12 relative z-10">
+                {/* DYNAMIC SECTIONS ENGINE */}
+                {sections?.map((section) => {
+                    const sectionItems = availableMenuItems.filter(item => {
+                        if (section.type === 'category') {
+                             return normalizeCategoryKey(item.category) === normalizeCategoryKey(section.category_id || "");
+                        }
+                        if (section.type === 'bestseller') {
+                            return item.is_popular;
+                        }
+                        if (section.type === 'tag') {
+                            return section.tags?.some(tag => item.tags?.includes(tag));
+                        }
+                        if (section.type === 'upsell') {
+                            return item.is_popular; // Placeholder
+                        }
+                        return false;
+                    }).slice(0, section.rules?.limit || 10);
+
+                    if (sectionItems.length === 0 && section.type !== 'static') return null;
+
+                    return (
+                        <section 
+                            key={section.id} 
+                            id={section.id}
+                            ref={(el) => { sectionRefs.current[section.id] = el as HTMLDivElement; }}
+                            className="space-y-6"
+                        >
+                            {section.type === 'static' ? (
+                                <div className="flex items-center gap-6 py-4">
+                                    <div className="h-[1px] flex-1 bg-[#0F3D2E]/10" />
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#0F3D2E]/40">{section.title}</h4>
+                                    <div className="h-[1px] flex-1 bg-[#0F3D2E]/10" />
+                                </div>
+                            ) : section.rules?.layout === 'snap' ? (
+                                <>
+                                     <h3 className="text-2xl font-black italic tracking-tight text-[#0F3D2E]">{section.title}</h3>
+                                     <ChefPicksSnapRail 
+                                        items={sectionItems} cart={cart} 
+                                        onAdd={(item) => addToCart(item)}
+                                        onRemove={(item) => removeFromCart(item)}
+                                    />
+                                </>
+                            ) : section.type === 'bestseller' ? (
+                                <>
+                                    <h3 className="text-2xl font-black italic tracking-tight text-[#0F3D2E]">{section.title}</h3>
+                                    <PopularGrid items={sectionItems} onAdd={(item) => addToCart(item)} />
+                                </>
+                            ) : section.type === 'tag' ? (
+                                <IndulgeSection items={sectionItems} onAdd={(item) => addToCart(item)} title={section.title} />
+                            ) : (
+                                <>
+                                    <CategorySectionHeader 
+                                        name={section.title} 
+                                        tagline={section.rules?.tagline || "Freshly prepared."} 
+                                        imageUrl={section.rules?.image_url} 
+                                    />
+                                    <div className="space-y-4">
+                                        {sectionItems.map((item) => (
+                                            <MinimalMenuItemCard 
+                                                key={item.id} 
+                                                item={item} 
+                                                quantity={cart[item.id] || 0} 
+                                                onAdd={() => addToCart(item)} 
+                                                onRemove={() => removeFromCart(item)} 
+                                            />
+                                        ))}
                                     </div>
-                                    <h3 className="text-2xl font-black text-white italic tracking-tighter leading-tight">{item.title}</h3>
-                                    <p className="text-white/60 text-[11px] font-medium leading-relaxed italic opacity-80">"Rich. Creamy. Unforgettable."</p>
-                                    <div className="pt-4 flex items-center justify-between">
-                                        <span className="text-xl font-black text-white">₹{item.price}</span>
-                                        <div className="flex items-center gap-2">
-                                            {cart[item.id] > 0 ? (
-                                                <div className="flex items-center gap-3 bg-white/20 border border-white/20 rounded-full p-1 shadow-lg">
-                                                    <button 
-                                                        onClick={(e) => { e.stopPropagation(); removeFromCart(item); }} 
-                                                        className="w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-white/10"
-                                                    >
-                                                        <Minus className="w-4 h-4" />
-                                                    </button>
-                                                    <span className="text-sm font-black text-white min-w-[1rem] text-center">{cart[item.id]}</span>
-                                                    <button 
-                                                        onClick={(e) => { e.stopPropagation(); addToCart(item, e as any); }} 
-                                                        className="w-8 h-8 rounded-full bg-[#C8A96A] text-white shadow-md hover:scale-105 active:scale-95"
-                                                    >
-                                                        <Plus className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <button 
-                                                    onClick={(e) => { e.stopPropagation(); addToCart(item, e as any); }}
-                                                    className="bg-[#C8A96A] px-5 py-2.5 rounded-full text-white text-[10px] font-black uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-                                                >
-                                                    <Plus className="w-3 h-3" /> Add Now
-                                                </button>
-                                            )}
+                                </>
+                            )}
+                        </section>
+                    );
+                })}
+
+                {/* Search / Filtered View (Fallback or Manual Search) */}
+                {searchQuery && (
+                    <section className="space-y-8">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-2xl font-black italic tracking-tight text-[#0F3D2E]">Search Results</h4>
+                        </div>
+                        <div className="grid grid-cols-1 gap-12">
+                            {filteredItems.map((item) => (
+                                <motion.div 
+                                    key={item.id}
+                                    layout
+                                    className="flex items-center gap-6 group cursor-pointer"
+                                    onClick={() => setSelectedProduct(item)}
+                                >
+                                    <div className="w-32 h-32 rounded-[2rem] overflow-hidden shadow-xl border border-black/5 relative shrink-0">
+                                        <img src={getDirectImageUrl(item.image_url)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.title} />
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <h5 className="text-lg font-black italic tracking-tighter text-[#0F3D2E]">{item.title}</h5>
+                                            <span className="text-[#C8A96A] font-black text-sm px-2">₹{item.price}</span>
+                                        </div>
+                                        <p className="text-[#0F3D2E]/60 text-[11px] leading-relaxed line-clamp-2 italic font-medium">
+                                            {item.description}
+                                        </p>
+                                        <div className="pt-2">
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); addToCart(item, e as any); }}
+                                                className="px-6 py-2.5 bg-[#C8A96A] text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg"
+                                            >
+                                                + Add
+                                            </button>
                                         </div>
                                     </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {/* Default Category View if no sections configured or "All" selected */}
+                {(!sections || sections.length === 0 || activeCategory !== 'all') && (
+                    <div className="space-y-16">
+                         {categories.filter(c => c.id !== "all" && (activeCategory === 'all' || activeCategory === c.id)).map((cat: any) => (
+                            <section key={cat.id} id={cat.id} ref={(el) => { sectionRefs.current[cat.id] = el as HTMLDivElement; }} className="space-y-6">
+                                <CategorySectionHeader name={cat.name} tagline={cat.tagline || "Freshly prepared."} imageUrl={cat.imageUrl} />
+                                <div className="space-y-4">
+                                    {availableMenuItems.filter((item: any) => normalizeCategoryKey(item.category) === cat.id).map((item) => (
+                                        <MinimalMenuItemCard 
+                                            key={item.id} 
+                                            item={item} 
+                                            quantity={cart[item.id] || 0} 
+                                            onAdd={() => addToCart(item)} 
+                                            onRemove={() => removeFromCart(item)} 
+                                        />
+                                    ))}
                                 </div>
-                            </motion.div>
+                            </section>
                         ))}
                     </div>
-                </section>
-
-                {/* 4. LIQUID CATEGORY NAV (Floating Pills) */}
-                <section className="sticky top-[80px] z-50 mb-12">
-                    <div className="flex gap-4 overflow-x-auto no-scrollbar px-6 py-4">
-                        {categories.map((cat) => (
-                            <button
-                                key={cat.id}
-                                onClick={() => setActiveCategory(cat.id)}
-                                className={`flex items-center gap-3 px-6 py-4 rounded-full transition-all duration-500 shrink-0 ${
-                                    activeCategory === cat.id 
-                                    ? "bg-[#0F3D2E] text-white scale-105 shadow-[0_10px_25px_rgba(15,61,46,0.3)]" 
-                                    : "bg-white/60 backdrop-blur-md border border-white/40 text-[#0F3D2E]/60 hover:bg-white/80"
-                                }`}
-                            >
-                                <span className="text-lg">{cat.icon}</span>
-                                <span className="text-[10px] font-black uppercase tracking-widest">{cat.name}</span>
-                                {activeCategory === cat.id && (
-                                    <motion.div layoutId="nav-dot" className="w-1.5 h-1.5 rounded-full bg-[#C8A96A]" />
-                                )}
-                            </button>
-                        ))}
-                    </div>
-                </section>
-
-                {/* 6. FULL MENU = "CONTENT CARDS" (Apple Style) */}
-                <section className="px-6 space-y-12">
-                    <div className="flex items-center gap-6">
-                                <div className="h-[1px] flex-1 bg-[#0F3D2E]/10" />
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#0F3D2E]/40">Explore Journey</h4>
-                                <div className="h-[1px] flex-1 bg-[#0F3D2E]/10" />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-12">
-                        {filteredItems.map((item) => (
-                            <motion.div 
-                                key={item.id}
-                                layout
-                                className="flex items-center gap-6 group cursor-pointer"
-                                onClick={() => setSelectedProduct(item)}
-                            >
-                                {/* Left: High-impact Image */}
-                                <div className="w-32 h-32 rounded-[2rem] overflow-hidden shadow-xl border border-black/5 relative shrink-0">
-                                    <img src={getDirectImageUrl(item.image_url)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.title} />
-                                </div>
-                                
-                                {/* Right: Product Story */}
-                                <div className="flex-1 space-y-2">
-                                    <div className="flex items-center justify-between">
-                                    <h5 className="text-lg font-black italic tracking-tighter text-[#0F3D2E]">{item.title}</h5>
-                                    <span className="text-[#C8A96A] font-black text-sm px-2">₹{item.price}</span>
-                                </div>
-                                <p className="text-[#0F3D2E]/60 text-[11px] leading-relaxed line-clamp-2 italic font-medium">
-                                    {item.description || "Handcrafted with premium ingredients and curated balance."}
-                                </p>
-                                    
-                                    <div className="pt-2">
-                                        <AnimatePresence mode="wait">
-                                            {cart[item.id] > 0 ? (
-                                                <motion.div 
-                                                    initial={{ opacity: 0, x: -10 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    className="flex items-center gap-4 bg-white/10 rounded-full p-1 border border-white/10 shadow-lg w-fit"
-                                                >
-                                                    <button 
-                                                        onClick={(e) => { e.stopPropagation(); removeFromCart(item); }} 
-                                                        className="w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-white/10"
-                                                    >
-                                                        <Minus className="w-4 h-4" />
-                                                    </button>
-                                                    <span className="text-xs font-black min-w-[1rem] text-center">{cart[item.id]}</span>
-                                                    <button 
-                                                        onClick={(e) => { e.stopPropagation(); addToCart(item, e as any); }} 
-                                                        className="w-8 h-8 rounded-full bg-[#C8A96A] text-white shadow-md"
-                                                    >
-                                                        <Plus className="w-4 h-4" />
-                                                    </button>
-                                                </motion.div>
-                                            ) : (
-                                                <button 
-                                                    onClick={(e) => { e.stopPropagation(); addToCart(item, e as any); }}
-                                                    className="px-6 py-2.5 bg-[#C8A96A] text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all"
-                                                >
-                                                    + Add to Bag
-                                                </button>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </section>
+                )}
             </main>
 
             {/* Apple Story Mode: Product Detail Modal */}

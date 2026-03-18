@@ -8,16 +8,17 @@ import { getDirectImageUrl } from "@/utils/image";
 interface IndulgeSectionProps {
     items: any[];
     onAdd: (item: any) => void;
+    title?: string;
 }
 
-export function IndulgeSection({ items, onAdd }: IndulgeSectionProps) {
+export function IndulgeSection({ items, onAdd, title }: IndulgeSectionProps) {
     if (!items.length) return null;
 
     return (
         <section className="space-y-6">
             <div className="flex items-center gap-2 px-1">
                 <Star className="w-4 h-4 text-purple-500 fill-purple-500" />
-                <h3 className="text-xl font-semibold tracking-tight text-[#0F3D2E]">Indulge yourself</h3>
+                <h3 className="text-xl font-semibold tracking-tight text-[#0F3D2E]">{title || "Indulge yourself"}</h3>
             </div>
 
             <div className="space-y-6">

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MenuCard } from "@/components/MenuCard";
 import { CheckCircle, Sparkles, TrendingUp, Gift } from "lucide-react";
-import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, useGuestLoyalty, saveGuestLoyaltySession, addLoyaltyPoints, getRoomAccessState, type MenuItem } from "@/utils/store";
+import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, useMenuCategories, deriveMenuCategories, normalizeCategoryKey, formatCategoryName, useGuestLoyalty, saveGuestLoyaltySession, addLoyaltyPoints, getRoomAccessState, type MenuItem, useMenuSections } from "@/utils/store";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
@@ -176,6 +176,7 @@ export default function RestaurantPage() {
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
     const { categories: menuCategories } = useMenuCategories(branding?.id);
+    const { sections: menuSections } = useMenuSections(branding?.id);
     const { roomNumber, orderMode } = useGuestRoom();
     const { cart, updateQuantity, clearCart } = useCart(branding?.id);
     const theme = useTheme(branding);
@@ -203,15 +204,33 @@ export default function RestaurantPage() {
 
     const { menuItems } = useSupabaseMenuItems(branding?.id);
 
-    // Use mock data if no items in DB (for visual testing)
-    const effectiveItems = menuItems.length > 0 ? menuItems : MOCK_FOOD_ITEMS;
+    const effectiveItems = useMemo<MenuItem[]>(() => {
+        if (menuItems.length > 0) {
+            return menuItems;
+        }
+
+        return MOCK_FOOD_ITEMS.map((item) => ({
+            hotel_id: branding?.id || "mock-hotel",
+            is_available: true,
+            upsell_items: [],
+            badges: [],
+            tags: [],
+            ...item,
+        })) as MenuItem[];
+    }, [branding?.id, menuItems]);
     const availableItems = useMemo(
-        () => effectiveItems.filter((item: any) => item.is_available !== false),
+        () => effectiveItems.filter((item) => item.is_available !== false),
         [effectiveItems]
     );
     const categoryRecords = menuCategories.filter((category) => category.is_active !== false).length > 0
         ? menuCategories.filter((category) => category.is_active !== false)
         : deriveMenuCategories(effectiveItems as any);
+    const categoryById = useMemo(() => {
+        return categoryRecords.reduce<Record<string, (typeof categoryRecords)[number]>>((acc, category) => {
+            acc[category.id] = category;
+            return acc;
+        }, {});
+    }, [categoryRecords]);
     const categories = useMemo(() => ([
         { id: "all", name: "All", icon: "🍱", tagline: "Explore the full menu", imageUrl: undefined },
         ...categoryRecords.map((category) => ({
@@ -313,14 +332,84 @@ export default function RestaurantPage() {
     const activeCategoryRecord = categoryRecords.find((category) => normalizeCategoryKey(category.slug || category.name) === activeCategory);
     
     // Filtering Logic
-    const filteredItems = (activeCategory === "all"
-        ? availableItems
-        : availableItems.filter(i => normalizeCategoryKey(i.category) === activeCategory));
-    
-    const recommendedItems = filteredItems.filter(i => i.is_recommended);
-    const comboItems = filteredItems.filter(i => i.is_combo && !i.is_recommended);
-    const popularItems = filteredItems.filter(i => i.is_popular && !i.is_recommended && !i.is_combo);
-    const normalItems = filteredItems.filter(i => !i.is_recommended && !i.is_popular && !i.is_combo);
+    const filteredItems = useMemo(
+        () => (activeCategory === "all"
+            ? availableItems
+            : availableItems.filter((item) => normalizeCategoryKey(item.category) === activeCategory)),
+        [activeCategory, availableItems]
+    );
+
+    const recommendedItems = useMemo(() => filteredItems.filter((item) => item.is_recommended), [filteredItems]);
+    const comboItems = useMemo(() => filteredItems.filter((item) => item.is_combo && !item.is_recommended), [filteredItems]);
+    const popularItems = useMemo(() => filteredItems.filter((item) => item.is_popular && !item.is_recommended && !item.is_combo), [filteredItems]);
+    const normalItems = useMemo(() => filteredItems.filter((item) => !item.is_recommended && !item.is_popular && !item.is_combo), [filteredItems]);
+    const strategySourceItems = useMemo(
+        () => (activeCategory === "all" ? availableItems : filteredItems),
+        [activeCategory, availableItems, filteredItems]
+    );
+
+    const strategyResult = useMemo(() => {
+        if (!menuSections.length) {
+            return { blocks: [], remainingItems: [] as MenuItem[] };
+        }
+
+        const consumedIds = new Set<string>();
+
+        const blocks = menuSections
+            .map((section) => {
+                const limit = Math.max(1, Number(section.rules?.limit || 5));
+                const normalizedTags = (section.tags || []).map((tag) => normalizeCategoryKey(tag));
+
+                let pool: MenuItem[] = [];
+                if (section.type === "bestseller") {
+                    pool = strategySourceItems
+                        .filter((item) =>
+                            item.is_popular ||
+                            (item.badges || []).some((badge) => normalizeCategoryKey(badge).includes("bestseller"))
+                        )
+                        .sort((left, right) => Number(Boolean(right.is_popular)) - Number(Boolean(left.is_popular)) || left.price - right.price);
+                } else if (section.type === "category") {
+                    if (section.category_id && categoryById[section.category_id]) {
+                        const categoryKey = normalizeCategoryKey(categoryById[section.category_id].slug || categoryById[section.category_id].name);
+                        pool = availableItems.filter((item) => normalizeCategoryKey(item.category) === categoryKey);
+                    } else {
+                        pool = strategySourceItems;
+                    }
+                } else if (section.type === "tag") {
+                    pool = strategySourceItems.filter((item) =>
+                        (item.tags || []).some((tag) => normalizedTags.includes(normalizeCategoryKey(tag)))
+                    );
+                } else if (section.type === "upsell") {
+                    pool = strategySourceItems
+                        .filter((item) => item.is_combo || (item.upsell_items || []).length > 0)
+                        .sort((left, right) => Number(Boolean(right.is_combo)) - Number(Boolean(left.is_combo)) || left.price - right.price);
+                }
+
+                const items = section.type === "static"
+                    ? []
+                    : pool.filter((item) => !consumedIds.has(item.id)).slice(0, limit);
+
+                items.forEach((item) => consumedIds.add(item.id));
+
+                return {
+                    ...section,
+                    items,
+                    detail:
+                        section.type === "category" && section.category_id
+                            ? categoryById[section.category_id]?.name || null
+                            : section.type === "tag" && normalizedTags.length > 0
+                                ? normalizedTags.join(", ")
+                                : null,
+                };
+            })
+            .filter((section) => section.type === "static" || section.items.length > 0);
+
+        return {
+            blocks,
+            remainingItems: strategySourceItems.filter((item) => !consumedIds.has(item.id)),
+        };
+    }, [availableItems, categoryById, menuSections, strategySourceItems]);
+    const hasStrategyBlocks = strategyResult.blocks.length > 0;
 
     const inlineUpsellAnchorItem = useMemo(
         () => availableItems.find((item) => item.id === inlineUpsellAnchorId) || null,
@@ -383,6 +472,30 @@ export default function RestaurantPage() {
             />
         );
     };
+
+    const renderMenuItemStack = (items: MenuItem[]) => (
+        <div className="space-y-12">
+            {items.map((item) => (
+                <React.Fragment key={item.id}>
+                    <MenuCard
+                        id={item.id}
+                        title={item.title}
+                        description={item.description || ""}
+                        price={item.price}
+                        image={item.image_url}
+                        isPopular={item.is_popular}
+                        isRecommended={item.is_recommended}
+                        theme={CATEGORY_THEMES[normalizeCategoryKey(item.category)] || CATEGORY_THEMES.all}
+                        onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
+                        quantity={cart[item.id] || 0}
+                        onAdd={() => addToCart(item)}
+                        onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
+                    />
+                    {renderInlineUpsellSection(item.id)}
+                </React.Fragment>
+            ))}
+        </div>
+    );
 
     useEffect(() => {
         if (!menuItems.length) return;
@@ -546,126 +659,126 @@ export default function RestaurantPage() {
                                 theme={theme}
                                 onBack={() => setView('discovery')}
                             />
+                            {hasStrategyBlocks ? (
+                                <>
+                                    {strategyResult.blocks.map((section) => (
+                                        <section
+                                            key={section.id}
+                                            ref={section.type === "bestseller" ? recommendSectionRef : undefined}
+                                            className="space-y-6"
+                                        >
+                                            <div className="flex items-center space-x-3 px-1">
+                                                {section.type === "bestseller" && <TrendingUp className="w-4 h-4 text-orange-500" />}
+                                                {section.type === "category" && <Sparkles className="w-4 h-4 text-sky-500" />}
+                                                {section.type === "tag" && <Sparkles className="w-4 h-4 text-emerald-500" />}
+                                                {section.type === "upsell" && <Gift className="w-4 h-4 text-purple-500" />}
+                                                <div>
+                                                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
+                                                        {section.title}
+                                                    </h3>
+                                                    {section.detail && (
+                                                        <p className="mt-1 text-[11px] font-medium text-slate-400">
+                                                            {section.detail}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
 
-                            {/* Chef Recommends Section */}
-                            {recommendedItems.length > 0 && (
-                                <section ref={recommendSectionRef} className="space-y-6">
-                                    <div className="flex items-center space-x-3 px-1">
-                                        <Sparkles className="w-4 h-4 text-[#F59E0B]" />
-                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
-                                            Chef Recommends
-                                        </h3>
-                                    </div>
-                                    <div className="flex space-x-6 overflow-x-auto no-scrollbar -mx-6 px-6 pb-6">
-                                        {recommendedItems.map(item => (
-                                            <ChefRecommendCard 
-                                                key={item.id} 
-                                                item={item} 
-                                                onAdd={() => addToCart(item)}
-                                                onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
-                                                onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
-                                                theme={theme}
-                                                quantity={cart[item.id] || 0}
-                                            />
-                                        ))}
-                                    </div>
-                                    {inlineUpsellAnchorId && recommendedItems.some((item) => item.id === inlineUpsellAnchorId) && renderInlineUpsellSection(inlineUpsellAnchorId)}
-                                </section>
-                            )}
-
-                            {/* Combo Deals Section */}
-                            {comboItems.length > 0 && (
-                                <section className="space-y-8">
-                                    <div className="flex items-center space-x-3 px-1">
-                                        <Gift className="w-4 h-4 text-purple-500" />
-                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
-                                            Combo Deals
-                                        </h3>
-                                    </div>
-                                    <div className="space-y-12">
-                                        {comboItems.map((item) => (
-                                            <React.Fragment key={item.id}>
-                                                <MenuCard
-                                                    id={item.id}
-                                                    title={item.title}
-                                                    description={item.description || ""}
-                                                    price={item.price}
-                                                    image={item.image_url}
-                                                    isPopular={item.is_popular}
-                                                    isRecommended={item.is_recommended}
-                                                    theme={CATEGORY_THEMES[normalizeCategoryKey(item.category)] || CATEGORY_THEMES.all}
-                                                    onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
-                                                    quantity={cart[item.id] || 0}
-                                                    onAdd={() => addToCart(item)}
-                                                    onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
-                                                />
-                                                {renderInlineUpsellSection(item.id)}
-                                            </React.Fragment>
-                                        ))}
-                                    </div>
-                                </section>
-                            )}
-
-                            {/* Best Sellers Section */}
-                            {popularItems.length > 0 && (
-                                <section className="space-y-8">
-                                    <div className="flex items-center space-x-3 px-1">
-                                        <TrendingUp className="w-4 h-4 text-orange-500" />
-                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
-                                            Best Sellers
-                                        </h3>
-                                    </div>
-                                    <div className="space-y-12">
-                                        {popularItems.map((item) => (
-                                            <React.Fragment key={item.id}>
-                                                <MenuCard
-                                                    id={item.id}
-                                                    title={item.title}
-                                                    description={item.description || ""}
-                                                    price={item.price}
-                                                    image={item.image_url}
-                                                    isPopular={item.is_popular}
-                                                    isRecommended={item.is_recommended}
-                                                    theme={CATEGORY_THEMES[normalizeCategoryKey(item.category)] || CATEGORY_THEMES.all}
-                                                    onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
-                                                    quantity={cart[item.id] || 0}
-                                                    onAdd={() => addToCart(item)}
-                                                    onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
-                                                />
-                                                {renderInlineUpsellSection(item.id)}
-                                            </React.Fragment>
-                                        ))}
-                                    </div>
-                                </section>
-                            )}
-
-                            {/* Full List Section */}
-                            <section className="space-y-8">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 px-1">
-                                    {activeCategory === 'all' ? 'Full Menu' : `Other ${activeCategoryRecord?.name || formatCategoryName(activeCategory)}`}
-                                </h3>
-                                <div className="space-y-12">
-                                    {normalItems.map((item) => (
-                                        <React.Fragment key={item.id}>
-                                            <MenuCard
-                                                id={item.id}
-                                                title={item.title}
-                                                description={item.description || ""}
-                                                price={item.price}
-                                                image={item.image_url}
-                                                isPopular={item.is_popular}
-                                                isRecommended={item.is_recommended}
-                                                theme={CATEGORY_THEMES[normalizeCategoryKey(item.category)] || CATEGORY_THEMES.all}
-                                                onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
-                                                quantity={cart[item.id] || 0}
-                                                onAdd={() => addToCart(item)}
-                                                onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
-                                            />
-                                            {renderInlineUpsellSection(item.id)}
-                                        </React.Fragment>
+                                            {section.type === "static" ? (
+                                                <div className="rounded-[2rem] border border-white/70 bg-white/60 px-5 py-4 text-sm font-medium text-slate-500 shadow-sm backdrop-blur-xl">
+                                                    {section.title}
+                                                </div>
+                                            ) : section.type === "bestseller" ? (
+                                                <>
+                                                    <div className="flex space-x-6 overflow-x-auto no-scrollbar -mx-6 px-6 pb-6">
+                                                        {section.items.map((item) => (
+                                                            <ChefRecommendCard
+                                                                key={item.id}
+                                                                item={item}
+                                                                onAdd={() => addToCart(item)}
+                                                                onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
+                                                                onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
+                                                                theme={theme}
+                                                                quantity={cart[item.id] || 0}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    {inlineUpsellAnchorId && section.items.some((item) => item.id === inlineUpsellAnchorId) && renderInlineUpsellSection(inlineUpsellAnchorId)}
+                                                </>
+                                            ) : (
+                                                renderMenuItemStack(section.items)
+                                            )}
+                                        </section>
                                     ))}
-                                </div>
-                            </section>
+
+                                    {strategyResult.remainingItems.length > 0 && (
+                                        <section className="space-y-8">
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 px-1">
+                                                More to explore
+                                            </h3>
+                                            {renderMenuItemStack(strategyResult.remainingItems)}
+                                        </section>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    {recommendedItems.length > 0 && (
+                                        <section ref={recommendSectionRef} className="space-y-6">
+                                            <div className="flex items-center space-x-3 px-1">
+                                                <Sparkles className="w-4 h-4 text-[#F59E0B]" />
+                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
+                                                    Chef Recommends
+                                                </h3>
+                                            </div>
+                                            <div className="flex space-x-6 overflow-x-auto no-scrollbar -mx-6 px-6 pb-6">
+                                                {recommendedItems.map(item => (
+                                                    <ChefRecommendCard 
+                                                        key={item.id} 
+                                                        item={item} 
+                                                        onAdd={() => addToCart(item)}
+                                                        onRemove={() => updateQuantity(item.id, (cart[item.id] || 0) - 1)}
+                                                        onClick={() => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
+                                                        theme={theme}
+                                                        quantity={cart[item.id] || 0}
+                                                    />
+                                                ))}
+                                            </div>
+                                            {inlineUpsellAnchorId && recommendedItems.some((item) => item.id === inlineUpsellAnchorId) && renderInlineUpsellSection(inlineUpsellAnchorId)}
+                                        </section>
+                                    )}
+
+                                    {comboItems.length > 0 && (
+                                        <section className="space-y-8">
+                                            <div className="flex items-center space-x-3 px-1">
+                                                <Gift className="w-4 h-4 text-purple-500" />
+                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
+                                                    Combo Deals
+                                                </h3>
+                                            </div>
+                                            {renderMenuItemStack(comboItems)}
+                                        </section>
+                                    )}
+
+                                    {popularItems.length > 0 && (
+                                        <section className="space-y-8">
+                                            <div className="flex items-center space-x-3 px-1">
+                                                <TrendingUp className="w-4 h-4 text-orange-500" />
+                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
+                                                    Best Sellers
+                                                </h3>
+                                            </div>
+                                            {renderMenuItemStack(popularItems)}
+                                        </section>
+                                    )}
+
+                                    <section className="space-y-8">
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 px-1">
+                                            {activeCategory === 'all' ? 'Full Menu' : `Other ${activeCategoryRecord?.name || formatCategoryName(activeCategory)}`}
+                                        </h3>
+                                        {renderMenuItemStack(normalItems)}
+                                    </section>
+                                </>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>

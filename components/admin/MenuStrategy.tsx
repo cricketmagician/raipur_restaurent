@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion, Reorder } from "framer-motion";
 import { 
     Plus, 
@@ -13,21 +13,37 @@ import {
     Flame, 
     LayoutGrid, 
     Tags, 
-    Shuffle,
-    ArrowRight
+    Shuffle
 } from "lucide-react";
-import { MenuSection, updateMenuSection, deleteMenuSection, addMenuSection } from "@/utils/store";
+import { MenuCategory, MenuSection, normalizeCategoryKey, updateMenuSection, deleteMenuSection, addMenuSection } from "@/utils/store";
 
 interface MenuStrategyProps {
     sections: MenuSection[];
+    categories: MenuCategory[];
     hotelId: string;
     onRefresh: () => void;
 }
 
-export function MenuStrategy({ sections: initialSections, hotelId, onRefresh }: MenuStrategyProps) {
+export function MenuStrategy({ sections: initialSections, categories, hotelId, onRefresh }: MenuStrategyProps) {
     const [sections, setSections] = useState(initialSections);
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     const [editingSection, setEditingSection] = useState<Partial<MenuSection> | null>(null);
+    const [tagDraft, setTagDraft] = useState("");
+
+    const categoryNameById = useMemo(() => {
+        return categories.reduce<Record<string, string>>((acc, category) => {
+            acc[category.id] = category.name;
+            return acc;
+        }, {});
+    }, [categories]);
+
+    useEffect(() => {
+        setSections(initialSections);
+    }, [initialSections]);
+
+    useEffect(() => {
+        setTagDraft((editingSection?.tags || []).join(", "));
+    }, [editingSection]);
 
     const handleReorder = async (newOrder: MenuSection[]) => {
         setSections(newOrder);
@@ -54,20 +70,38 @@ export function MenuStrategy({ sections: initialSections, hotelId, onRefresh }: 
         e.preventDefault();
         if (!editingSection?.title || !editingSection?.type) return;
 
-        if (editingSection.id) {
-            await updateMenuSection(editingSection.id, editingSection);
+        const normalizedTags = tagDraft
+            .split(",")
+            .map((tag) => normalizeCategoryKey(tag))
+            .filter(Boolean);
+        const normalizedRules = editingSection.type === "static"
+            ? {}
+            : {
+                ...(editingSection.rules || {}),
+                limit: Math.max(1, Number(editingSection.rules?.limit || 5)),
+            };
+        const payload = {
+            ...editingSection,
+            category_id: editingSection.type === "category" ? editingSection.category_id : undefined,
+            tags: editingSection.type === "tag" ? normalizedTags : [],
+            rules: normalizedRules,
+        };
+
+        if (payload.id) {
+            await updateMenuSection(payload.id, payload);
         } else {
             await addMenuSection(hotelId, {
-                title: editingSection.title,
-                type: editingSection.type as any,
+                title: payload.title as string,
+                type: payload.type as any,
                 priority: sections.length,
                 is_active: true,
-                category_id: editingSection.category_id,
-                tags: editingSection.tags || [],
-                rules: editingSection.rules || {}
+                category_id: payload.category_id || undefined,
+                tags: payload.tags || [],
+                rules: payload.rules || {}
             } as any);
         }
         setIsConfigModalOpen(false);
+        setEditingSection(null);
         onRefresh();
     };
 
@@ -80,7 +114,7 @@ export function MenuStrategy({ sections: initialSections, hotelId, onRefresh }: 
                 </div>
                 <button 
                     onClick={() => {
-                        setEditingSection({ title: "", type: "category", priority: sections.length });
+                        setEditingSection({ title: "", type: "category", priority: sections.length, rules: { limit: 5 }, tags: [] });
                         setIsConfigModalOpen(true);
                     }}
                     className="bg-[#3E2723] text-white px-8 py-4 rounded-[1.5rem] font-serif italic text-lg shadow-xl flex items-center gap-3 hover:scale-105 transition-all"
@@ -122,6 +156,16 @@ export function MenuStrategy({ sections: initialSections, hotelId, onRefresh }: 
                                 {section.type === 'upsell' && "Rules-based cross-selling logic."}
                                 {section.type === 'static' && "Visual divider or custom title block."}
                             </p>
+                            {section.type === "category" && section.category_id && (
+                                <p className="text-xs text-slate-500 font-semibold mt-2">
+                                    Category: {categoryNameById[section.category_id] || "Unknown"}
+                                </p>
+                            )}
+                            {section.type === "tag" && (section.tags || []).length > 0 && (
+                                <p className="text-xs text-slate-500 font-semibold mt-2">
+                                    Tags: {(section.tags || []).join(", ")}
+                                </p>
+                            )}
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -178,7 +222,13 @@ export function MenuStrategy({ sections: initialSections, hotelId, onRefresh }: 
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Strategy Type</label>
                                 <select 
                                     value={editingSection?.type || "category"}
-                                    onChange={e => setEditingSection({...editingSection, type: e.target.value as any})}
+                                    onChange={e => setEditingSection({
+                                        ...editingSection,
+                                        type: e.target.value as any,
+                                        category_id: e.target.value === "category" ? editingSection?.category_id : undefined,
+                                        tags: e.target.value === "tag" ? editingSection?.tags || [] : [],
+                                        rules: e.target.value === "static" ? {} : { ...(editingSection?.rules || {}), limit: Number(editingSection?.rules?.limit || 5) },
+                                    })}
                                     className="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-sm font-medium outline-none"
                                 >
                                     <option value="static">Static Divider</option>
@@ -189,10 +239,66 @@ export function MenuStrategy({ sections: initialSections, hotelId, onRefresh }: 
                                 </select>
                             </div>
 
+                            {editingSection?.type === "category" && (
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Category Source</label>
+                                    <select
+                                        value={editingSection?.category_id || ""}
+                                        onChange={(e) => setEditingSection({ ...editingSection, category_id: e.target.value || undefined })}
+                                        className="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-sm font-medium outline-none"
+                                    >
+                                        <option value="">Current opened category</option>
+                                        {categories.map((category) => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            {editingSection?.type === "tag" && (
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Item Tags</label>
+                                    <input
+                                        type="text"
+                                        value={tagDraft}
+                                        onChange={(e) => setTagDraft(e.target.value)}
+                                        className="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-sm font-medium outline-none"
+                                        placeholder="spicy, sweet, coffee"
+                                    />
+                                </div>
+                            )}
+
+                            {editingSection?.type !== "static" && (
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Max Items</label>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        max={12}
+                                        value={editingSection?.rules?.limit || 5}
+                                        onChange={(e) =>
+                                            setEditingSection({
+                                                ...editingSection,
+                                                rules: {
+                                                    ...(editingSection?.rules || {}),
+                                                    limit: Number(e.target.value) || 5,
+                                                },
+                                            })
+                                        }
+                                        className="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-sm font-medium outline-none"
+                                    />
+                                </div>
+                            )}
+
                             <div className="pt-6 flex gap-4">
                                 <button 
                                     type="button"
-                                    onClick={() => setIsConfigModalOpen(false)}
+                                    onClick={() => {
+                                        setIsConfigModalOpen(false);
+                                        setEditingSection(null);
+                                    }}
                                     className="flex-1 py-4 text-slate-400 font-black text-[10px] uppercase tracking-widest"
                                 >
                                     Cancel

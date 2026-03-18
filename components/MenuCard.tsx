@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, Minus, Trash2, Sparkles } from "lucide-react";
+import { Plus, Minus, Trash2 } from "lucide-react";
 import { CategoryTheme } from "@/utils/themes";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -67,29 +67,12 @@ export function MenuCard({ id, title, description, price, image, onAdd, isPopula
                         style={{ backgroundImage: `linear-gradient(to top, ${globalTheme.primary}44, transparent, transparent)` }}
                     />
                     
-                    <div 
-                        className="absolute top-3 right-3 px-3 py-1.5 rounded-full shadow-lg z-10 border"
-                        style={{ backgroundColor: globalTheme.surface, borderColor: `${primaryColor}10` }}
-                    >
-                        <span className="text-[11px] font-black" style={{ color: primaryColor }}>₹{price.toFixed(0)}</span>
-                    </div>
- 
                     {finalTag && (
                         <div 
                             className="absolute top-3 left-3 text-white px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.18em] z-10 border border-white/10 shadow-lg"
                             style={{ backgroundColor: isRecommended ? primaryColor : "#F59E0B" }}
                         >
                             {finalTag}
-                        </div>
-                    )}
-                    
-                    {isPopular && (
-                        <div 
-                            className="absolute bottom-3 left-3 px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.18em] z-10 shadow-md flex items-center"
-                            style={{ backgroundColor: globalTheme.secondary, color: primaryColor }}
-                        >
-                            <Sparkles className="w-3 h-3 mr-1.5" />
-                            Bestseller
                         </div>
                     )}
                 </div>

@@ -450,6 +450,7 @@ export default function MenuPage() {
             ) : viewMode === 'strategy' ? (
                 <MenuStrategy 
                     sections={sections || []} 
+                    categories={categoryRecords}
                     hotelId={branding?.id || ""} 
                     onRefresh={refreshSections} 
                 />

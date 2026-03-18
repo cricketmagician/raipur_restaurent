@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Sparkles, ArrowRight, Save, Layout, Type, MousePointer2, Image as ImageIcon, Star, Plus, Trash2, Loader2, CheckCircle2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHotelBranding, supabase, useSupabaseMenuItems } from "@/utils/store";
+import { useHotelBranding, supabase, useSupabaseMenuItems, useHeroes, saveSupabaseHero, deleteSupabaseHero } from "@/utils/store";
 import { getDirectImageUrl } from "@/utils/image";
 import { Toast } from "@/components/Toast";
 
@@ -15,14 +15,14 @@ export default function AdminHomepage() {
     const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
 
     const [form, setForm] = useState({
-        hero_headline: "",
-        hero_subtext: "",
         hero_cta: "Start Ordering",
         trust_signal: "1,000+ happy customers in Raipur",
-        hero_image: "",
-        bg_pattern: "",
         quick_order_ids: [] as string[]
     });
+
+    const { heroes, loading: heroesLoading } = useHeroes(branding?.id);
+    const [newHero, setNewHero] = useState({ title: "", subtext: "", image_url: "", is_active: true });
+    const [isAddingHero, setIsAddingHero] = useState(false);
 
     const [isSaving, setIsSaving] = useState(false);
     const [toast, setToast] = useState({ message: "", type: "success" as "success" | "error", isVisible: false });
@@ -30,12 +30,8 @@ export default function AdminHomepage() {
     useEffect(() => {
         if (branding) {
             setForm({
-                hero_headline: branding.hero_headline || "Your Favorite Café. Now One Tap Away.",
-                hero_subtext: branding.hero_subtext || "Order instantly. Skip the wait.",
                 hero_cta: branding.hero_cta || "Start Ordering",
                 trust_signal: branding.trust_signal || "1,000+ happy customers in Raipur",
-                hero_image: branding.hero_image || branding.heroImage || "",
-                bg_pattern: branding.bgPattern || "",
                 quick_order_ids: branding.quick_order_ids || []
             });
         }
@@ -48,12 +44,8 @@ export default function AdminHomepage() {
             const { error } = await supabase
                 .from('hotels')
                 .update({
-                    hero_headline: form.hero_headline,
-                    hero_subtext: form.hero_subtext,
                     hero_cta: form.hero_cta,
                     trust_signal: form.trust_signal,
-                    hero_image: form.hero_image,
-                    bg_pattern: form.bg_pattern,
                     quick_order_ids: form.quick_order_ids
                 })
                 .eq('id', branding.id);
@@ -64,6 +56,41 @@ export default function AdminHomepage() {
             setToast({ message: "Failed to save: " + error.message, type: "error", isVisible: true });
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleAddHero = async () => {
+        if (!branding?.id || !newHero.image_url) return;
+        setIsAddingHero(true);
+        try {
+            const { error } = await saveSupabaseHero(branding.id, newHero);
+            if (error) throw error;
+            setNewHero({ title: "", subtext: "", image_url: "", is_active: true });
+            setToast({ message: "New hero slide added! 📸", type: "success", isVisible: true });
+        } catch (error: any) {
+            setToast({ message: "Failed to add hero: " + error.message, type: "error", isVisible: true });
+        } finally {
+            setIsAddingHero(false);
+        }
+    };
+
+    const handleDeleteHero = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this slide?")) return;
+        try {
+            const { error } = await deleteSupabaseHero(id);
+            if (error) throw error;
+            setToast({ message: "Hero slide deleted", type: "success", isVisible: true });
+        } catch (error: any) {
+            setToast({ message: "Delete failed: " + error.message, type: "error", isVisible: true });
+        }
+    };
+
+    const handleToggleHero = async (hero: any) => {
+        try {
+            const { error } = await saveSupabaseHero(branding?.id!, { ...hero, is_active: !hero.is_active });
+            if (error) throw error;
+        } catch (error: any) {
+            setToast({ message: "Update failed: " + error.message, type: "error", isVisible: true });
         }
     };
 
@@ -81,7 +108,7 @@ export default function AdminHomepage() {
         });
     };
 
-    if (brandingLoading || menuLoading) {
+    if (brandingLoading || menuLoading || heroesLoading) {
         return <div className="p-10 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>;
     }
 
@@ -103,13 +130,32 @@ export default function AdminHomepage() {
                     <div className="aspect-[9/16] w-full max-w-[320px] mx-auto bg-[#F1F8F5] rounded-[3rem] shadow-2xl border-[8px] border-slate-900 relative overflow-hidden flex flex-col scale-[0.85] origin-top">
                         {/* Mock Hero */}
                         <div className="h-[45%] bg-[#002B1B] relative overflow-hidden flex flex-col justify-end p-6 pb-12">
-                            <img src={getDirectImageUrl(form.bg_pattern)} className="absolute inset-0 w-full h-full object-cover opacity-50" alt="" />
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={heroes?.length ? heroes.filter(h => h.is_active)[0]?.id : 'default'}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="absolute inset-0"
+                                >
+                                    <img 
+                                        src={getDirectImageUrl(heroes?.filter(h => h.is_active)[0]?.image_url || "")} 
+                                        className="absolute inset-0 w-full h-full object-cover opacity-50" 
+                                        alt="" 
+                                    />
+                                </motion.div>
+                            </AnimatePresence>
                             <div className="absolute inset-0 bg-gradient-to-t from-[#F1F8F5] via-transparent to-transparent" />
-                            <h2 className="text-2xl font-black text-white leading-tight mb-2 tracking-tighter">{form.hero_headline}</h2>
-                            <p className="text-white/60 text-[10px] font-medium italic mb-6">{form.hero_subtext}</p>
-                            <button className="px-6 py-3 bg-[#00704A] text-white rounded-full font-black text-[9px] uppercase tracking-widest w-fit shadow-xl">
-                                {form.hero_cta}
-                            </button>
+                            <div className="relative z-10">
+                                <h2 className="text-2xl font-black text-white leading-tight mb-2 tracking-tighter">
+                                    {heroes?.filter(h => h.is_active)[0]?.title || "Your Favorite Café. Now One Tap Away."}
+                                </h2>
+                                <p className="text-white/60 text-[10px] font-medium italic mb-6">
+                                    {heroes?.filter(h => h.is_active)[0]?.subtext || "Order instantly. Skip the wait."}
+                                </p>
+                                <button className="px-6 py-3 bg-[#00704A] text-white rounded-full font-black text-[9px] uppercase tracking-widest w-fit shadow-xl">
+                                    {form.hero_cta}
+                                </button>
+                            </div>
                         </div>
                         
                         {/* Mock Quick Order */}
@@ -141,40 +187,96 @@ export default function AdminHomepage() {
                            <p className="text-[8px] font-black text-center text-[#1E3932]">{form.trust_signal}</p>
                         </div>
                     </div>
+
+                    {/* Hero Carousel Manager */}
+                    <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100 mt-10">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600">
+                                <Sparkles className="w-5 h-5" />
+                            </div>
+                            <h2 className="text-lg font-black text-slate-900 tracking-tight">Hero Carousel Slides</h2>
+                        </div>
+
+                        <div className="space-y-4 mb-8">
+                            {heroes?.map(hero => (
+                                <div key={hero.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
+                                    <div className="w-16 h-16 rounded-xl bg-slate-200 overflow-hidden shrink-0">
+                                        <img src={getDirectImageUrl(hero.image_url)} className="w-full h-full object-cover" alt="" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-xs font-black truncate">{hero.title}</h4>
+                                        <p className="text-[10px] text-slate-400 truncate italic">{hero.subtext}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button 
+                                            onClick={() => handleToggleHero(hero)}
+                                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${hero.is_active ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-400'}`}
+                                        >
+                                            <CheckCircle2 className="w-4 h-4" />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDeleteHero(hero.id)}
+                                            className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                            {(!heroes || heroes.length === 0) && (
+                                <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-[2rem]">
+                                    <ImageIcon className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No Slides Added Yet</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-6 bg-slate-900 rounded-[2rem] space-y-4">
+                            <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Add New Slide</h3>
+                            <input 
+                                placeholder="Slide Headline"
+                                value={newHero.title}
+                                onChange={e => setNewHero({...newHero, title: e.target.value})}
+                                className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-2 text-white text-xs outline-none focus:border-rose-500 transition-all font-bold"
+                            />
+                            <input 
+                                placeholder="Subtext"
+                                value={newHero.subtext}
+                                onChange={e => setNewHero({...newHero, subtext: e.target.value})}
+                                className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-2 text-white text-xs outline-none focus:border-rose-500 transition-all font-bold"
+                            />
+                            <input 
+                                placeholder="Image URL"
+                                value={newHero.image_url}
+                                onChange={e => setNewHero({...newHero, image_url: e.target.value})}
+                                className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-2 text-white text-xs outline-none focus:border-rose-500 transition-all font-bold"
+                            />
+                            <button 
+                                onClick={handleAddHero}
+                                disabled={isAddingHero || !newHero.image_url}
+                                className="w-full py-3 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
+                            >
+                                {isAddingHero ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                                Add Slide
+                            </button>
+                        </div>
+                    </div>
                 </section>
 
                 {/* Controls */}
                 <section className="space-y-8">
-                    {/* Hero Section */}
+                    {/* Homepage Configuration */}
                     <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
                                 <Type className="w-5 h-5" />
                             </div>
-                            <h2 className="text-lg font-black text-slate-900 tracking-tight">Hero Content</h2>
+                            <h2 className="text-lg font-black text-slate-900 tracking-tight">Homepage Settings</h2>
                         </div>
                         
                         <div className="space-y-5">
                             <div>
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Main Headline</label>
-                                <input 
-                                    value={form.hero_headline}
-                                    onChange={e => setForm({...form, hero_headline: e.target.value})}
-                                    className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                                    placeholder="Emotional & Clear"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Subtext</label>
-                                <input 
-                                    value={form.hero_subtext}
-                                    onChange={e => setForm({...form, hero_subtext: e.target.value})}
-                                    className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                                    placeholder="Emotional trigger"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">CTA Label</label>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">CTA Label (Button Text)</label>
                                 <input 
                                     value={form.hero_cta}
                                     onChange={e => setForm({...form, hero_cta: e.target.value})}
@@ -190,21 +292,6 @@ export default function AdminHomepage() {
                                     className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                                     placeholder="e.g. 1000+ happy customers"
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Hero Section Image URL</label>
-                                <div className="flex gap-3">
-                                    <input 
-                                        value={form.hero_image}
-                                        onChange={e => setForm({...form, hero_image: e.target.value})}
-                                        className="flex-1 px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                                        placeholder="Full URL or /images/..."
-                                    />
-                                    <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
-                                        <img src={getDirectImageUrl(form.hero_image)} className="w-full h-full object-cover" alt="Preview" />
-                                    </div>
-                                </div>
-                                <p className="text-[10px] text-slate-400 mt-2">Recommended: 1600x900px high-quality luxury shot.</p>
                             </div>
                         </div>
                     </div>

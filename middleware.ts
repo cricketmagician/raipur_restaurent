@@ -2,33 +2,34 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-    let response = NextResponse.next({
-        request: {
-            headers: request.headers,
-        },
-    });
+    const url = new URL(request.url);
+    const pathname = url.pathname;
 
+    // 1. FAST EXCLUSIONS: If it's not an admin route, return immediately.
+    // This is a second layer of protection alongside the config matcher.
+    const pathSegments = pathname.split('/');
+    const isAdminRoute = pathSegments.length >= 3 && pathSegments[2] === 'admin';
+    const isLoginPage = pathname.endsWith('/admin/login');
+
+    if (!isAdminRoute || isLoginPage) {
+        return NextResponse.next();
+    }
+
+    // 2. ONLY INITIALIZE SUPABASE FOR ADMIN ROUTES
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    // Robust check to ensure we have a valid-looking URL before passing it to createServerClient
-    const isConfigured = !!(supabaseUrl && 
-                         supabaseUrl.startsWith('http') && 
-                         !supabaseUrl.includes('your-project-id') && 
-                         supabaseKey && 
-                         supabaseKey.length > 40 &&
-                         supabaseKey !== 'placeholder-key' &&
-                         process.env.NEXT_PUBLIC_FORCE_DEMO !== 'true');
-
-    // Bypass middleware if Supabase is not configured (Demo Mode) or if Force Demo is active
-    if (!isConfigured) {
-        return response;
+    if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('your-project-id')) {
+        return NextResponse.next();
     }
 
-    // 1. Initialize Supabase client
+    let response = NextResponse.next({
+        request: { headers: request.headers },
+    });
+
     const supabase = createServerClient(
-        supabaseUrl!,
-        supabaseKey!,
+        supabaseUrl,
+        supabaseKey,
         {
             cookies: {
                 get(name: string) {
@@ -52,29 +53,31 @@ export async function middleware(request: NextRequest) {
         }
     );
 
-    // 2. Faster session check instead of full getUser() for middleware.
-    // getSession() reads from the cookie and doesn't hit the Supabase Auth API
-    // as aggressively as getUser(). For deeper security, the client-side 
-    // or Server Components will perform a full getUser() check.
-    const {
-        data: { session },
-    } = await supabase.auth.getSession();
-
-    const url = new URL(request.url);
-    const pathSegments = url.pathname.split('/');
-
-    // Protect admin routes
-    if (pathSegments.length >= 3 && pathSegments[2] === 'admin' && pathSegments[3] !== 'login') {
-        const hotelSlug = pathSegments[1];
-
+    // 3. FAST SESSION CHECK
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
         if (!session) {
+            const hotelSlug = pathSegments[1];
             return NextResponse.redirect(new URL(`/${hotelSlug}/admin/login`, request.url));
         }
+    } catch (e) {
+        // If session check fails (e.g. network glitch), allow through or redirect to login
+        console.error("Middleware Session Error:", e);
     }
 
     return response;
 }
 
 export const config = {
-    matcher: ['/:hotel_slug/admin/:path*'],
+    matcher: [
+        /*
+         * Match all request paths except for the ones starting with:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * Feel free to modify this pattern to include more paths.
+         */
+        '/((?!_next/static|_next/image|favicon.ico).*)',
+    ],
 };

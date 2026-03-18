@@ -9,7 +9,6 @@ import {
     ArrowRight,
     RefreshCw,
 } from "lucide-react";
-import { CartOverlay } from "@/components/CartOverlay";
 import { LoyaltySignIn } from "@/components/LoyaltySignIn";
 import { SeasonalStories } from "@/components/SeasonalStories";
 import { StoryOverlay } from "@/components/StoryOverlay";
@@ -70,7 +69,6 @@ export default function GuestDashboard() {
     const { stories, loading: storiesLoading } = useSeasonalStories(branding?.id);
     const { moods } = useMoods(branding?.id);
 
-    const [showCart, setShowCart] = React.useState(false);
     const [isOrdering, setIsOrdering] = React.useState(false);
     const [orderComplete, setOrderComplete] = React.useState(false);
     const [isLoyaltyOpen, setIsLoyaltyOpen] = React.useState(false);
@@ -141,12 +139,6 @@ export default function GuestDashboard() {
         if (source.includes("spicy") || source.includes("hot") || source.includes("peri") || source.includes("masala")) return "spicy";
         if (source.includes("light") || source.includes("fresh") || source.includes("salad") || source.includes("healthy")) return "light";
         return "filling";
-    }, []);
-
-    React.useEffect(() => {
-        const handleOpenCart = () => setShowCart(true);
-        window.addEventListener("open_cart", handleOpenCart);
-        return () => window.removeEventListener("open_cart", handleOpenCart);
     }, []);
 
     React.useEffect(() => {
@@ -272,7 +264,6 @@ export default function GuestDashboard() {
         }
 
         clearCart();
-        setShowCart(false);
         setOrderComplete(true);
         setToast({ message: "Order placed successfully.", type: "success", isVisible: true });
     };
@@ -543,7 +534,7 @@ export default function GuestDashboard() {
                                 </div>
 
                                 <button
-                                    onClick={() => setShowCart(true)}
+                                    onClick={() => window.dispatchEvent(new CustomEvent("open_cart"))}
                                     className="flex items-center gap-2 rounded-full px-5 py-3 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-lg transition-all active:scale-95"
                                     style={{ backgroundColor: theme.primary }}
                                 >
@@ -617,18 +608,6 @@ export default function GuestDashboard() {
                 guestName={loyaltyProfile?.name || ""}
                 guestPhone={loyaltyProfile?.phone || ""}
                 lastVisitAt={lastVisit}
-            />
-
-            <CartOverlay
-                isOpen={showCart}
-                onClose={() => setShowCart(false)}
-                cart={cart}
-                updateQuantity={updateQuantity}
-                cartTotal={cartTotal}
-                isOrdering={isOrdering}
-                onOrder={handleOrder}
-                hotelId={branding.id}
-                menuItems={cartCatalogItems}
             />
 
             <StoryOverlay

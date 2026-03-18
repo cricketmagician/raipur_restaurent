@@ -7,7 +7,6 @@ import { addSupabaseRequest, useHotelBranding, useCart, useSupabaseMenuItems, us
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { CartOverlay } from "@/components/CartOverlay";
 import { CATEGORY_THEMES, useTheme } from "@/utils/themes";
 import { CategoryDiscoveryGrid } from "@/components/CategoryDiscoveryGrid";
 import { CategoryHeroHeader } from "@/components/CategoryHeroHeader";
@@ -182,7 +181,6 @@ export default function RestaurantPage() {
     const theme = useTheme(branding);
     const [isOrdering, setIsOrdering] = useState(false);
     const [orderComplete, setOrderComplete] = useState(false);
-    const [showCart, setShowCart] = useState(false);
     const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
 
     // View State: 'discovery' or 'detail'
@@ -316,13 +314,6 @@ export default function RestaurantPage() {
             recommendSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }, [view, activeCategory]);
-
-    useEffect(() => {
-        const handleOpenCart = () => setShowCart(true);
-        window.addEventListener("open_cart", handleOpenCart);
-
-        return () => window.removeEventListener("open_cart", handleOpenCart);
-    }, []);
 
     const handleCategoryClick = (id: string) => {
         if (id === 'all') {
@@ -632,7 +623,6 @@ export default function RestaurantPage() {
         } else {
             setOrderComplete(true);
             clearCart();
-            setShowCart(false);
         }
     };
 
@@ -835,17 +825,6 @@ export default function RestaurantPage() {
                     )}
                 </AnimatePresence>
 
-                <CartOverlay 
-                    isOpen={showCart}
-                    onClose={() => setShowCart(false)}
-                    cart={cart}
-                    updateQuantity={updateQuantity}
-                    cartTotal={cartTotal}
-                    isOrdering={isOrdering}
-                    onOrder={handleOrder}
-                    hotelId={branding?.id}
-                    menuItems={cartCatalogItems}
-                />
                 <LoyaltySignIn
                     isOpen={isLoyaltyOpen}
                     onClose={() => setIsLoyaltyOpen(false)}

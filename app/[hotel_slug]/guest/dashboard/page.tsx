@@ -280,7 +280,7 @@ export default function GuestDashboard() {
                 )}
 
                 {/* DYNAMIC SECTIONS ENGINE */}
-                {sections?.map((section) => {
+                {!activeMoodId && sections?.map((section) => {
                     const sectionItems = availableMenuItems.filter(item => {
                         if (section.type === 'category') {
                              return normalizeCategoryKey(item.category) === normalizeCategoryKey(section.category_id || "");
@@ -353,7 +353,7 @@ export default function GuestDashboard() {
                 })}
 
                 {/* Search / Filtered View (Fallback or Manual Search) */}
-                {searchQuery && (
+                {!activeMoodId && searchQuery && (
                     <section className="space-y-8">
                         <div className="flex items-center justify-between">
                             <h4 className="text-2xl font-black italic tracking-tight text-[#0F3D2E]">Search Results</h4>
@@ -393,7 +393,7 @@ export default function GuestDashboard() {
                 )}
 
                 {/* Default Category View if no sections configured or "All" selected */}
-                {(!sections || sections.length === 0 || activeCategory !== 'all') && (
+                {!activeMoodId && (!sections || sections.length === 0 || activeCategory !== 'all') && (
                     <div className="space-y-16">
                          {categories.filter(c => c.id !== "all" && (activeCategory === 'all' || activeCategory === c.id)).map((cat: any) => (
                             <section key={cat.id} id={cat.id} ref={(el) => { sectionRefs.current[cat.id] = el as HTMLDivElement; }} className="space-y-6">

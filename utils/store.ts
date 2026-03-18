@@ -40,6 +40,44 @@ export interface HotelBranding {
     hero_cta?: string;
     trust_signal?: string;
     quick_order_ids?: string[];
+    designSystem?: {
+        card_style: 'soft-shadow' | 'flat';
+        border_radius: string;
+        primary_color?: string;
+        accent_color?: string;
+    };
+    orderExperience?: {
+        success_message: string;
+        success_subtext?: string;
+        animation: 'confetti' | 'minimal';
+        brand_tone: 'Premium' | 'Fun' | 'Friendly';
+    };
+}
+
+export interface Hero {
+    id: string;
+    hotel_id: string;
+    title: string;
+    subtext?: string;
+    image_url?: string;
+    cta_text?: string;
+    start_time?: string;
+    end_time?: string;
+    priority?: number;
+    is_active: boolean;
+    created_at?: string;
+}
+
+export interface UpsellRule {
+    id: string;
+    hotel_id: string;
+    trigger_item_id: string;
+    upsell_item_id: string;
+    message?: string;
+    discount_percentage?: number;
+    priority: 'High' | 'Medium' | 'Low';
+    is_active: boolean;
+    created_at?: string;
 }
 
 export interface SpecialOffer {
@@ -148,6 +186,17 @@ export interface MenuItem {
     is_recommended?: boolean;
     is_combo?: boolean;
     upsell_items?: string[];
+    badges?: string[];
+    availability_hours?: {
+        start: string;
+        end: string;
+    };
+    product_story?: {
+        bullets: string[];
+        ingredients: { name: string; icon: string }[];
+        story_text: string;
+        section_image?: string;
+    };
     created_at?: string;
 }
 
@@ -159,6 +208,13 @@ export interface MenuCategory {
     description?: string;
     image_url?: string;
     icon_emoji?: string;
+    icon_url?: string;
+    display_style?: 'pill' | 'grid';
+    is_highlighted?: boolean;
+    active_hours?: {
+        start: string;
+        end: string;
+    };
     sort_order?: number;
     is_active?: boolean;
     created_at?: string;
@@ -397,6 +453,8 @@ const mapHotelBrandingRow = (data: any): HotelBranding => ({
     hero_cta: data.hero_cta,
     trust_signal: data.trust_signal,
     quick_order_ids: data.quick_order_ids || [],
+    designSystem: data.design_system,
+    orderExperience: data.order_experience,
 });
 
 // --- Utilities ---
@@ -1325,6 +1383,50 @@ export function useMenuCategories(hotelId?: string) {
     };
 }
 
+export function useHeroes(hotelId: string | undefined) {
+    const state = useRealtimeCollection<Hero>({
+        table: 'heroes',
+        consumer: 'heroes-engine',
+        scopeKey: hotelId || 'no-hotel',
+        enabled: !!hotelId,
+        fetchFilters: hotelId ? [{ column: 'hotel_id', value: hotelId }] : [],
+        channelFilter: hotelId ? { column: 'hotel_id', value: hotelId } : undefined,
+        orderBy: { column: 'priority', ascending: false },
+        enablePollingFallback: true,
+    });
+
+    return {
+        heroes: state.data,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+        fetchError: state.fetchError,
+        lastSyncedAt: state.lastSyncedAt,
+    };
+}
+
+export function useUpsellRules(hotelId: string | undefined) {
+    const state = useRealtimeCollection<UpsellRule>({
+        table: 'upsell_rules',
+        consumer: 'upsell-engine',
+        scopeKey: hotelId || 'no-hotel',
+        enabled: !!hotelId,
+        fetchFilters: hotelId ? [{ column: 'hotel_id', value: hotelId }] : [],
+        channelFilter: hotelId ? { column: 'hotel_id', value: hotelId } : undefined,
+        orderBy: { column: 'created_at', ascending: false },
+        enablePollingFallback: true,
+    });
+
+    return {
+        rules: state.data,
+        loading: state.loading,
+        refresh: state.refresh,
+        syncStatus: state.syncStatus,
+        fetchError: state.fetchError,
+        lastSyncedAt: state.lastSyncedAt,
+    };
+}
+
 export async function saveMenuCategory(hotelId: string, category: Partial<MenuCategory>) {
     const payload = {
         slug: normalizeCategoryKey(category.slug || category.name),
@@ -1332,6 +1434,10 @@ export async function saveMenuCategory(hotelId: string, category: Partial<MenuCa
         description: category.description || null,
         image_url: category.image_url || null,
         icon_emoji: category.icon_emoji || null,
+        icon_url: category.icon_url || null,
+        display_style: category.display_style || 'pill',
+        is_highlighted: category.is_highlighted ?? false,
+        active_hours: category.active_hours || null,
         sort_order: category.sort_order ?? 0,
         is_active: category.is_active ?? true,
     };
@@ -1346,6 +1452,48 @@ export async function saveMenuCategory(hotelId: string, category: Partial<MenuCa
     return await supabase
         .from('menu_categories')
         .insert([{ ...payload, hotel_id: hotelId }]);
+}
+
+export async function saveSupabaseHero(hotelId: string, hero: Partial<Hero>) {
+    const payload = {
+        title: hero.title,
+        subtext: hero.subtext,
+        image_url: hero.image_url,
+        cta_text: hero.cta_text,
+        start_time: hero.start_time,
+        end_time: hero.end_time,
+        priority: hero.priority ?? 1,
+        is_active: hero.is_active ?? true,
+    };
+
+    if (hero.id) {
+        return await supabase.from('heroes').update(payload).eq('id', hero.id);
+    }
+    return await supabase.from('heroes').insert([{ ...payload, hotel_id: hotelId }]);
+}
+
+export async function deleteSupabaseHero(id: string) {
+    return await supabase.from('heroes').delete().eq('id', id);
+}
+
+export async function saveUpsellRule(hotelId: string, rule: Partial<UpsellRule>) {
+    const payload = {
+        trigger_item_id: rule.trigger_item_id,
+        upsell_item_id: rule.upsell_item_id,
+        message: rule.message,
+        discount_percentage: rule.discount_percentage ?? 0,
+        priority: rule.priority || 'Medium',
+        is_active: rule.is_active ?? true,
+    };
+
+    if (rule.id) {
+        return await supabase.from('upsell_rules').update(payload).eq('id', rule.id);
+    }
+    return await supabase.from('upsell_rules').insert([{ ...payload, hotel_id: hotelId }]);
+}
+
+export async function deleteUpsellRule(id: string) {
+    return await supabase.from('upsell_rules').delete().eq('id', id);
 }
 
 export async function deleteMenuCategory(id: string) {
@@ -1426,7 +1574,10 @@ export async function saveSupabaseMenuItem(hotelId: string, item: Partial<MenuIt
                 is_popular: item.is_popular,
                 is_recommended: item.is_recommended,
                 is_combo: item.is_combo,
-                upsell_items: item.upsell_items
+                upsell_items: item.upsell_items,
+                badges: item.badges,
+                availability_hours: item.availability_hours,
+                product_story: item.product_story
             })
             .eq('id', item.id);
         if (error) {

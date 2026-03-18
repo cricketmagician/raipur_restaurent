@@ -459,7 +459,7 @@ export default function AdminHub() {
                             <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Live Pulse</p>
                         </div>
                         <h1 className="text-5xl font-black text-[#3E2723] tracking-tight leading-none mb-4 uppercase">
-                            Café <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3E2723] to-[#F59E0B]">Pulse</span>
+                            {branding?.name?.split(' ')[0] || 'Property'} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3E2723] to-[#F59E0B]">{branding?.name?.split(' ').slice(1).join(' ') || 'Pulse'}</span>
                         </h1>
                         <div className="flex items-center space-x-6 text-slate-400 font-bold text-xs uppercase tracking-widest">
                             <div className="flex items-center">

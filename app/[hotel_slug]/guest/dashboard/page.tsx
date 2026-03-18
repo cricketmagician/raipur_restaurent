@@ -210,7 +210,11 @@ export default function GuestDashboard() {
             {/* 1. FLOATING UTILITY BAR (Sticky Navigation) */}
             <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${scrolled ? 'py-3 backdrop-blur-2xl bg-white/60 border-b border-black/5 shadow-[0_8px_32px_rgba(0,0,0,0.05)]' : 'py-6 bg-transparent'}`}>
                 <div className="max-w-md mx-auto px-6 flex items-center justify-between">
-                    <div className="flex-1 opacity-0 pointer-events-none" /> {/* Placeholder for balance */}
+                    <div className="flex-1">
+                        <h1 className={`text-lg font-black italic tracking-tighter truncate transition-colors duration-500 ${scrolled ? 'text-[#0F3D2E]' : 'text-white drop-shadow-md'}`}>
+                            {branding?.name}
+                        </h1>
+                    </div>
                     
                     <div className="flex items-center gap-3">
                         <div className={`flex rounded-full p-1 border transition-colors duration-500 ${scrolled ? 'bg-black/5 border-black/10' : 'bg-white/10 border-white/20 backdrop-blur-md'}`}>

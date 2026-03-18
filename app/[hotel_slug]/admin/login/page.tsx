@@ -143,11 +143,7 @@ function LoginContent() {
                             className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-xl"
                             style={{ backgroundColor: branding?.primaryColor || "#3b82f6" }}
                         >
-                            {branding?.logoImage ? (
-                                <img src={branding.logoImage} className="w-full h-full object-cover rounded-2xl" alt="Logo" />
-                            ) : (
-                                <Hotel className="w-8 h-8 text-white" />
-                            )}
+                            <Hotel className="w-8 h-8 text-white" />
                         </div>
                         <h1 className="text-3xl font-black text-slate-900 text-center">{branding?.name || "Hotel Admin"}</h1>
                         <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-2 flex items-center">

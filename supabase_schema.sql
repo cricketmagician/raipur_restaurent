@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS hotels (
     welcome_message TEXT,
     address TEXT,
     guest_theme TEXT DEFAULT 'CAFE',
+    design_system JSONB DEFAULT '{"card_style": "soft-shadow", "border_radius": "24px"}'::jsonb,
+    order_experience JSONB DEFAULT '{"success_message": "Handcrafted with Love.", "animation": "confetti", "brand_tone": "Premium"}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -95,6 +97,10 @@ CREATE TABLE IF NOT EXISTS menu_categories (
     description TEXT,
     image_url TEXT,
     icon_emoji TEXT,
+    icon_url TEXT, -- Dynamic Icon Engine
+    display_style TEXT DEFAULT 'pill', -- 'pill' or 'grid'
+    is_highlighted BOOLEAN DEFAULT false,
+    active_hours JSONB, -- { "start": "06:00", "end": "22:00" }
     sort_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
@@ -114,6 +120,37 @@ CREATE TABLE IF NOT EXISTS menu_items (
     is_recommended BOOLEAN DEFAULT false,
     upsell_items UUID[] DEFAULT '{}',
     badge_text TEXT,
+    badges TEXT[] DEFAULT '{}', -- ['Bestseller', 'New', 'Premium']
+    availability_hours JSONB,
+    product_story JSONB DEFAULT '{"bullets": [], "ingredients": [], "story_text": ""}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 9. Heroes Engine (First Impression Machine)
+CREATE TABLE IF NOT EXISTS heroes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    hotel_id UUID REFERENCES hotels(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    subtext TEXT,
+    image_url TEXT,
+    cta_text TEXT DEFAULT 'Explore Menu',
+    start_time TEXT, -- e.g. "06:00"
+    end_time TEXT,   -- e.g. "11:00"
+    priority INTEGER DEFAULT 1,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 10. Upsell Engine (Revenue Booster)
+CREATE TABLE IF NOT EXISTS upsell_rules (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    hotel_id UUID REFERENCES hotels(id) ON DELETE CASCADE,
+    trigger_item_id UUID REFERENCES menu_items(id) ON DELETE CASCADE,
+    upsell_item_id UUID REFERENCES menu_items(id) ON DELETE CASCADE,
+    message TEXT,
+    discount_percentage INTEGER DEFAULT 0,
+    priority TEXT DEFAULT 'Medium', -- 'High', 'Medium', 'Low'
+    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

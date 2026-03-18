@@ -10,9 +10,10 @@ interface ChefPicksSnapRailProps {
     cart: Record<string, number>;
     onAdd: (item: any) => void;
     onRemove: (item: any) => void;
+    onItemClick?: (item: any) => void;
 }
 
-export function ChefPicksSnapRail({ items, cart, onAdd, onRemove }: ChefPicksSnapRailProps) {
+export function ChefPicksSnapRail({ items, cart, onAdd, onRemove, onItemClick }: ChefPicksSnapRailProps) {
     if (!items.length) return null;
 
     return (
@@ -27,7 +28,8 @@ export function ChefPicksSnapRail({ items, cart, onAdd, onRemove }: ChefPicksSna
                     <motion.div 
                         key={item.id}
                         whileTap={{ scale: 0.98 }}
-                        className="min-w-[85%] aspect-[3/4] snap-center rounded-[2.5rem] overflow-hidden relative shadow-2xl group border border-black/5"
+                        onClick={() => onItemClick?.(item)}
+                        className="min-w-[85%] aspect-[3/4] snap-center rounded-[2.5rem] overflow-hidden relative shadow-2xl group border border-black/5 cursor-pointer"
                     >
                         <img 
                             src={getDirectImageUrl(item.image_url)} 

@@ -457,6 +457,7 @@ export default function GuestDashboard() {
                             cart={cart}
                             onAdd={(item) => updateQuantity(item.id, (cart[item.id] || 0) + 1)}
                             onRemove={(item) => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))}
+                            onItemClick={(item) => router.push(`/${hotelSlug}/guest/item/${item.id}`)}
                         />
                         {chefPickItems.length === 0 && (
                             <div className="px-4 text-sm font-semibold opacity-60" style={{ color: theme.primary }}>

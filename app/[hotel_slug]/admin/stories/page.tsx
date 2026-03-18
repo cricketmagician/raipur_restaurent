@@ -32,15 +32,21 @@ export default function AdminStoriesPage() {
         if (!branding?.id || !editingStory?.label) return;
 
         setIsSaving(true);
-        await saveSeasonalStory(branding.id, editingStory);
+        const { error } = await saveSeasonalStory(branding.id, editingStory);
         setIsSaving(false);
-        setIsModalOpen(false);
-        setEditingStory(null);
+        
+        if (error) {
+            alert(`Failed to save: ${error.message}`);
+        } else {
+            setIsModalOpen(false);
+            setEditingStory(null);
+        }
     };
 
     const handleDelete = async (id: string) => {
         if (confirm("Delete this story?")) {
-            await deleteSeasonalStory(id);
+            const { error } = await deleteSeasonalStory(id);
+            if (error) alert(`Failed to delete: ${error.message}`);
         }
     };
 

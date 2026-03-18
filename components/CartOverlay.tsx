@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Trash2, Plus, Minus, X, RefreshCw, ShoppingBag, Sparkles, ArrowUpRight, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/utils/themes";
@@ -15,9 +15,11 @@ interface CartOverlayProps {
     updateQuantity: (id: string, q: number) => void;
     cartTotal: number;
     isOrdering: boolean;
-    onOrder: () => void;
+    onOrder: (details: { name: string; phone: string; table: string; mode: string }) => void;
     hotelId?: string;
     menuItems: any[];
+    defaultTable?: string;
+    defaultMode?: string;
 }
 
 export function CartOverlay({
@@ -29,7 +31,9 @@ export function CartOverlay({
     isOrdering,
     onOrder,
     hotelId,
-    menuItems
+    menuItems,
+    defaultTable = "",
+    defaultMode = "dine-in"
 }: CartOverlayProps) {
     const params = useParams();
     const hotelSlug = params?.hotel_slug as string;
@@ -48,12 +52,26 @@ export function CartOverlay({
         updateQuantity(item.id, currentQty + 1);
     };
 
-    const [isConfirming, setIsConfirming] = React.useState(false);
+    const [isConfirming, setIsConfirming] = useState(false);
+    const [step, setStep] = useState<1 | 2>(1); // 1: Cart, 2: Details Form
+    const [guestName, setGuestName] = useState("");
+    const [guestPhone, setGuestPhone] = useState("");
+    const [tableInput, setTableInput] = useState(defaultTable);
+    const [orderModeInput, setOrderModeInput] = useState(defaultMode);
 
-    // Reset confirmation state when drawer closes
-    React.useEffect(() => {
-        if (!isOpen) setIsConfirming(false);
+    // Reset state when drawer closes
+    useEffect(() => {
+        if (!isOpen) {
+            setIsConfirming(false);
+            setStep(1);
+        }
     }, [isOpen]);
+
+    useEffect(() => {
+        if (defaultTable) setTableInput(defaultTable);
+    }, [defaultTable]);
+
+    const isFormValid = guestName.trim() !== "" && guestPhone.trim() !== "" && tableInput.trim() !== "";
 
     return (
         <AnimatePresence>
@@ -85,24 +103,26 @@ export function CartOverlay({
                         <div className="p-8 pt-4 overflow-y-auto no-scrollbar pb-safe">
                             <div className="flex items-center justify-between mb-10 gap-4">
                                 <div>
-                                    <h2 className="text-[10px] font-black text-[#0F3D2E]/40 uppercase tracking-[0.4em] mb-2">{isConfirming ? "Confirm Journey" : "Your Selection"}</h2>
+                                    <h2 className="text-[10px] font-black text-[#0F3D2E]/40 uppercase tracking-[0.4em] mb-2">
+                                        {step === 2 ? (isConfirming ? "Final Check" : "Guest Details") : "Your Selection"}
+                                    </h2>
                                     <h2 className="text-3xl font-black italic tracking-tighter leading-none text-[#0F3D2E]">
-                                        {isConfirming ? "Final Check" : "Premium Bag"}
+                                        {step === 2 ? (isConfirming ? "Order Summary" : "Details") : "Premium Bag"}
                                     </h2>
                                     <p className="mt-2 text-[11px] font-black uppercase tracking-[0.22em] text-[#C8A96A]">
-                                        {isConfirming ? "Ready for your experience?" : `${cartItems.length} curated item${cartItems.length === 1 ? "" : "s"}`}
+                                        {step === 2 ? "Ready for your experience?" : `${cartItems.length} curated item${cartItems.length === 1 ? "" : "s"}`}
                                     </p>
                                 </div>
                                 <motion.button
                                     whileTap={{ scale: 0.9 }}
-                                    onClick={isConfirming ? () => setIsConfirming(false) : onClose}
+                                    onClick={isConfirming ? () => setIsConfirming(false) : (step === 2 ? () => setStep(1) : onClose)}
                                     className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl border shrink-0 bg-white border-black/5 text-[#0F3D2E]"
                                 >
-                                    {isConfirming ? <ChevronLeft className="w-5 h-5" /> : <X className="w-5 h-5" />}
+                                    {isConfirming || step === 2 ? <ChevronLeft className="w-5 h-5" /> : <X className="w-5 h-5" />}
                                 </motion.button>
                             </div>
 
-                            {!isConfirming ? (
+                            {step === 1 && (
                                 <>
                                     <div className="space-y-4 mb-10">
                                         {cartItems.length > 0 ? (
@@ -157,7 +177,7 @@ export function CartOverlay({
                                         )}
                                     </div>
 
-                                    {/* 4. Complete your Order (Final Impulse) */}
+                                    {/* Final Impulse Suggestions */}
                                     {cartItems.length > 0 && (
                                         <div className="mb-12">
                                             <div className="flex items-center space-x-3 mb-8 px-1">
@@ -205,7 +225,73 @@ export function CartOverlay({
                                         </div>
                                     )}
                                 </>
-                            ) : (
+                            )}
+
+                            {step === 2 && !isConfirming && (
+                                <div className="space-y-8 mb-12">
+                                    <div className="space-y-6">
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0F3D2E]/40 ml-2">How should we address you?</label>
+                                            <input 
+                                                type="text"
+                                                placeholder="Enter your name"
+                                                value={guestName}
+                                                onChange={(e) => setGuestName(e.target.value)}
+                                                className="w-full bg-white border border-[#0F3D2E]/5 rounded-[1.5rem] px-6 py-5 font-black text-sm text-[#0F3D2E] focus:outline-none focus:ring-2 focus:ring-[#C8A96A]/20 transition-all placeholder:text-[#0F3D2E]/20"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0F3D2E]/40 ml-2">Phone for updates</label>
+                                            <input 
+                                                type="tel"
+                                                placeholder="Enter mobile number"
+                                                value={guestPhone}
+                                                onChange={(e) => setGuestPhone(e.target.value)}
+                                                className="w-full bg-white border border-[#0F3D2E]/5 rounded-[1.5rem] px-6 py-5 font-black text-sm text-[#0F3D2E] focus:outline-none focus:ring-2 focus:ring-[#C8A96A]/20 transition-all placeholder:text-[#0F3D2E]/20"
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0F3D2E]/40 ml-2">Table / Spot</label>
+                                                <input 
+                                                    type="text"
+                                                    placeholder="e.g., T-12"
+                                                    value={tableInput}
+                                                    onChange={(e) => setTableInput(e.target.value)}
+                                                    className="w-full bg-white border border-[#0F3D2E]/5 rounded-[1.5rem] px-6 py-5 font-black text-sm text-[#0F3D2E] focus:outline-none focus:ring-2 focus:ring-[#C8A96A]/20 transition-all placeholder:text-[#0F3D2E]/20"
+                                                />
+                                            </div>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0F3D2E]/40 ml-2">Order Type</label>
+                                                <div className="flex bg-white border border-[#0F3D2E]/5 rounded-[1.5rem] p-1.5 h-[62px]">
+                                                    <button 
+                                                        onClick={() => setOrderModeInput("dine-in")}
+                                                        className={`flex-1 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${orderModeInput === "dine-in" ? 'bg-[#0F3D2E] text-white shadow-lg' : 'text-[#0F3D2E]/40'}`}
+                                                    >
+                                                        Dine-In
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setOrderModeInput("takeaway")}
+                                                        className={`flex-1 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${orderModeInput === "takeaway" ? 'bg-[#0F3D2E] text-white shadow-lg' : 'text-[#0F3D2E]/40'}`}
+                                                    >
+                                                        Takeaway
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 rounded-[2rem] bg-[#0F3D2E]/5 space-y-2">
+                                        <p className="text-[9px] font-bold text-[#0F3D2E]/40 uppercase tracking-[0.2em] leading-relaxed">
+                                            Your order will be prepared as <span className="text-[#C8A96A]">{orderModeInput.replace('-', ' ')}</span> at {tableInput || 'your location'}.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {isConfirming && (
                                 <div className="mb-12 p-8 rounded-[2.5rem] bg-white border border-[#0F3D2E]/5 shadow-sm">
                                     <div className="space-y-6">
                                         {cartItems.map(item => (
@@ -226,7 +312,7 @@ export function CartOverlay({
                                 </div>
                             )}
 
-                            {/* 5. Checkout Action */}
+                            {/* Checkout Action Area */}
                             <div className="rounded-[3rem] p-8 shadow-2xl border bg-white border-[#0F3D2E]/5">
                                 {!isConfirming && (
                                     <div className="flex justify-between items-center mb-8">
@@ -235,15 +321,21 @@ export function CartOverlay({
                                     </div>
                                 )}
                                 <button
-                                    onClick={isConfirming ? onOrder : () => setIsConfirming(true)}
-                                    disabled={isOrdering || cartItems.length === 0}
+                                    onClick={() => {
+                                        if (step === 1) setStep(2);
+                                        else if (step === 2 && !isConfirming) setIsConfirming(true);
+                                        else onOrder({ name: guestName, phone: guestPhone, table: tableInput, mode: orderModeInput });
+                                    }}
+                                    disabled={isOrdering || cartItems.length === 0 || (step === 2 && !isFormValid)}
                                     className="w-full py-6 font-black text-xs uppercase tracking-[0.3em] shadow-2xl disabled:opacity-40 active:scale-[0.98] transition-all flex items-center justify-center text-white bg-[#0F3D2E] rounded-[2rem]"
                                 >
                                     {isOrdering ? (
                                         <RefreshCw className="w-6 h-6 animate-spin text-[#C8A96A]" />
                                     ) : (
                                         <span className="flex items-center space-x-3">
-                                            <span>{isConfirming ? "Initiate Experience" : "Checkout Bag"}</span>
+                                            <span>
+                                                {step === 1 ? "Proceed to Details" : (isConfirming ? "Initiate Experience" : "Review & Confirm")}
+                                            </span>
                                             <ArrowUpRight className="w-5 h-5" />
                                         </span>
                                     )}

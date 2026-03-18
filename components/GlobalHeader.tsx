@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Utensils, ShoppingBag, User, Bell, Droplets, ArrowLeft, Menu, Sparkles, X, ChevronRight, MapPin } from "lucide-react";
+import { ShoppingBag, Bell, Droplets, Menu, Sparkles, X, ChevronRight } from "lucide-react";
 import { useRouter, useParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHotelBranding, useCart } from "@/utils/store";
@@ -9,12 +9,11 @@ import { useTheme } from "@/utils/themes";
 import { useGuestRoom } from "../app/[hotel_slug]/guest/GuestAuthWrapper";
 
 export function GlobalHeader() {
-    const router = useRouter();
     const params = useParams();
     const pathname = usePathname();
     const hotelSlug = params?.hotel_slug as string;
     const { branding } = useHotelBranding(hotelSlug);
-    const { roomNumber, orderMode, switchToDineIn, switchToTakeaway } = useGuestRoom();
+    const { roomNumber } = useGuestRoom();
     const { cartCount } = useCart(branding?.id);
     const theme = useTheme(branding);
     
@@ -117,38 +116,6 @@ export function GlobalHeader() {
                                     {cartCount}
                                 </motion.span>
                             )}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Row 2: Universal Mode Toggle */}
-                <div className="flex justify-center pb-1">
-                    <div className={`flex p-1 rounded-full border transition-all duration-500 shadow-sm relative ${scrolled ? 'bg-slate-100 border-slate-200' : 'bg-black/20 border-white/20'}`}>
-                        {/* Sliding Highlight */}
-                        <motion.div 
-                            layoutId="modeHighlight"
-                            animate={{ x: orderMode === "dine-in" ? 0 : "100%" }}
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="absolute top-1 left-1 bottom-1 w-[calc(50%-4px)] bg-[#C8A96A] rounded-full shadow-md"
-                        />
-                        
-                        <button 
-                            onClick={switchToDineIn}
-                            className={`relative z-10 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors duration-300 flex items-center gap-2 ${
-                                orderMode === "dine-in" ? 'text-white' : (scrolled ? 'text-[#0F3D2E]/40' : 'text-white/60')
-                            }`}
-                        >
-                            <MapPin className="w-3 h-3" />
-                            Dine-In
-                        </button>
-                        <button 
-                            onClick={switchToTakeaway}
-                            className={`relative z-10 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors duration-300 flex items-center gap-2 ${
-                                orderMode === "takeaway" ? 'text-white' : (scrolled ? 'text-[#0F3D2E]/40' : 'text-white/60')
-                            }`}
-                        >
-                            <ShoppingBag className="w-3 h-3" />
-                            Takeaway
                         </button>
                     </div>
                 </div>

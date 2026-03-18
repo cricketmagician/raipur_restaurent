@@ -16,14 +16,12 @@ import {
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { CartOverlay } from "@/components/CartOverlay";
+import { MinimalMenuItemCard } from "@/components/MinimalMenuItemCard";
+import { CategoryCard } from "@/components/CategoryCard";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import { useTheme } from "@/utils/themes";
 import { CategoryScrollNav } from "@/components/CategoryScrollNav";
 import { CategorySectionHeader } from "@/components/CategorySectionHeader";
-import { MinimalMenuItemCard } from "@/components/MinimalMenuItemCard";
-import { FloatingCartBar } from "@/components/FloatingCartBar";
-import { CategoryCard } from "@/components/CategoryCard";
-import { LoadingScreen } from "@/components/LoadingScreen";
 import { Search, ChevronLeft, Sparkles, X, ShoppingCart, Plus, Minus } from "lucide-react";
 import { getDirectImageUrl } from "@/utils/image";
 
@@ -40,8 +38,6 @@ export default function RestaurantPage() {
     
     const [scrolled, setScrolled] = useState(false);
     const [activeCategory, setActiveCategory] = useState<string>("all");
-    const [showCart, setShowCart] = useState(false);
-    const [isOrdering, setIsOrdering] = useState(false);
     const [orderComplete, setOrderComplete] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
@@ -110,32 +106,6 @@ export default function RestaurantPage() {
     const handleCategoryClick = (id: string) => {
         setActiveCategory(id);
         window.scrollTo({ top: 0, behavior: "smooth" });
-    };
-
-    const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);
-    const cartTotal = Object.entries(cart).reduce((sum, [id, q]) => {
-        const item = availableItems.find(i => i.id === id);
-        return sum + (item?.price || 0) * (q as number);
-    }, 0);
-
-    const handleOrder = async () => {
-        if (!branding?.id) return;
-        setIsOrdering(true);
-        const cartItemsData = Object.entries(cart).map(([id, q]) => {
-            const item = availableItems.find(m => m.id === id);
-            return { id, title: item?.title || 'Unknown', quantity: q, price: item?.price || 0, total: (item?.price || 0) * (q as number) };
-        });
-        const { error } = await addSupabaseRequest(branding.id, {
-            room: roomNumber || 'Unknown',
-            type: "Dining Order",
-            notes: cartItemsData.map(item => `${item.title} x${item.quantity}`).join(", "),
-            total: cartTotal,
-            price: cartTotal,
-            items: cartItemsData
-        });
-        setIsOrdering(false);
-        if (error) alert(`Order Failed: ${error.message}`);
-        else { setOrderComplete(true); clearCart(); setShowCart(false); }
     };
 
     if (loading) {
@@ -318,9 +288,6 @@ export default function RestaurantPage() {
                     )}
                 </AnimatePresence>
             </main>
-
-            <FloatingCartBar count={cartCount} total={cartTotal} onClick={() => setShowCart(true)} isVisible={!showCart} />
-            <CartOverlay isOpen={showCart} onClose={() => setShowCart(false)} cart={cart} updateQuantity={updateQuantity} cartTotal={cartTotal} isOrdering={isOrdering} onOrder={handleOrder} hotelId={branding?.id} menuItems={availableItems} />
 
             {/* 5. PRODUCT STORY MODAL (Full View) */}
             <AnimatePresence>

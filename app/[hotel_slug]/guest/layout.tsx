@@ -11,8 +11,10 @@ import { initAudioContext } from "@/utils/audio";
 import { GuestAuthWrapper } from "./GuestAuthWrapper";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { useHotelBranding, useCart } from "@/utils/store";
+import { useHotelBranding, useCart, useSupabaseMenuItems, addSupabaseRequest } from "@/utils/store";
 import { ServiceHubOverlay } from "@/components/ServiceHubOverlay";
+import { CartOverlay } from "@/components/CartOverlay";
+import { OrderSuccessOverlay } from "@/components/OrderSuccessOverlay";
 import { Toast } from "@/components/Toast";
 import { useGuestRoom } from "./GuestAuthWrapper";
 
@@ -33,22 +35,65 @@ export default function GuestLayout({
     const { roomNumber: tableNumber } = useGuestRoom();
     
     const [showServiceHub, setShowServiceHub] = useState(false);
+    const [showCart, setShowCart] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [isOrdering, setIsOrdering] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: "success" | "error"; isVisible: boolean }>({
         message: "",
         type: "success",
         isVisible: false
     });
 
+    const { menuItems } = useSupabaseMenuItems(branding?.id);
+    const { cart, updateQuantity, clearCart } = useCart(branding?.id);
+
+    const cartTotal = Object.entries(cart).reduce((sum, [id, q]) => {
+        const item = menuItems.find(m => m.id === id);
+        return sum + ((item?.price || 0) * (q as number));
+    }, 0);
+
+    const handleOrder = async (details: { name: string; phone: string; table: string; mode: string }) => {
+        if (!branding?.id) return;
+        setIsOrdering(true);
+        
+        const cartItemsData = Object.entries(cart).map(([id, q]) => {
+            const item = menuItems.find(m => m.id === id);
+            return { id, title: item?.title || 'Unknown', quantity: q, price: item?.price || 0, total: (item?.price || 0) * (q as number) };
+        });
+
+        const { error } = await addSupabaseRequest(branding.id, {
+            room: details.table || tableNumber || 'Unknown',
+            type: details.mode === 'takeaway' ? "Takeaway Order" : "Dining Order",
+            notes: `Guest: ${details.name} (${details.phone}) | items: ` + cartItemsData.map(item => `${item.title} x${item.quantity}`).join(", "),
+            total: cartTotal,
+            price: cartTotal,
+            items: cartItemsData
+        });
+
+        setIsOrdering(false);
+        if (error) {
+            setToast({ message: `Order Failed: ${error.message}`, type: "error", isVisible: true });
+        } else {
+            setShowCart(false);
+            setShowSuccess(true);
+            clearCart();
+            setTimeout(() => setShowSuccess(false), 5000);
+        }
+    };
+
     useEffect(() => {
         const handleOpenService = () => setShowServiceHub(true);
+        const handleOpenCart = () => setShowCart(true);
         const handleShowToast = (e: any) => {
             const { message, type } = e.detail;
             setToast({ message, type: type || 'success', isVisible: true });
         };
         window.addEventListener("guest_open_service_hub", handleOpenService);
+        window.addEventListener("open_cart", handleOpenCart);
         window.addEventListener("guest_show_toast", handleShowToast);
         return () => {
             window.removeEventListener("guest_open_service_hub", handleOpenService);
+            window.removeEventListener("open_cart", handleOpenCart);
             window.removeEventListener("guest_show_toast", handleShowToast);
         };
     }, []);
@@ -111,6 +156,25 @@ export default function GuestLayout({
                 />
 
                 <Toast {...toast} onClose={() => setToast({ ...toast, isVisible: false })} />
+
+                <CartOverlay 
+                    isOpen={showCart} 
+                    onClose={() => setShowCart(false)}
+                    cart={cart}
+                    updateQuantity={updateQuantity}
+                    cartTotal={cartTotal}
+                    isOrdering={isOrdering}
+                    onOrder={handleOrder}
+                    hotelId={branding?.id}
+                    menuItems={menuItems}
+                    defaultTable={tableNumber}
+                    defaultMode={useGuestRoom().orderMode}
+                />
+
+                <OrderSuccessOverlay 
+                    isVisible={showSuccess}
+                    onClose={() => setShowSuccess(false)}
+                />
             </GuestAuthWrapper>
         </div>
     );

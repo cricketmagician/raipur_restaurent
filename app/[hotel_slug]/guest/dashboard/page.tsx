@@ -15,7 +15,6 @@ import {
     ChevronLeft,
     HandPlatter,
     Info,
-    CheckCircle2,
     X,
     Bell,
     Droplets,
@@ -51,7 +50,6 @@ import { SeasonalStories } from "@/components/SeasonalStories";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { Toast } from "@/components/Toast";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { CartOverlay } from "@/components/CartOverlay";
 import { useAddEffectTrigger } from "@/components/AddEffect";
 import { useTheme, getTimeTheme } from "@/utils/themes";
 
@@ -70,12 +68,9 @@ export default function GuestDashboard() {
     const timeTheme = getTimeTheme();
 
     const [activeCategory, setActiveCategory] = useState("all");
-    const [showCart, setShowCart] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
-    const [isOrdering, setIsOrdering] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [scrolled, setScrolled] = useState(false);
-    const [orderSuccess, setOrderSuccess] = useState(false);
     const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
     const sectionRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
@@ -164,37 +159,6 @@ export default function GuestDashboard() {
         updateQuantity(item.id, currentQty - 1);
     };
 
-    const handleOrder = async () => {
-        if (!branding?.id) return;
-        setIsOrdering(true);
-        
-        const { error } = await addSupabaseRequest(branding.id, {
-            room: tableNumber,
-            type: `Dining Order`,
-            notes: Object.entries(cart).map(([id, q]) => {
-                const item = availableMenuItems.find(m => m.id === id);
-                return `${q}x ${item?.title}`;
-            }).join(", "),
-            status: "Pending",
-            price: cartTotal,
-            total: cartTotal,
-            items: Object.entries(cart).map(([id, q]) => {
-                const item = availableMenuItems.find(m => m.id === id);
-                return { id, title: item?.title, quantity: q, price: item?.price, total: (item?.price || 0) * (q as number) };
-            })
-        });
-
-        setIsOrdering(false);
-        if (error) {
-            window.dispatchEvent(new CustomEvent("guest_show_toast", { detail: { message: "Order failed", type: "error" } }));
-        } else {
-            setOrderSuccess(true);
-            clearCart();
-            setShowCart(false);
-            setTimeout(() => setOrderSuccess(false), 5000);
-        }
-    };
-
     const filteredItems = useMemo(() => {
         return availableMenuItems.filter(i => 
             (activeCategory === 'all' || normalizeCategoryKey(i.category) === activeCategory) &&
@@ -215,34 +179,6 @@ export default function GuestDashboard() {
     return (
         <div className="min-h-screen bg-[#F5F1E8] text-[#0F3D2E] selection:bg-[#C8A96A] selection:text-white pb-32 font-sans overflow-x-hidden">
             
-            {/* Success Animation Overlay */}
-            <AnimatePresence>
-                {orderSuccess && (
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[200] flex items-center justify-center bg-[#0F3D2E] px-8"
-                    >
-                        <motion.div 
-                            initial={{ scale: 0.8, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            className="text-center space-y-8"
-                        >
-                            <div className="w-24 h-24 rounded-full bg-[#C8A96A] flex items-center justify-center mx-auto shadow-[0_0_50px_rgba(200,169,106,0.3)]">
-                                <CheckCircle2 className="w-12 h-12 text-white" />
-                            </div>
-                            <div className="space-y-2">
-                                <h1 className="text-4xl font-black italic text-white tracking-tighter">Handcrafted with Love.</h1>
-                                <p className="text-[#C8A96A] text-sm font-black uppercase tracking-[0.3em]">Order Placed Successfully</p>
-                            </div>
-                            <p className="text-white/40 text-xs italic font-medium leading-relaxed">"Your journey of flavors begins now. Sit back and enjoy the anticipation."</p>
-                            <button onClick={() => setOrderSuccess(false)} className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] pt-8">Close</button>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
             {/* 2. MINIMAL AUTO-CAROUSEL HERO */}
             <section className="relative h-[60vh] w-full overflow-hidden">
                 <AnimatePresence mode="wait">

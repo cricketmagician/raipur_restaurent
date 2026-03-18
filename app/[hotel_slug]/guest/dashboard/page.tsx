@@ -4,10 +4,12 @@ export const dynamic = "force-dynamic";
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
     ArrowRight,
     ClipboardList,
+    Flame,
+    PlayCircle,
     Receipt,
     RefreshCw,
     ShoppingBag,
@@ -16,15 +18,21 @@ import {
 } from "lucide-react";
 import { CartOverlay } from "@/components/CartOverlay";
 import { LoyaltySignIn } from "@/components/LoyaltySignIn";
+import { SeasonalStories } from "@/components/SeasonalStories";
+import { ChefPicksSnapRail } from "@/components/ChefPicksSnapRail";
+import { EatByMoodSection } from "@/components/EatByMoodSection";
 import { Toast } from "@/components/Toast";
 import {
     addLoyaltyPoints,
     addSupabaseRequest,
     getRoomAccessState,
     saveGuestLoyaltySession,
+    useHeroes,
     useCart,
     useGuestLoyalty,
     useHotelBranding,
+    useMoods,
+    useSeasonalStories,
     useSupabaseMenuItems,
     useSupabaseRequests,
 } from "@/utils/store";
@@ -62,11 +70,16 @@ export default function GuestDashboard() {
     const { cart, updateQuantity, cartCount, clearCart } = useCart(branding?.id);
     const { menuItems } = useSupabaseMenuItems(branding?.id);
     const requests = useSupabaseRequests(branding?.id, roomNumber, checkedInAt);
+    const { heroes } = useHeroes(branding?.id);
+    const { stories, loading: storiesLoading } = useSeasonalStories(branding?.id);
+    const { moods } = useMoods(branding?.id);
 
     const [showCart, setShowCart] = React.useState(false);
     const [isOrdering, setIsOrdering] = React.useState(false);
     const [orderComplete, setOrderComplete] = React.useState(false);
     const [isLoyaltyOpen, setIsLoyaltyOpen] = React.useState(false);
+    const [activeMoodId, setActiveMoodId] = React.useState<string | null>(null);
+    const [activeHeroIndex, setActiveHeroIndex] = React.useState(0);
     const [toast, setToast] = React.useState<{ message: string; type: "success" | "error"; isVisible: boolean }>({
         message: "",
         type: "success",
@@ -83,12 +96,64 @@ export default function GuestDashboard() {
         () => menuItems.filter((item) => item.is_available !== false),
         [menuItems]
     );
+    const activeStories = React.useMemo(
+        () => stories.filter((story) => story.is_active !== false),
+        [stories]
+    );
+    const activeHeroes = React.useMemo(() => {
+        const heroRecords = heroes.filter((hero) => hero.is_active !== false);
+        if (heroRecords.length > 0) {
+            return heroRecords;
+        }
+
+        if (!branding) {
+            return [];
+        }
+
+        return [
+            {
+                id: "fallback-hero",
+                title: `${branding.name} Specials`,
+                subtext: "Fresh picks curated by the kitchen today.",
+                image_url: branding.heroImage || "",
+                is_active: true,
+            },
+        ];
+    }, [heroes, branding]);
+    const chefPickItems = React.useMemo(
+        () =>
+            availableMenuItems
+                .filter((item) => item.is_recommended || item.is_popular)
+                .slice(0, 8),
+        [availableMenuItems]
+    );
+
+    const resolveMoodForMenu = React.useCallback((moodName?: string, tagLinked?: string) => {
+        const source = `${moodName || ""} ${tagLinked || ""}`.toLowerCase();
+        if (source.includes("sweet") || source.includes("dessert") || source.includes("choco")) return "sweet";
+        if (source.includes("spicy") || source.includes("hot") || source.includes("peri") || source.includes("masala")) return "spicy";
+        if (source.includes("light") || source.includes("fresh") || source.includes("salad") || source.includes("healthy")) return "light";
+        return "filling";
+    }, []);
 
     React.useEffect(() => {
         const handleOpenCart = () => setShowCart(true);
         window.addEventListener("open_cart", handleOpenCart);
         return () => window.removeEventListener("open_cart", handleOpenCart);
     }, []);
+
+    React.useEffect(() => {
+        if (activeHeroes.length <= 1) {
+            setActiveHeroIndex(0);
+            return;
+        }
+
+        const interval = window.setInterval(() => {
+            setActiveHeroIndex((current) => (current + 1) % activeHeroes.length);
+        }, 4200);
+
+        return () => window.clearInterval(interval);
+    }, [activeHeroes.length]);
 
     React.useEffect(() => {
         if (!menuItems.length) return;
@@ -320,6 +385,122 @@ export default function GuestDashboard() {
                     </div>
                 </motion.section>
 
+                {activeHeroes.length > 0 && (
+                    <motion.section
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.04 }}
+                        className="rounded-[2rem] border overflow-hidden shadow-[0_22px_70px_-34px_rgba(0,0,0,0.25)]"
+                        style={{ borderColor: `${theme.primary}10` }}
+                    >
+                        <div className="relative aspect-[16/8]">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={activeHeroes[activeHeroIndex]?.id || activeHeroIndex}
+                                    initial={{ opacity: 0.2, scale: 1.03 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0.2, scale: 1.03 }}
+                                    transition={{ duration: 0.45 }}
+                                    className="absolute inset-0"
+                                >
+                                    <img
+                                        src={getDirectImageUrl(activeHeroes[activeHeroIndex]?.image_url) || getDirectImageUrl(branding.heroImage)}
+                                        alt={activeHeroes[activeHeroIndex]?.title || branding.name}
+                                        className="h-full w-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/10" />
+                                </motion.div>
+                            </AnimatePresence>
+
+                            <div className="absolute left-4 right-4 bottom-4 z-10">
+                                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-3 py-1.5 mb-3">
+                                    <PlayCircle className="w-3.5 h-3.5 text-white" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/95">Live Ads</span>
+                                </div>
+                                <h3 className="text-2xl font-black tracking-tight text-white leading-none">
+                                    {activeHeroes[activeHeroIndex]?.title || `${branding.name} Specials`}
+                                </h3>
+                                <p className="text-xs font-semibold text-white/80 mt-2 max-w-[30ch]">
+                                    {activeHeroes[activeHeroIndex]?.subtext || "New recommendations from the kitchen this hour."}
+                                </p>
+                            </div>
+
+                            {activeHeroes.length > 1 && (
+                                <div className="absolute bottom-3 right-4 z-10 flex items-center gap-1.5">
+                                    {activeHeroes.map((hero, index) => (
+                                        <button
+                                            key={hero.id}
+                                            onClick={() => setActiveHeroIndex(index)}
+                                            className={`h-2 rounded-full transition-all ${index === activeHeroIndex ? "w-6 bg-white" : "w-2 bg-white/45"}`}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </motion.section>
+                )}
+
+                <motion.section
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.06 }}
+                    className="rounded-[2rem] border bg-white/80 backdrop-blur-xl shadow-[0_20px_60px_-30px_rgba(0,0,0,0.18)] overflow-hidden"
+                    style={{ borderColor: `${theme.primary}10` }}
+                >
+                    <div className="px-5 pt-5">
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] opacity-35 mb-2" style={{ color: theme.primary }}>
+                            Status Stories
+                        </p>
+                        <h3 className="text-xl font-black tracking-tight" style={{ color: theme.primary }}>
+                            Updates set from admin seasonal stories
+                        </h3>
+                    </div>
+                    <SeasonalStories
+                        stories={activeStories}
+                        loading={storiesLoading}
+                        onStoryClick={(story) => {
+                            if (story.menu_item_id) {
+                                router.push(`/${hotelSlug}/guest/item/${story.menu_item_id}`);
+                                return;
+                            }
+                            router.push(`/${hotelSlug}/guest/restaurant`);
+                        }}
+                    />
+                    {!storiesLoading && activeStories.length === 0 && (
+                        <div className="px-5 pb-5 text-sm font-semibold opacity-60" style={{ color: theme.primary }}>
+                            No seasonal stories added yet from admin.
+                        </div>
+                    )}
+                </motion.section>
+
+                <motion.section
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 }}
+                    className="rounded-[2rem] border bg-white/80 backdrop-blur-xl shadow-[0_20px_60px_-30px_rgba(0,0,0,0.18)] overflow-hidden"
+                    style={{ borderColor: `${theme.primary}10` }}
+                >
+                    <div className="px-5 pt-5">
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] opacity-35 mb-2" style={{ color: theme.primary }}>
+                            Chef Pick
+                        </p>
+                        <h3 className="text-xl font-black tracking-tight" style={{ color: theme.primary }}>
+                            Kitchen favourites you can add in one tap
+                        </h3>
+                    </div>
+                    <ChefPicksSnapRail
+                        items={chefPickItems}
+                        cart={cart}
+                        onAdd={(item) => updateQuantity(item.id, (cart[item.id] || 0) + 1)}
+                        onRemove={(item) => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))}
+                    />
+                    {chefPickItems.length === 0 && (
+                        <div className="px-5 pb-5 text-sm font-semibold opacity-60" style={{ color: theme.primary }}>
+                            Add recommended or popular menu items in admin to power this section.
+                        </div>
+                    )}
+                </motion.section>
+
                 <section className="grid grid-cols-2 gap-3">
                     {actionCards.map((card, index) => (
                         <motion.button
@@ -372,32 +553,44 @@ export default function GuestDashboard() {
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        {DISCOVERY_MOODS.map((mood, index) => (
-                            <motion.button
-                                key={mood.id}
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 + index * 0.04 }}
-                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant?mood=${mood.id}`)}
-                                className="rounded-[1.7rem] border p-4 text-left bg-white/82 backdrop-blur-xl shadow-[0_16px_45px_rgba(0,0,0,0.05)] active:scale-[0.98] transition-all"
-                                style={{ borderColor: `${theme.primary}10` }}
-                            >
-                                <div className="flex items-center justify-between gap-3 mb-4">
-                                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl" style={{ backgroundColor: `${theme.secondary}45` }}>
-                                        {mood.icon}
+                    <EatByMoodSection
+                        moods={moods.filter((mood) => mood.is_active !== false)}
+                        activeMoodId={activeMoodId}
+                        onMoodSelect={(moodId) => {
+                            setActiveMoodId(moodId);
+                            const selectedMood = moods.find((mood) => mood.id === moodId);
+                            const normalizedMood = resolveMoodForMenu(selectedMood?.name, selectedMood?.tag_linked);
+                            router.push(`/${hotelSlug}/guest/restaurant?mood=${normalizedMood}`);
+                        }}
+                    />
+                    {moods.filter((mood) => mood.is_active !== false).length === 0 && (
+                        <div className="grid grid-cols-2 gap-3">
+                            {DISCOVERY_MOODS.map((mood, index) => (
+                                <motion.button
+                                    key={mood.id}
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 + index * 0.04 }}
+                                    onClick={() => router.push(`/${hotelSlug}/guest/restaurant?mood=${mood.id}`)}
+                                    className="rounded-[1.7rem] border p-4 text-left bg-white/82 backdrop-blur-xl shadow-[0_16px_45px_rgba(0,0,0,0.05)] active:scale-[0.98] transition-all"
+                                    style={{ borderColor: `${theme.primary}10` }}
+                                >
+                                    <div className="flex items-center justify-between gap-3 mb-4">
+                                        <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl" style={{ backgroundColor: `${theme.secondary}45` }}>
+                                            {mood.icon}
+                                        </div>
+                                        <ArrowRight className="w-4 h-4 opacity-35" style={{ color: theme.primary }} />
                                     </div>
-                                    <ArrowRight className="w-4 h-4 opacity-35" style={{ color: theme.primary }} />
-                                </div>
-                                <p className="text-base font-black tracking-tight mb-1" style={{ color: theme.primary }}>
-                                    {mood.label}
-                                </p>
-                                <p className="text-[11px] font-semibold opacity-60 leading-5" style={{ color: theme.primary }}>
-                                    {mood.guidance}
-                                </p>
-                            </motion.button>
-                        ))}
-                    </div>
+                                    <p className="text-base font-black tracking-tight mb-1" style={{ color: theme.primary }}>
+                                        {mood.label}
+                                    </p>
+                                    <p className="text-[11px] font-semibold opacity-60 leading-5" style={{ color: theme.primary }}>
+                                        {mood.guidance}
+                                    </p>
+                                </motion.button>
+                            ))}
+                        </div>
+                    )}
                 </motion.section>
 
                 {cartCount > 0 ? (

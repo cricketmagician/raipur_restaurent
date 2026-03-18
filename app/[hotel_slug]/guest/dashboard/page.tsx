@@ -39,14 +39,15 @@ import {
     getRoomAccessState,
     useSpecialOffers,
     useMenuSections,
-    useHeroes
+    useHeroes,
+    useSeasonalStories
 } from "@/utils/store";
 import { CategorySectionHeader } from "@/components/CategorySectionHeader";
 import { ChefPicksSnapRail } from "@/components/ChefPicksSnapRail";
 import { PopularGrid } from "@/components/PopularGrid";
 import { IndulgeSection } from "@/components/IndulgeSection";
 import { MinimalMenuItemCard } from "@/components/MinimalMenuItemCard";
-import { CategoryScrollNav } from "@/components/CategoryScrollNav";
+import { SeasonalStories } from "@/components/SeasonalStories";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { Toast } from "@/components/Toast";
 import { CartOverlay } from "@/components/CartOverlay";
@@ -89,6 +90,7 @@ export default function GuestDashboard() {
     const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
     const { sections, loading: sectionsLoading } = useMenuSections(branding?.id);
     const { heroes, loading: heroesLoading } = useHeroes(branding?.id);
+    const { stories, loading: storiesLoading } = useSeasonalStories(branding?.id);
 
     // Derived Data
     const availableMenuItems = useMemo(
@@ -200,17 +202,6 @@ export default function GuestDashboard() {
         );
     }, [availableMenuItems, activeCategory, searchQuery]);
 
-    const scrollToCategory = (id: string) => {
-        if (id === "all") {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            return;
-        }
-        const element = sectionRefs.current[id];
-        if (element) {
-            const offset = element.offsetTop - 120;
-            window.scrollTo({ top: offset, behavior: "smooth" });
-        }
-    };
 
     if (loading || menuLoading) return (
         <div className="min-h-screen bg-[#F5F1E8] flex items-center justify-center">
@@ -288,12 +279,16 @@ export default function GuestDashboard() {
                 )}
             </section>
 
-            {/* 3. CATEGORY NAV (STICKY) */}
-            <CategoryScrollNav 
-                categories={categories} 
-                activeCategory={activeCategory} 
-                onCategoryClick={scrollToCategory} 
-                scrolled={scrolled} 
+            {/* 3. SEASONAL STORIES (REPLACES CATEGORIES) */}
+            <SeasonalStories 
+                stories={stories} 
+                loading={storiesLoading}
+                onStoryClick={(story) => {
+                    if (story.menu_item_id) {
+                        const item = availableMenuItems.find(i => i.id === story.menu_item_id);
+                        if (item) setSelectedProduct(item);
+                    }
+                }}
             />
 
             <main className="max-w-md mx-auto px-6 space-y-12 pt-12 relative z-10">

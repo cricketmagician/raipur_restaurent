@@ -23,6 +23,7 @@ import { CategorySectionHeader } from "@/components/CategorySectionHeader";
 import { MinimalMenuItemCard } from "@/components/MinimalMenuItemCard";
 import { FloatingCartBar } from "@/components/FloatingCartBar";
 import { CategoryCard } from "@/components/CategoryCard";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import { Search, ChevronLeft, Sparkles, X, ShoppingCart, Plus, Minus } from "lucide-react";
 import { getDirectImageUrl } from "@/utils/image";
 
@@ -31,7 +32,7 @@ export default function RestaurantPage() {
     const params = useParams();
     const searchParams = useSearchParams();
     const hotelSlug = params?.hotel_slug as string;
-    const { branding } = useHotelBranding(hotelSlug);
+    const { branding, loading } = useHotelBranding(hotelSlug);
     const { categories: menuCategories } = useMenuCategories(branding?.id);
     const { roomNumber, orderMode } = useGuestRoom();
     const { cart, updateQuantity, clearCart } = useCart(branding?.id);
@@ -136,6 +137,16 @@ export default function RestaurantPage() {
         if (error) alert(`Order Failed: ${error.message}`);
         else { setOrderComplete(true); clearCart(); setShowCart(false); }
     };
+
+    if (loading) {
+        return (
+            <LoadingScreen 
+                hotelName={branding?.name} 
+                logo={branding?.logoImage || branding?.logo} 
+                backgroundImage={branding?.loadingImage}
+            />
+        );
+    }
 
     if (orderComplete) {
         return (

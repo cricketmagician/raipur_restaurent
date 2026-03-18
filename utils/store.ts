@@ -52,6 +52,7 @@ export interface HotelBranding {
         animation: 'confetti' | 'minimal';
         brand_tone: 'Premium' | 'Fun' | 'Friendly';
     };
+    loadingImage?: string;
 }
 
 export interface Hero {
@@ -469,6 +470,7 @@ const mapHotelBrandingRow = (data: any): HotelBranding => ({
     quick_order_ids: data.quick_order_ids || [],
     designSystem: data.design_system,
     orderExperience: data.order_experience,
+    loadingImage: data.loading_image,
 });
 
 // --- Utilities ---

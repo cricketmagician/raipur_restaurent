@@ -50,6 +50,7 @@ import { MinimalMenuItemCard } from "@/components/MinimalMenuItemCard";
 import { SeasonalStories } from "@/components/SeasonalStories";
 import { useGuestRoom } from "../GuestAuthWrapper";
 import { Toast } from "@/components/Toast";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import { CartOverlay } from "@/components/CartOverlay";
 import { useAddEffectTrigger } from "@/components/AddEffect";
 import { useTheme, getTimeTheme } from "@/utils/themes";
@@ -204,13 +205,11 @@ export default function GuestDashboard() {
 
 
     if (loading || menuLoading) return (
-        <div className="min-h-screen bg-[#F5F1E8] flex items-center justify-center">
-            <motion.div 
-                animate={{ rotate: 360 }} 
-                transition={{ repeat: Infinity, duration: 1, ease: "linear" }} 
-                className="w-10 h-10 border-4 border-[#C8A96A] border-t-transparent rounded-full shadow-lg" 
-            />
-        </div>
+        <LoadingScreen 
+            hotelName={branding?.name} 
+            logo={branding?.logoImage || branding?.logo} 
+            backgroundImage={branding?.loadingImage}
+        />
     );
 
     return (

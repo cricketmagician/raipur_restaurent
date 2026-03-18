@@ -22,7 +22,8 @@ import { CategoryScrollNav } from "@/components/CategoryScrollNav";
 import { CategorySectionHeader } from "@/components/CategorySectionHeader";
 import { MinimalMenuItemCard } from "@/components/MinimalMenuItemCard";
 import { FloatingCartBar } from "@/components/FloatingCartBar";
-import { Search } from "lucide-react";
+import { CategoryCard } from "@/components/CategoryCard";
+import { Search, ChevronLeft, Sparkles } from "lucide-react";
 
 export default function RestaurantPage() {
     const router = useRouter();
@@ -52,12 +53,14 @@ export default function RestaurantPage() {
         [effectiveItems]
     );
 
-    const categoryRecords = menuCategories.filter((category) => category.is_active !== false).length > 0
-        ? menuCategories.filter((category) => category.is_active !== false)
-        : deriveMenuCategories(availableItems as any);
+    const categoryRecords = useMemo(() => {
+        return menuCategories.filter((category) => category.is_active !== false).length > 0
+            ? menuCategories.filter((category) => category.is_active !== false)
+            : deriveMenuCategories(availableItems as any);
+    }, [menuCategories, availableItems]);
 
     const categories = useMemo(() => ([
-        { id: "all", name: "All", icon: "🍱" },
+        { id: "all", name: "All", icon: "🍱", tagline: undefined, imageUrl: undefined },
         ...categoryRecords.map((category) => ({
             id: normalizeCategoryKey(category.slug || category.name),
             name: category.name,
@@ -79,39 +82,37 @@ export default function RestaurantPage() {
         const handleScroll = () => {
             setScrolled(window.scrollY > 50);
 
-            // Intersection Logic for auto-highlighting
-            const scrollPos = window.scrollY + 150;
-            let current = "all";
+            if (activeCategory !== "all") {
+                const scrollPos = window.scrollY + 150;
+                let current = activeCategory;
 
-            for (const catId in sectionRefs.current) {
-                const element = sectionRefs.current[catId];
-                if (element && element.offsetTop <= scrollPos) {
-                    current = catId;
+                for (const catId in sectionRefs.current) {
+                    const element = sectionRefs.current[catId];
+                    if (element && element.offsetTop <= scrollPos) {
+                        current = catId;
+                    }
+                }
+                // Only update if it's a different category but still within the category story view
+                if (current !== activeCategory && current !== "all") {
+                    // This logic is mostly for multi-category story pages if we ever support them
+                    // For now, CategoryStoryView is usually one category at a time
                 }
             }
-            setActiveCategory(current);
         };
 
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
+    }, [activeCategory]);
 
-    const scrollToCategory = (id: string) => {
-        if (id === "all") {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            return;
-        }
-        const element = sectionRefs.current[id];
-        if (element) {
-            const offset = element.offsetTop - 120;
-            window.scrollTo({ top: offset, behavior: "smooth" });
-        }
+    const handleCategoryClick = (id: string) => {
+        setActiveCategory(id);
+        window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);
     const cartTotal = Object.entries(cart).reduce((sum, [id, q]) => {
         const item = availableItems.find(i => i.id === id);
-        return sum + (item?.price || 0) * q;
+        return sum + (item?.price || 0) * (q as number);
     }, 0);
 
     const handleOrder = async () => {
@@ -119,7 +120,7 @@ export default function RestaurantPage() {
         setIsOrdering(true);
         const cartItemsData = Object.entries(cart).map(([id, q]) => {
             const item = availableItems.find(m => m.id === id);
-            return { id, title: item?.title || 'Unknown', quantity: q, price: item?.price || 0, total: (item?.price || 0) * q };
+            return { id, title: item?.title || 'Unknown', quantity: q, price: item?.price || 0, total: (item?.price || 0) * (q as number) };
         });
         const { error } = await addSupabaseRequest(branding.id, {
             room: roomNumber || 'Unknown',
@@ -147,53 +148,66 @@ export default function RestaurantPage() {
         );
     }
 
+    const currentCategory = categories.find(c => c.id === activeCategory);
+
     return (
-        <motion.div initial={{ y: "100%", opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="min-h-screen bg-[#F5F1E8] pb-40">
-            {/* 1. GLASS TOP BAR */}
-            <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 px-6 py-4 flex items-center justify-between ${scrolled ? "bg-white/80 backdrop-blur-xl border-b border-slate-200" : "bg-transparent"}`}>
-                <button onClick={() => router.back()} className="text-[#0F3D2E]/40 text-[10px] font-black uppercase tracking-widest">← Back</button>
-                <h1 className="text-[#0F3D2E] text-sm font-semibold tracking-tight">Full Menu</h1>
-                <div className="relative flex-1 max-w-[150px] ml-4">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-[#0F3D2E]/40" />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-[#F5F1E8] pb-40">
+            {/* 1. PREMIUM TOP BAR */}
+            <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 px-6 py-4 flex items-center justify-between ${scrolled || activeCategory !== 'all' ? "bg-white/80 backdrop-blur-2xl border-b border-[#0F3D2E]/5 shadow-sm" : "bg-transparent"}`}>
+                <div className="flex items-center gap-4">
+                    {activeCategory !== 'all' ? (
+                        <motion.button 
+                            initial={{ x: -10, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            onClick={() => setActiveCategory('all')} 
+                            className="w-10 h-10 rounded-full bg-[#0F3D2E]/5 flex items-center justify-center text-[#0F3D2E]"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </motion.button>
+                    ) : (
+                        <button onClick={() => router.back()} className="text-[#0F3D2E]/40 text-[10px] font-black uppercase tracking-widest">← Back</button>
+                    )}
+                    <h1 className="text-[#0F3D2E] text-sm font-black italic tracking-tighter">
+                        {activeCategory === 'all' ? 'The Menu' : currentCategory?.name}
+                    </h1>
+                </div>
+                
+                <div className="relative flex-1 max-w-[160px] ml-4">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#0F3D2E]/40" />
                     <input 
                         type="text" 
-                        placeholder="Search..."
+                        placeholder="Search flavors..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-[#0F3D2E]/5 border-none rounded-full py-2 pl-9 pr-4 text-[10px] focus:ring-1 focus:ring-[#C8A96A] transition-all"
+                        className="w-full bg-[#0F3D2E]/5 border-none rounded-full py-2.5 pl-10 pr-4 text-[11px] font-medium focus:ring-1 focus:ring-[#C8A96A] transition-all placeholder:text-[#0F3D2E]/20"
                     />
                 </div>
             </header>
 
-            {/* 2. CATEGORY NAV (STICKY) */}
-            <CategoryScrollNav categories={categories} activeCategory={activeCategory} onCategoryClick={scrollToCategory} scrolled={scrolled} />
+            {/* 2. GLOBAL CATEGORY NAV */}
+            <CategoryScrollNav 
+                categories={categories} 
+                activeCategory={activeCategory} 
+                onCategoryClick={handleCategoryClick} 
+                scrolled={scrolled || activeCategory !== 'all'} 
+            />
 
-            <div className="max-w-md mx-auto px-6 space-y-12 pt-24">
-                {/* HERO / SEARCH TITLE */}
-                <div className="space-y-2 pt-4">
-                    <h2 className="text-3xl font-black italic tracking-tighter text-[#0F3D2E]">
-                        {searchTerm ? "Results" : (activeCategory === "all" ? "Our Menu" : formatCategoryName(activeCategory))}
-                    </h2>
-                    <p className="text-[#0F3D2E]/40 text-xs font-medium italic">
-                        {searchTerm ? `${filteredItems.length} items found` : "Selection of the finest ingredients."}
-                    </p>
-                </div>
-
-                {/* CATEGORY SECTIONS */}
-                {categories.filter(c => c.id !== "all" && (activeCategory === "all" || activeCategory === c.id)).map((cat: any) => {
-                    const catItems = filteredItems.filter((item: any) => normalizeCategoryKey(item.category) === cat.id);
-                    if (catItems.length === 0) return null;
-
-                    return (
-                        <section 
-                            key={cat.id} 
-                            id={cat.id} 
-                            ref={(el) => { sectionRefs.current[cat.id] = el as HTMLDivElement; }} 
-                            className="space-y-6"
+            <main className="max-w-md mx-auto px-6 pt-28">
+                <AnimatePresence mode="wait">
+                    {searchTerm ? (
+                        /* SEARCH RESULTS VIEW */
+                        <motion.div 
+                            key="search"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="space-y-8"
                         >
-                            <CategorySectionHeader name={cat.name} tagline={cat.tagline || "Freshly prepared."} imageUrl={cat.imageUrl} />
-                            <div className="space-y-4">
-                                {catItems.map((item) => (
+                            <div className="space-y-1">
+                                <h2 className="text-3xl font-black italic tracking-tighter text-[#0F3D2E]">Search Results</h2>
+                                <p className="text-[#0F3D2E]/40 text-xs font-medium italic">{filteredItems.length} items found for "{searchTerm}"</p>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4">
+                                {filteredItems.map(item => (
                                     <MinimalMenuItemCard 
                                         key={item.id} 
                                         item={item} 
@@ -203,10 +217,83 @@ export default function RestaurantPage() {
                                     />
                                 ))}
                             </div>
-                        </section>
-                    );
-                })}
-            </div>
+                        </motion.div>
+                    ) : activeCategory === "all" ? (
+                        /* DISCOVERY VIEW: PREMIUM CATEGORY CARDS */
+                        <motion.div 
+                            key="discovery"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="space-y-10"
+                        >
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4 text-[#C8A96A] fill-[#C8A96A]" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C8A96A]">Curated Collections</span>
+                                </div>
+                                <h2 className="text-5xl font-black italic tracking-tighter text-[#0F3D2E] leading-none">Explore Our World</h2>
+                                <p className="text-[#0F3D2E]/40 text-sm font-medium italic">Discover flavors handcrafted for your mood.</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-8">
+                                {categories.filter(c => c.id !== "all").map((cat, idx) => (
+                                    <motion.div
+                                        key={cat.id}
+                                        initial={{ opacity: 0, y: 30 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.1 }}
+                                    >
+                                        <CategoryCard 
+                                            category={cat as any} 
+                                            onClick={() => handleCategoryClick(cat.id)} 
+                                        />
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    ) : (
+                        /* CATEGORY STORY VIEW: DETAILED MENU */
+                        <motion.div 
+                            key={activeCategory}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-12"
+                        >
+                            {/* CATEGORY HERO */}
+                            <section className="space-y-4">
+                                <CategorySectionHeader 
+                                    name={currentCategory?.name || ""} 
+                                    tagline={currentCategory?.tagline || "Freshly prepared masterpiece."} 
+                                    imageUrl={currentCategory?.imageUrl || branding?.hero_image} 
+                                />
+                            </section>
+
+                            {/* CATEGORY ITEMS LIST */}
+                            <section className="space-y-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-[1px] flex-1 bg-[#0F3D2E]/10" />
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#0F3D2E]/40">Full Selection</h4>
+                                    <div className="h-[1px] flex-1 bg-[#0F3D2E]/10" />
+                                </div>
+                                
+                                <div className="space-y-4">
+                                    {availableItems.filter(item => normalizeCategoryKey(item.category) === activeCategory).map((item) => (
+                                        <MinimalMenuItemCard 
+                                            key={item.id} 
+                                            item={item} 
+                                            quantity={cart[item.id] || 0} 
+                                            onAdd={() => updateQuantity(item.id, (cart[item.id] || 0) + 1)} 
+                                            onRemove={() => updateQuantity(item.id, Math.max(0, (cart[item.id] || 0) - 1))} 
+                                        />
+                                    ))}
+                                </div>
+                            </section>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </main>
 
             <FloatingCartBar count={cartCount} total={cartTotal} onClick={() => setShowCart(true)} isVisible={!showCart} />
             <CartOverlay isOpen={showCart} onClose={() => setShowCart(false)} cart={cart} updateQuantity={updateQuantity} cartTotal={cartTotal} isOrdering={isOrdering} onOrder={handleOrder} hotelId={branding?.id} menuItems={availableItems} />

@@ -38,7 +38,8 @@ import {
     normalizeCategoryKey,
     getRoomAccessState,
     useSpecialOffers,
-    useMenuSections
+    useMenuSections,
+    useHeroes
 } from "@/utils/store";
 import { CategorySectionHeader } from "@/components/CategorySectionHeader";
 import { ChefPicksSnapRail } from "@/components/ChefPicksSnapRail";
@@ -73,6 +74,7 @@ export default function GuestDashboard() {
     const [searchQuery, setSearchQuery] = useState("");
     const [scrolled, setScrolled] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState(false);
+    const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
     const sectionRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -86,6 +88,7 @@ export default function GuestDashboard() {
 
     const { menuItems, loading: menuLoading } = useSupabaseMenuItems(branding?.id);
     const { sections, loading: sectionsLoading } = useMenuSections(branding?.id);
+    const { heroes, loading: heroesLoading } = useHeroes(branding?.id);
 
     // Derived Data
     const availableMenuItems = useMemo(
@@ -105,9 +108,19 @@ export default function GuestDashboard() {
         ];
     }, [menuItems]);
 
-    const heroItem = useMemo(() => {
-        return availableMenuItems.find(i => i.is_recommended) || availableMenuItems[0];
-    }, [availableMenuItems]);
+    const heroItems = useMemo(() => {
+        const activeHeroes = (heroes || []).filter(h => h.is_active);
+        if (activeHeroes.length > 0) return activeHeroes;
+        return [{ image_url: branding?.heroImage || availableMenuItems[0]?.image_url }];
+    }, [heroes, branding, availableMenuItems]);
+
+    React.useEffect(() => {
+        if (heroItems.length <= 1) return;
+        const interval = setInterval(() => {
+            setCurrentHeroIndex((prev) => (prev + 1) % heroItems.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [heroItems.length]);
 
     const mostOrderedItems = useMemo(() => {
         return availableMenuItems.filter(i => i.is_popular).slice(0, 5);
@@ -229,46 +242,39 @@ export default function GuestDashboard() {
                 )}
             </AnimatePresence>
 
-            {/* 2. CINEMATIC HERO (Entry Experience) */}
-            <section className="relative h-[90vh] w-full overflow-hidden">
-                <motion.div 
-                    initial={{ scale: 1.1 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 20, repeat: Infinity, repeatType: "reverse" }}
-                    className="absolute inset-0"
-                >
-                    <img 
-                        src={getDirectImageUrl(branding?.heroImage || heroItem?.image_url)} 
-                        className="w-full h-full object-cover"
-                        alt="Hero background"
-                    />
-                </motion.div>
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0F3D2E]/20 via-transparent to-[rgba(0,0,0,0.7)]" />
-                
-                <div className="absolute inset-0 flex flex-col items-start justify-center px-8 lg:px-12 pt-20">
-                    <motion.div
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="space-y-4 max-w-sm"
+            {/* 2. MINIMAL AUTO-CAROUSEL HERO */}
+            <section className="relative h-[40vh] w-full overflow-hidden">
+                <AnimatePresence mode="wait">
+                    <motion.div 
+                        key={currentHeroIndex}
+                        initial={{ opacity: 0, scale: 1.05 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 1.5, ease: "easeInOut" }}
+                        className="absolute inset-0"
                     >
-                        <h2 className="text-white/70 text-[10px] font-black tracking-[0.4em] uppercase">{timeTheme.greeting}</h2>
-                        <h1 className="text-white text-[42px] font-semibold tracking-[-0.03em] leading-[1.1] drop-shadow-2xl">
-                            Fresh mornings,<br/>made better
-                        </h1>
-                        <p className="text-white/60 text-sm font-medium italic">"You deserve something amazing today."</p>
-                        
-                        <div className="pt-6">
-                            <motion.button 
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.96 }}
-                                className="bg-white/15 backdrop-blur-xl border border-white/20 px-8 py-4 rounded-full text-white text-[10px] font-black uppercase tracking-[0.3em] shadow-2xl transition-all"
-                                onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                            >
-                                Explore Menu →
-                            </motion.button>
-                        </div>
+                        <img 
+                            src={getDirectImageUrl(heroItems[currentHeroIndex]?.image_url)} 
+                            className="w-full h-full object-cover"
+                            alt="Restaurant Ad"
+                        />
                     </motion.div>
-                </div>
+                </AnimatePresence>
+                
+                {/* Subtle Gradient for readability of overlay elements if any */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent pointer-events-none" />
+
+                {/* Progress Indicators */}
+                {heroItems.length > 1 && (
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                        {heroItems.map((_, idx) => (
+                            <div 
+                                key={idx} 
+                                className={`h-1 rounded-full transition-all duration-500 ${idx === currentHeroIndex ? 'w-6 bg-white' : 'w-2 bg-white/30'}`}
+                            />
+                        ))}
+                    </div>
+                )}
             </section>
 
             {/* 3. CATEGORY NAV (STICKY) */}

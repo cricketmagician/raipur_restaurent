@@ -69,14 +69,14 @@ export function BottomNav() {
                                     }}
                                     className={`flex flex-col items-center justify-center relative transition-all duration-300 ${
                                         isService 
-                                            ? "absolute -top-[32px] w-[64px] h-[64px] left-1/2 -translate-x-1/2"
+                                            ? "relative -top-[12px] w-[58px] h-[58px]" // lowered slightly to rest inside the dock
                                             : `w-full max-w-[68px] h-[58px] rounded-[1.2rem] ${isActive ? "bg-white/10" : "bg-transparent"}`
                                     }`}
                                 >
                                     <div
                                         className={`flex items-center justify-center transition-all duration-300 ${
                                             isService
-                                                ? "bg-[#C8A96A] text-white w-full h-full rounded-full shadow-[0_12px_30px_rgba(200,169,106,0.4)] border-4"
+                                                ? "bg-[#C8A96A] text-white w-full h-full rounded-full shadow-[0_4px_24px_rgba(200,169,106,0.5)] border-[5px]"
                                                 : "w-8 h-8 rounded-full"
                                         }`}
                                         style={isService ? { borderColor: dockTone } : undefined}

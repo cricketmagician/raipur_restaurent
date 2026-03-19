@@ -87,11 +87,37 @@ export function CategoryDiscoveryGrid({
                 </section>
             )}
 
-            <section className="space-y-3">
+            <section className="space-y-4">
                 <div className="px-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.26em] opacity-45 mb-2" style={{ color: theme.primary }}>
+                    <p className="text-[10px] font-black uppercase tracking-[0.26em] opacity-45" style={{ color: theme.primary }}>
                         What are you craving?
                     </p>
+                </div>
+
+                {/* Modern Category Quick Rail */}
+                <div className="flex overflow-x-auto no-scrollbar gap-3 px-1 pb-2 pt-1 -mx-2 pl-2 snap-x">
+                    {categories.map((category) => {
+                        const isActive = activeCategory === category.id;
+                        return (
+                            <button
+                                key={`rail-${category.id}`}
+                                onClick={() => onCategoryClick(category.id)}
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-full whitespace-nowrap snap-start border shrink-0 transition-all active:scale-95 ${
+                                    isActive 
+                                    ? "shadow-md" 
+                                    : "bg-white/60 hover:bg-white/90 backdrop-blur-md"
+                                }`}
+                                style={
+                                    isActive 
+                                        ? { backgroundColor: theme.primary, borderColor: theme.primary, color: theme.background } 
+                                        : { color: theme.primary, borderColor: `${theme.primary}12` }
+                                }
+                            >
+                                <span className="text-sm drop-shadow-sm">{category.icon}</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">{category.name}</span>
+                            </button>
+                        );
+                    })}
                 </div>
 
                 <div

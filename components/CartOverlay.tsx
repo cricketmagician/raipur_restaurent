@@ -180,46 +180,57 @@ export function CartOverlay({
                                     {/* Final Impulse Suggestions */}
                                     {cartItems.length > 0 && (
                                         <div className="mb-12">
-                                            <div className="flex items-center space-x-3 mb-8 px-1">
-                                                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C8A96A]">Taste More</span>
+                                            <div className="flex items-center space-x-3 mb-6 px-1">
+                                                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C8A96A]">Quick Add-ons</span>
                                                 <div className="h-[1px] flex-1 bg-[#C8A96A]/20" />
                                             </div>
-                                            <div className="grid grid-cols-1 gap-6">
+                                            <div className="flex overflow-x-auto no-scrollbar gap-4 px-1 pb-4 snap-x">
                                                 {(() => {
-                                                    const suggestion = menuItems.find(m => m.is_recommended && !cart[m.id]) || menuItems.find(m => 
-                                                        (m.category.toLowerCase() === 'desserts' || m.category.toLowerCase() === 'drinks') && 
-                                                        !cart[m.id]
-                                                    );
+                                                    // Find items with #cart tag in description, otherwise fallback to cheap drinks/desserts
+                                                    let addons = menuItems.filter(m => !cart[m.id] && m.description?.toLowerCase().includes('#cart'));
                                                     
-                                                    if (!suggestion) return null;
+                                                    if (addons.length === 0) {
+                                                        addons = menuItems.filter(m => 
+                                                            !cart[m.id] && 
+                                                            (m.category.toLowerCase() === 'desserts' || m.category.toLowerCase().includes('drink') || m.category.toLowerCase().includes('beverage')) &&
+                                                            (m.price && m.price < 250)
+                                                        ).slice(0, 5); // Fallback to max 5 cheap impulse items
+                                                    }
+                                                    
+                                                    if (addons.length === 0) return null;
 
-                                                    return (
+                                                    return addons.map((suggestion) => (
                                                         <motion.div 
-                                                            whileTap={{ scale: 0.98 }}
-                                                            onClick={() => addToCart(suggestion)}
-                                                            className="rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group bg-[#0F3D2E]"
+                                                            key={suggestion.id}
+                                                            whileTap={{ scale: 0.95 }}
+                                                            className="min-w-[140px] max-w-[160px] snap-start rounded-[1.5rem] p-3 shadow-md border border-[#0F3D2E]/5 bg-white relative flex flex-col"
                                                         >
-                                                            <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-110 transition-transform text-white">
-                                                                <Sparkles className="w-24 h-24" />
+                                                            <div className="w-full h-24 rounded-xl overflow-hidden mb-3 bg-[#0F3D2E]/5">
+                                                                {suggestion.image_url ? (
+                                                                    <img src={getDirectImageUrl(suggestion.image_url)} alt={suggestion.title} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center">
+                                                                        <Sparkles className="w-6 h-6 text-[#0F3D2E]/20" />
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                            <div className="relative z-10 text-left space-y-4">
-                                                                <div className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#C8A96A]">
-                                                                    <div className="w-1.5 h-1.5 rounded-full bg-[#C8A96A] animate-pulse" />
-                                                                    <span>Chef's Choice</span>
-                                                                </div>
-                                                                <div>
-                                                                    <h4 className="text-2xl font-black italic text-white leading-tight">“Add a {suggestion.title}?”</h4>
-                                                                    <p className="text-white/60 text-sm font-medium italic mt-1">The perfect finale to your journey.</p>
-                                                                </div>
+                                                            <div className="flex-1 mb-3">
+                                                                <h4 className="text-[13px] font-black italic text-[#0F3D2E] leading-tight line-clamp-2">{suggestion.title}</h4>
+                                                            </div>
+                                                            <div className="flex items-center justify-between mt-auto">
+                                                                <span className="text-[11px] font-black text-[#C8A96A]">₹{suggestion.price}</span>
                                                                 <button 
-                                                                    className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest px-8 py-5 rounded-2xl shadow-2xl active:scale-95 transition-all text-white bg-[#C8A96A]"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        addToCart(suggestion);
+                                                                    }}
+                                                                    className="w-7 h-7 rounded-full bg-[#0F3D2E] text-white flex flex-col items-center justify-center shadow-lg active:scale-90 transition-transform"
                                                                 >
-                                                                    <Plus className="w-4 h-4" />
-                                                                    <span>Add for ₹{suggestion.price}</span>
+                                                                    <Plus className="w-3.5 h-3.5" />
                                                                 </button>
                                                             </div>
                                                         </motion.div>
-                                                    );
+                                                    ));
                                                 })()}
                                             </div>
                                         </div>

@@ -700,32 +700,60 @@ export default function GuestDashboard() {
                 </div>
             </div>
 
-            {orderComplete && (
-                <div className="fixed inset-0 z-[150] bg-black/35 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-sm rounded-[2rem] bg-white p-6 text-center shadow-2xl border border-white/80">
-                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-500 mb-2">Order placed</p>
-                        <h2 className="text-2xl font-black text-slate-900 mb-2">Kitchen has your order</h2>
-                        <p className="text-sm text-slate-500 mb-6">You can track progress from the orders page.</p>
-                        <div className="grid grid-cols-1 gap-3">
-                            <button
-                                onClick={() => router.push(`/${hotelSlug}/guest/status`)}
-                                className="rounded-full bg-slate-900 text-white py-3.5 text-[10px] font-black uppercase tracking-[0.24em]"
-                            >
-                                View Orders
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setOrderComplete(false);
-                                    router.push(`/${hotelSlug}/guest/restaurant`);
-                                }}
-                                className="rounded-full border border-slate-200 py-3.5 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700"
-                            >
-                                Order More
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <AnimatePresence>
+                {orderComplete && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[200] bg-white/95 backdrop-blur-xl flex flex-col items-center justify-center p-6"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.8, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            className="w-full max-w-md bg-slate-50 rounded-[3.5rem] p-10 text-center shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)] border border-white relative overflow-hidden"
+                        >
+                            {/* Chef Animation */}
+                            <div className="mx-auto w-32 h-32 bg-white rounded-[2rem] shadow-sm border border-slate-100 flex items-center justify-center relative mb-8 z-10">
+                                <motion.div
+                                    animate={{ rotate: [-6, 6, -6], y: [0, -5, 0] }}
+                                    transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+                                    className="relative z-10 text-emerald-600"
+                                >
+                                    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6h.2A6.13 6.13 0 0 1 12 4a6.13 6.13 0 0 1 4.39 2h.2A4 4 0 0 1 18 13.87"/><path d="M6 12a4 4 0 0 1-1.3-7.8"/><path d="M18 12a4 4 0 0 0 1.3-7.8"/><path d="M3 20h18"/><path d="M7 20v-6"/><path d="M17 20v-6"/><path d="M12 20v-8"/></svg>
+                                </motion.div>
+                                <motion.div className="absolute top-4 left-8 w-2 h-2 bg-emerald-300 rounded-full blur-[2px]" animate={{ y: [0, -20], opacity: [0, 0.8, 0], scale: [1, 1.4] }} transition={{ repeat: Infinity, duration: 1.6, delay: 0 }} />
+                                <motion.div className="absolute top-6 right-8 w-2 h-2 bg-emerald-300 rounded-full blur-[2px]" animate={{ y: [0, -24], opacity: [0, 0.8, 0], scale: [1, 1.5] }} transition={{ repeat: Infinity, duration: 1.9, delay: 0.5 }} />
+                            </div>
+
+                            <p className="relative z-10 text-[10px] font-black uppercase tracking-[0.35em] text-emerald-600 mb-3">Order Received</p>
+                            <h2 className="relative z-10 text-4xl font-serif italic text-slate-900 mb-4 tracking-tight leading-tight">Chefs are on it.</h2>
+                            <p className="relative z-10 text-[13px] font-medium text-slate-500 mb-10 leading-relaxed px-2">Your crafted selection has been sent securely to the kitchen. We'll update you momentarily.</p>
+                            
+                            <div className="relative z-10 space-y-3">
+                                <button
+                                    onClick={() => router.push(`/${hotelSlug}/guest/status`)}
+                                    className="w-full bg-slate-900 text-white py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.25em] shadow-xl active:scale-95 transition-transform"
+                                >
+                                    Track Progress
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setOrderComplete(false);
+                                        router.push(`/${hotelSlug}/guest/restaurant`);
+                                    }}
+                                    className="w-full bg-white text-slate-500 border border-slate-200 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.25em] active:scale-95 transition-transform"
+                                >
+                                    Order More
+                                </button>
+                            </div>
+                            
+                            <div className="absolute -right-12 -top-12 w-64 h-64 bg-emerald-100/40 rounded-full blur-3xl pointer-events-none" />
+                            <div className="absolute -left-12 -bottom-12 w-64 h-64 bg-slate-200/40 rounded-full blur-3xl pointer-events-none" />
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <LoyaltySignIn
                 isOpen={isLoyaltyOpen}

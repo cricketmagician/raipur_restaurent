@@ -363,7 +363,7 @@ export default function GuestDashboard() {
                         transition={{ delay: 0.04 }}
                         className="relative overflow-hidden"
                     >
-                        <div className="relative min-h-[60svh] overflow-x-auto no-scrollbar snap-x snap-mandatory flex">
+                        <div className="relative h-[60svh] w-full overflow-x-auto no-scrollbar snap-x snap-mandatory flex">
                             {activeHeroes.map((hero, index) => (
                                 <div 
                                     key={hero.id} 

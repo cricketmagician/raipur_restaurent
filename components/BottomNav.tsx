@@ -35,8 +35,8 @@ export function BottomNav() {
     }, []);
 
     return (
-        <div className={`fixed inset-x-0 bottom-0 z-[100] transition-all duration-500 ${isHidden ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"} pointer-events-none`}>
-            <div className="mx-3 mb-[calc(env(safe-area-inset-bottom)+0.6rem)]">
+        <div className={`fixed inset-x-0 bottom-0 z-[100] transition-all duration-500 ${isHidden ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"} pointer-events-none flex justify-center`}>
+            <div className="w-full max-w-[480px] px-3 mb-[calc(env(safe-area-inset-bottom)+0.6rem)]">
                 <div
                     className="pointer-events-auto flex items-end justify-between rounded-[1.8rem] border px-3 py-2.5 shadow-[0_20px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl"
                     style={{

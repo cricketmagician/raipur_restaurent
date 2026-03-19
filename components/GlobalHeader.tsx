@@ -39,9 +39,9 @@ export function GlobalHeader() {
         <motion.header 
             initial={{ y: -100 }}
             animate={{ y: 0 }}
-            className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 py-3 ${scrolled ? 'bg-[#0F3D2E]/95 backdrop-blur-xl border-b border-white/5 shadow-md' : 'bg-gradient-to-b from-[#0F3D2E]/80 to-transparent'}`}
+            className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 py-3 flex justify-center ${scrolled ? 'bg-[#0F3D2E]/95 backdrop-blur-xl border-b border-white/5 shadow-md' : 'bg-gradient-to-b from-[#0F3D2E]/80 to-transparent'}`}
         >
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 w-full max-w-[480px]">
                 {/* Row 1: Menu (Left), Branding (Center), Cart (Right) */}
                 <div className="px-5 flex items-center justify-between">
                     {/* Left: Menu */}

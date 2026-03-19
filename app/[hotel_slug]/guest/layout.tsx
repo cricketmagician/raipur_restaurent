@@ -194,21 +194,23 @@ export default function GuestLayout({
     }, []);
 
     return (
-        <div 
-            className={`flex flex-col min-h-[100dvh] text-slate-900 antialiased pb-[70px] overflow-x-hidden pt-safe transition-colors duration-500`}
-            style={{ backgroundColor: isDashboard ? 'transparent' : theme.background }}
-        >
-            <GuestAuthWrapper>
-                <GuestLayoutContent 
-                    hotelSlug={hotelSlug} 
-                    branding={branding} 
-                    theme={theme} 
-                    isDashboard={isDashboard}
-                    pathname={pathname}
-                >
-                    {children}
-                </GuestLayoutContent>
-            </GuestAuthWrapper>
+        <div className="min-h-[100dvh] w-full bg-[#0a0a0a] flex justify-center font-sans overflow-hidden">
+            <div 
+                className={`relative w-full max-w-[480px] flex flex-col min-h-[100dvh] text-slate-900 antialiased pb-[70px] overflow-x-hidden pt-safe transition-colors duration-500 shadow-2xl`}
+                style={{ backgroundColor: isDashboard ? 'transparent' : theme.background }}
+            >
+                <GuestAuthWrapper>
+                    <GuestLayoutContent 
+                        hotelSlug={hotelSlug} 
+                        branding={branding} 
+                        theme={theme} 
+                        isDashboard={isDashboard}
+                        pathname={pathname}
+                    >
+                        {children}
+                    </GuestLayoutContent>
+                </GuestAuthWrapper>
+            </div>
         </div>
     );
 }

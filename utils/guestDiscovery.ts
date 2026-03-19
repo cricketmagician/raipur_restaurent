@@ -2,6 +2,7 @@ export interface DiscoveryMood {
     id: string;
     label: string;
     icon: string;
+    image: string;
     description: string;
     guidance: string;
     categoryKeywords: string[];
@@ -13,6 +14,7 @@ export const DISCOVERY_MOODS: DiscoveryMood[] = [
         id: "light",
         label: "Light",
         icon: "🥗",
+        image: "/images/mood_light.png",
         description: "Fresh and easy",
         guidance: "Salads, breakfast plates, coffee and lighter pours.",
         categoryKeywords: ["salad", "breakfast", "coffee", "drink", "juice", "tea", "smoothie", "light"],
@@ -22,6 +24,7 @@ export const DISCOVERY_MOODS: DiscoveryMood[] = [
         id: "filling",
         label: "Filling",
         icon: "🍔",
+        image: "/images/mood_filling.png",
         description: "Hungry right now",
         guidance: "Burgers, pizzas, combos and heavier mains.",
         categoryKeywords: ["burger", "pizza", "combo", "main", "wrap", "pasta", "meal", "rice"],
@@ -31,6 +34,7 @@ export const DISCOVERY_MOODS: DiscoveryMood[] = [
         id: "sweet",
         label: "Sweet",
         icon: "🍰",
+        image: "/images/mood_sweet.png",
         description: "Dessert first",
         guidance: "Cakes, waffles, shakes, bakes and sweet coffee.",
         categoryKeywords: ["dessert", "cake", "sweet", "ice", "waffle", "bakery", "shake"],
@@ -40,6 +44,7 @@ export const DISCOVERY_MOODS: DiscoveryMood[] = [
         id: "spicy",
         label: "Spicy",
         icon: "🌶️",
+        image: "/images/mood_spicy.png",
         description: "Bold flavours",
         guidance: "Peri peri, hot sauces, masala sides and fiery mains.",
         categoryKeywords: ["spicy", "peri", "hot", "masala", "wings", "snack", "starter"],

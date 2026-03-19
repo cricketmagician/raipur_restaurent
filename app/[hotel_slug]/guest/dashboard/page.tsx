@@ -125,12 +125,12 @@ export default function GuestDashboard() {
                 id: "fallback-hero",
                 title: `${branding.name} Specials`,
                 subtext: "Fresh picks curated by the kitchen today.",
-                image_url: branding.heroImage || "",
+                image_url: branding.heroImage || (hotelSlug === 'hutgood' ? '/images/hutgood_hero.png' : ""),
                 cta_text: branding.hero_cta || "Explore Menu",
                 is_active: true,
             },
         ];
-    }, [heroes, branding]);
+    }, [heroes, branding, hotelSlug]);
     const chefPickItems = React.useMemo(
         () =>
             availableMenuItems
@@ -344,7 +344,7 @@ export default function GuestDashboard() {
                     className="absolute inset-0"
                     style={{ background: `linear-gradient(180deg, ${theme.background} 0%, ${theme.surface} 100%)` }}
                 />
-                {branding.heroImage ? (
+                {getDirectImageUrl(branding.heroImage) ? (
                     <img
                         src={getDirectImageUrl(branding.heroImage)}
                         alt={branding.name}
@@ -370,11 +370,17 @@ export default function GuestDashboard() {
                                     className="min-w-full h-full relative snap-start shrink-0"
                                 >
                                     <div className="absolute inset-0">
-                                        <img
-                                            src={getDirectImageUrl(hero.image_url) || getDirectImageUrl(branding.heroImage)}
-                                            alt={hero.title || branding.name}
-                                            className="h-full w-full object-cover"
-                                        />
+                                        {(getDirectImageUrl(hero.image_url) || getDirectImageUrl(branding.heroImage)) ? (
+                                            <img
+                                                src={getDirectImageUrl(hero.image_url) || getDirectImageUrl(branding.heroImage)}
+                                                alt={hero.title || branding.name}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="h-full w-full bg-gradient-to-br from-[#0F3D2E] to-black relative overflow-hidden">
+                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full blur-[80px] bg-[#C8A96A]/20"></div>
+                                            </div>
+                                        )}
                                         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
                                     </div>
                                     

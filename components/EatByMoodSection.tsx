@@ -24,9 +24,11 @@ export function EatByMoodSection({ moods, activeMoodId, onMoodSelect }: EatByMoo
                 </h3>
             </div>
 
-            <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory -mx-4 px-4 pb-2 pt-1">
+            <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory -mx-4 px-4 pb-4 pt-2">
                 {moods.map((mood) => {
                     const isActive = activeMoodId === mood.id;
+                    const moodImage = (mood as any).image; // Cast as any temporarily if TS complains, though we added it to interface
+                    
                     return (
                         <motion.button
                             key={mood.id}
@@ -34,36 +36,53 @@ export function EatByMoodSection({ moods, activeMoodId, onMoodSelect }: EatByMoo
                             onClick={() => {
                                 onMoodSelect(mood.id);
                                 if (window.navigator?.vibrate) {
-                                    window.navigator.vibrate(50); // Subtle haptic feedback
+                                    window.navigator.vibrate(50);
                                 }
                             }}
-                            className={`relative min-w-[140px] snap-start overflow-hidden rounded-[1.15rem] border px-4 py-4 text-left transition-all duration-300 backdrop-blur-md ${
+                            className={`relative min-w-[150px] min-h-[160px] snap-start overflow-hidden rounded-[1.25rem] border text-left transition-all duration-300 ${
                                 isActive
-                                    ? "bg-[#0F3D2E] text-white border-[#0F3D2E] shadow-[0_18px_40px_rgba(15,61,46,0.22)] scale-[1.02]"
-                                    : "bg-white/65 text-[#0F3D2E] border-white/55 shadow-[0_10px_26px_rgba(15,23,42,0.06)] hover:bg-white/80"
+                                    ? "border-[#C8A96A] shadow-[0_18px_40px_rgba(200,169,106,0.3)] scale-[1.02]"
+                                    : "border-white/10 shadow-lg hover:border-white/20"
                             }`}
                         >
-                            <div className="flex items-start justify-between gap-3">
-                                <span className="text-2xl">{mood.icon}</span>
-                                {isActive && (
-                                    <span className="rounded-full bg-white/15 px-2 py-1 text-[8px] font-black uppercase tracking-[0.2em] text-white">
-                                        Selected
-                                    </span>
+                            {/* Background Image */}
+                            <div className="absolute inset-0">
+                                {moodImage ? (
+                                    <img 
+                                        src={moodImage} 
+                                        alt={mood.name} 
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-[#0F3D2E]" />
                                 )}
+                                {/* Gradient Overlay for text readability */}
+                                <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 transition-opacity duration-300 ${isActive ? 'opacity-90' : 'opacity-70 group-hover:opacity-80'}`} />
                             </div>
-                            <div className="mt-4 space-y-1">
-                                <span className={`block text-[13px] font-black tracking-tight ${isActive ? "text-white" : "text-[#0F3D2E]"}`}>
-                                    {mood.name}
-                                </span>
-                                <span className={`block text-[10px] font-semibold leading-4 ${isActive ? "text-white/70" : "text-[#0F3D2E]/60"}`}>
-                                    {mood.tag_linked || "Tap to reveal picks"}
-                                </span>
+
+                            <div className="relative h-full flex flex-col justify-between p-4 z-10">
+                                <div className="flex items-start justify-between gap-3">
+                                    <span className="text-2xl drop-shadow-lg">{mood.icon}</span>
+                                    {isActive && (
+                                        <span className="rounded-full bg-[#C8A96A] px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.2em] text-white shadow-md">
+                                            Selected
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="mt-auto pt-6 space-y-1">
+                                    <span className={`block text-[15px] font-black tracking-tight text-white drop-shadow-md`}>
+                                        {mood.name}
+                                    </span>
+                                    <span className={`block text-[10px] font-bold leading-4 ${isActive ? "text-[#C8A96A]" : "text-white/75"}`}>
+                                        {mood.tag_linked || "Tap to reveal picks"}
+                                    </span>
+                                </div>
                             </div>
 
                             {isActive && (
                                 <motion.div 
                                     layoutId="mood-active"
-                                    className="pointer-events-none absolute inset-0 rounded-[1.15rem] ring-2 ring-white/15"
+                                    className="pointer-events-none absolute inset-0 rounded-[1.25rem] ring-2 ring-[#C8A96A] ring-offset-2 ring-offset-black/50"
                                 />
                             )}
                         </motion.button>

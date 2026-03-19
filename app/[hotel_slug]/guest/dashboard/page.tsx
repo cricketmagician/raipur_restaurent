@@ -356,24 +356,27 @@ export default function GuestDashboard() {
             </div>
 
             <div className="space-y-0">
-                {activeHeroes.length > 0 && (
-                    <motion.section
-                        initial={{ opacity: 0, y: 18 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.04 }}
-                        className="relative overflow-hidden"
-                    >
-                        <div className="relative h-[60svh] w-full overflow-x-auto no-scrollbar snap-x snap-mandatory flex">
-                            {activeHeroes.map((hero, index) => (
+                <motion.section
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.04 }}
+                    className="relative overflow-hidden"
+                >
+                    <div className="relative h-[60svh] w-full overflow-x-auto no-scrollbar snap-x snap-mandatory flex">
+                        {activeHeroes.length === 0 ? (
+                            <div className="min-w-full h-full relative snap-start shrink-0 flex items-center justify-center bg-[#0F3D2E]/5">
+                                <span className="animate-pulse w-8 h-8 rounded-full bg-[#0F3D2E]/20" />
+                            </div>
+                        ) : activeHeroes.map((hero, index) => (
                                 <div 
                                     key={hero.id} 
                                     className="min-w-full h-full relative snap-start shrink-0"
                                 >
                                     <div className="absolute inset-0">
-                                        {(getDirectImageUrl(hero.image_url) || getDirectImageUrl(branding.heroImage)) ? (
+                                        {(getDirectImageUrl(hero.image_url) || getDirectImageUrl(branding?.heroImage) || (hotelSlug === 'hutgood' ? '/images/hutgood_hero.png' : '')) ? (
                                             <img
-                                                src={getDirectImageUrl(hero.image_url) || getDirectImageUrl(branding.heroImage)}
-                                                alt={hero.title || branding.name}
+                                                src={getDirectImageUrl(hero.image_url) || getDirectImageUrl(branding?.heroImage) || (hotelSlug === 'hutgood' ? '/images/hutgood_hero.png' : '')}
+                                                alt={hero.title || branding?.name || 'Hero Image'}
                                                 className="h-full w-full object-cover"
                                             />
                                         ) : (
@@ -401,9 +404,8 @@ export default function GuestDashboard() {
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    </motion.section>
-                )}
+                    </div>
+                </motion.section>
 
                 <div className="space-y-12">
                     <motion.section

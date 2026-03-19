@@ -50,27 +50,27 @@ export function SeasonalStories({ stories, onStoryClick, loading }: SeasonalStor
                     <button
                         key={story.id}
                         onClick={() => onStoryClick(story)}
-                        className="min-w-[220px] snap-start overflow-hidden rounded-[1.8rem] bg-white shadow-[0_18px_40px_rgba(0,0,0,0.08)] border border-black/5 text-left group active:scale-[0.98] transition-transform"
+                        className="min-w-[160px] snap-start overflow-hidden rounded-[1.4rem] bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)] border border-black/5 text-left group active:scale-[0.98] transition-transform"
                     >
-                        <div className="relative h-[250px] overflow-hidden">
+                        <div className="relative h-[200px] overflow-hidden">
                             <img
                                 src={getDirectImageUrl(story.image_url) || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=900&auto=format"}
                                 alt={story.label}
                                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/18 to-transparent" />
-                            <div className="absolute left-4 top-4 rounded-full bg-white/18 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] text-white backdrop-blur-md">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
+                            <div className="absolute left-3 top-3 rounded-full bg-white/20 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.2em] text-white backdrop-blur-md">
                                 {story.type || "Story"}
                             </div>
-                            <div className="absolute inset-x-4 bottom-4 space-y-2 text-white">
-                                <h4 className="text-[1.35rem] font-black tracking-tight leading-[1.02]">
+                            <div className="absolute inset-x-3 bottom-3 space-y-1.5 text-white">
+                                <h4 className="text-[1.1rem] font-black tracking-tight leading-[1.05]">
                                     {story.label}
                                 </h4>
-                                <div className="flex items-center justify-between gap-3">
-                                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/72">
-                                        {story.price ? `₹${story.price}` : "Story highlight"}
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/70">
+                                        {story.price ? `₹${story.price}` : "Highlight"}
                                     </span>
-                                    <span className="rounded-full bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-[#0F3D2E]">
+                                    <span className="rounded-full bg-white px-2 py-1 text-[8px] font-black uppercase tracking-[0.15em] text-[#0F3D2E]">
                                         Open
                                     </span>
                                 </div>

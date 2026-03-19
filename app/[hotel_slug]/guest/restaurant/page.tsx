@@ -696,6 +696,32 @@ export default function RestaurantPage() {
                                 theme={theme}
                                 onBack={() => setView('discovery')}
                             />
+
+                            {/* Category Quick Rail in Detail View */}
+                            <div className="flex overflow-x-auto no-scrollbar gap-3 px-1 pb-2 -mt-4 -mx-2 pl-2 snap-x relative z-10">
+                                {filteredDiscoveryCategories.map((category) => {
+                                    const isActive = activeCategory === category.id;
+                                    return (
+                                        <button
+                                            key={`rail-detail-${category.id}`}
+                                            onClick={() => handleCategoryClick(category.id)}
+                                            className={`flex items-center gap-2 px-4 py-2.5 rounded-full whitespace-nowrap snap-start border shrink-0 transition-all active:scale-95 ${
+                                                isActive 
+                                                ? "shadow-md" 
+                                                : "bg-[#0F3D2E]/5 hover:bg-[#0F3D2E]/10 backdrop-blur-md"
+                                            }`}
+                                            style={
+                                                isActive 
+                                                    ? { backgroundColor: theme.primary, borderColor: theme.primary, color: theme.background } 
+                                                    : { color: theme.primary, borderColor: `${theme.primary}12` }
+                                            }
+                                        >
+                                            <span className="text-sm drop-shadow-sm">{category.icon}</span>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">{category.name}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                             {hasStrategyBlocks ? (
                                 <>
                                     {strategyResult.blocks.map((section) => (

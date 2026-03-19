@@ -1914,7 +1914,10 @@ export function useCart(hotelId: string | undefined, menuItems: any[] = [], scop
                 newCart[id] = q;
             }
             if (hotelId) {
-                persistCart(newCart);
+                // Move side effect outside of React's pure render phase
+                setTimeout(() => {
+                    persistCart(newCart);
+                }, 0);
             }
             return newCart;
         });
@@ -1922,7 +1925,9 @@ export function useCart(hotelId: string | undefined, menuItems: any[] = [], scop
 
     const clearCart = () => {
         setCart({});
-        if (hotelId) persistCart({});
+        if (hotelId) {
+            setTimeout(() => persistCart({}), 0);
+        }
     };
 
     const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);

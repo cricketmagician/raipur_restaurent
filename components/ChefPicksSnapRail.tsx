@@ -54,7 +54,11 @@ export function ChefPicksSnapRail({ items, cart, onAdd, onRemove, onItemClick }:
                                     {cart[item.id] > 0 ? (
                                         <div className="flex items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full p-1 shadow-2xl">
                                             <button 
-                                                onClick={(e) => { e.stopPropagation(); onRemove(item); }} 
+                                                onClick={(e) => { 
+                                                    e.stopPropagation(); 
+                                                    if (window.navigator?.vibrate) window.navigator.vibrate(40);
+                                                    onRemove(item); 
+                                                }} 
                                                 className="w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-white/10"
                                             >
                                                 <Minus className="w-4 h-4" />
@@ -63,6 +67,7 @@ export function ChefPicksSnapRail({ items, cart, onAdd, onRemove, onItemClick }:
                                             <button 
                                                 onClick={(e) => {
                                                     e.stopPropagation();
+                                                    if (window.navigator?.vibrate) window.navigator.vibrate(40);
                                                     if (item.image_url) triggerFly(item.id, item.image_url, e);
                                                     onAdd(item);
                                                 }} 
@@ -75,6 +80,7 @@ export function ChefPicksSnapRail({ items, cart, onAdd, onRemove, onItemClick }:
                                         <button 
                                             onClick={(e) => {
                                                 e.stopPropagation();
+                                                if (window.navigator?.vibrate) window.navigator.vibrate(40);
                                                 if (item.image_url) triggerFly(item.id, item.image_url, e);
                                                 onAdd(item);
                                             }}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ShoppingBag, Bell, Droplets, Menu, Sparkles, X, ChevronRight } from "lucide-react";
+import { ShoppingBag, Bell, Droplets, Menu, Sparkles, X, ChevronRight, User } from "lucide-react";
 import { useRouter, useParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHotelBranding, useCart } from "@/utils/store";
@@ -9,6 +9,7 @@ import { useTheme } from "@/utils/themes";
 import { useGuestRoom } from "../app/[hotel_slug]/guest/GuestAuthWrapper";
 
 export function GlobalHeader() {
+    const router = useRouter();
     const params = useParams();
     const pathname = usePathname();
     const hotelSlug = params?.hotel_slug as string;
@@ -47,7 +48,10 @@ export function GlobalHeader() {
                     {/* Left: Menu */}
                     <div className="w-12">
                         <button 
-                            onClick={() => setShowUtility(!showUtility)}
+                            onClick={() => {
+                                if (window.navigator?.vibrate) window.navigator.vibrate(30);
+                                setShowUtility(!showUtility);
+                            }}
                             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 border border-white/20 bg-black/20 shadow-sm text-white`}
                             style={{ 
                                 backgroundColor: showUtility ? theme.primary : "rgba(0,0,0,0.2)"
@@ -68,22 +72,26 @@ export function GlobalHeader() {
                                         <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/40">Guest Selection</p>
                                     </div>
                                     <button 
+                                        onClick={() => {
+                                            setShowUtility(false);
+                                            // Make sure router is available at the component level
+                                            router.push(`/${hotelSlug}/guest/profile`);
+                                        }}
+                                        className="w-full px-5 py-3 flex items-center justify-between hover:bg-white/5 transition-colors group"
+                                    >
+                                        <div className="flex items-center space-x-3 text-white">
+                                            <User className="w-4 h-4 text-[#C8A96A]" />
+                                            <span className="text-[10px] font-bold uppercase tracking-widest">Profile</span>
+                                        </div>
+                                        <ChevronRight className="w-3 h-3 text-white/20" />
+                                    </button>
+                                    <button 
                                         onClick={() => openQuickActions("waiter")}
                                         className="w-full px-5 py-3 flex items-center justify-between hover:bg-white/5 transition-colors group"
                                     >
                                         <div className="flex items-center space-x-3 text-white">
                                             <Bell className="w-4 h-4 text-[#C8A96A]" />
                                             <span className="text-[10px] font-bold uppercase tracking-widest">Call Host</span>
-                                        </div>
-                                        <ChevronRight className="w-3 h-3 text-white/20" />
-                                    </button>
-                                    <button 
-                                        onClick={() => openQuickActions("water")}
-                                        className="w-full px-5 py-3 flex items-center justify-between hover:bg-white/5 transition-colors group"
-                                    >
-                                        <div className="flex items-center space-x-3 text-white">
-                                            <Droplets className="w-4 h-4 text-[#C8A96A]" />
-                                            <span className="text-[10px] font-bold uppercase tracking-widest">Hydration</span>
                                         </div>
                                         <ChevronRight className="w-3 h-3 text-white/20" />
                                     </button>
@@ -94,9 +102,17 @@ export function GlobalHeader() {
 
                     {/* Center: Hotel Name */}
                     <div className="flex-1 text-center truncate px-2">
-                        <h1 className="text-base font-black italic tracking-tighter truncate text-white drop-shadow-md">
-                            {branding?.name}
-                        </h1>
+                        <button 
+                            onClick={() => {
+                                if (window.navigator?.vibrate) window.navigator.vibrate(20);
+                                router.push(`/${hotelSlug}/guest/dashboard`);
+                            }}
+                            className="inline-block transition-transform active:scale-95"
+                        >
+                            <h1 className="text-base font-black italic tracking-tighter truncate text-white drop-shadow-md">
+                                {branding?.name}
+                            </h1>
+                        </button>
                     </div>
 
                     {/* Right: Cart */}

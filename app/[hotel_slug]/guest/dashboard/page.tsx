@@ -415,7 +415,7 @@ export default function GuestDashboard() {
                         className="pt-1"
                     >
                         <div className="px-4 mb-2 flex items-baseline justify-between">
-                            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Today's Stories</h2>
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Highlights</h2>
                         </div>
                         <SeasonalStories
                             stories={activeStories}

@@ -74,9 +74,15 @@ export default function GuestDashboard() {
     const [orderComplete, setOrderComplete] = React.useState(false);
     const [isLoyaltyOpen, setIsLoyaltyOpen] = React.useState(false);
     const [activeMoodId, setActiveMoodId] = React.useState<string | null>(null);
-    const [activeHeroIndex, setActiveHeroIndex] = React.useState(0);
     const [activeStoryIndex, setActiveStoryIndex] = React.useState(0);
     const [isStoryOverlayOpen, setIsStoryOverlayOpen] = React.useState(false);
+    const [searchTerm, setSearchTerm] = React.useState("");
+    const [showUtilityMenu, setShowUtilityMenu] = React.useState(false);
+
+    // Hero Slideshow State
+    const [activeHeroIndex, setActiveHeroIndex] = React.useState(0);
+    const heroScrollRef = React.useRef<HTMLDivElement>(null);
+
     const moodPicksRef = React.useRef<HTMLDivElement>(null);
     const [toast, setToast] = React.useState<{ message: string; type: "success" | "error"; isVisible: boolean }>({
         message: "",
@@ -156,8 +162,30 @@ export default function GuestDashboard() {
             return;
         }
 
-        // Auto-slide removed per user request for manual scroll feel
+        const interval = setInterval(() => {
+            setActiveHeroIndex(prev => {
+                const next = (prev + 1) % activeHeroes.length;
+                if (heroScrollRef.current) {
+                    heroScrollRef.current.scrollTo({
+                        left: heroScrollRef.current.clientWidth * next,
+                        behavior: 'smooth'
+                    });
+                }
+                return next;
+            });
+        }, 4500);
+        return () => clearInterval(interval);
     }, [activeHeroes.length]);
+
+    const handleHeroScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const clientWidth = e.currentTarget.clientWidth;
+        const scrollLeft = e.currentTarget.scrollLeft;
+        if (clientWidth === 0) return;
+        const index = Math.round(scrollLeft / clientWidth);
+        if (index !== activeHeroIndex && index >= 0 && index < activeHeroes.length) {
+            setActiveHeroIndex(index);
+        }
+    };
 
     React.useEffect(() => {
         if (!menuItems.length) return;
@@ -362,7 +390,11 @@ export default function GuestDashboard() {
                     transition={{ delay: 0.04 }}
                     className="relative overflow-hidden"
                 >
-                    <div className="relative h-[60svh] w-full overflow-x-auto no-scrollbar snap-x snap-mandatory flex">
+                    <div 
+                        ref={heroScrollRef}
+                        onScroll={handleHeroScroll}
+                        className="relative h-[60svh] w-full overflow-x-auto no-scrollbar snap-x snap-mandatory flex"
+                    >
                         {activeHeroes.length === 0 ? (
                             <div className="min-w-full h-full relative snap-start shrink-0 flex items-center justify-center bg-[#0F3D2E]/5">
                                 <span className="animate-pulse w-8 h-8 rounded-full bg-[#0F3D2E]/20" />
@@ -405,6 +437,18 @@ export default function GuestDashboard() {
                                 </div>
                             ))}
                     </div>
+
+                    {/* Pagination Dots */}
+                    {activeHeroes.length > 1 && (
+                        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20 pointer-events-none">
+                            {activeHeroes.map((_, index) => (
+                                <div 
+                                    key={index}
+                                    className={`h-1.5 rounded-full transition-all duration-500 ${index === activeHeroIndex ? "w-6 bg-white" : "w-1.5 bg-white/40"}`}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </motion.section>
 
                 <div className="space-y-12">

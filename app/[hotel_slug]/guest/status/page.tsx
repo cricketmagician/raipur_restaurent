@@ -112,26 +112,53 @@ export default function StatusPage() {
 
     return (
         <div 
-            className="pb-40 px-5 pt-safe min-h-screen overflow-x-hidden transition-colors duration-500"
+            className="relative pb-40 px-5 pt-safe min-h-screen overflow-x-hidden transition-colors duration-500"
             style={{ 
                 backgroundColor: theme.background,
                 fontFamily: theme.fontSans,
                 color: theme.text
             }}
         >
-            <div className="flex items-center justify-between mb-10 pt-10">
+            {/* Dynamic Background Elements */}
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+                <motion.div 
+                    animate={{ 
+                        scale: [1, 1.15, 1],
+                        opacity: [0.3, 0.45, 0.3],
+                        x: [0, 30, 0],
+                        y: [0, -40, 0]
+                    }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute -top-[10%] -right-[20%] w-[80vw] h-[80vw] rounded-full blur-[80px]"
+                    style={{ backgroundColor: `${theme.primary}12` }}
+                />
+                <motion.div 
+                    animate={{ 
+                        scale: [1, 1.25, 1],
+                        opacity: [0.2, 0.35, 0.2],
+                        x: [0, -30, 0],
+                        y: [0, 50, 0]
+                    }}
+                    transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                    className="absolute top-[35%] -left-[25%] w-[70vw] h-[70vw] rounded-full blur-[90px]"
+                    style={{ backgroundColor: theme.secondary ? `${theme.secondary}15` : `${theme.primary}08` }}
+                />
+                <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]" />
+            </div>
+
+            <div className="relative z-10 flex items-center justify-between mb-8 pt-6">
                 <motion.button 
                     whileTap={{ scale: 0.9 }}
                     onClick={() => router.back()} 
-                    className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-slate-100 active:scale-90 transition-transform"
+                    className="w-12 h-12 rounded-[1.2rem] bg-white/80 backdrop-blur-md flex items-center justify-center shadow-lg border border-white active:scale-90 transition-transform"
                 >
-                    <ArrowLeft className="w-6 h-6 text-slate-900" />
+                    <ArrowLeft className="w-5 h-5 text-slate-800" />
                 </motion.button>
                 <h1 className="text-3xl font-serif italic text-slate-900 tracking-tighter">Selection Status</h1>
                 <div className="w-12"></div>
             </div>
 
-            <div className="mb-14">
+            <div className="relative z-10 mb-14">
                 <div className="flex items-center justify-between mb-8 px-1">
                     <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Journey Pulse</h2>
                     {activeRequests.length > 0 && (
@@ -232,19 +259,28 @@ export default function StatusPage() {
                     </div>
                 ) : (
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="bg-white/40 backdrop-blur-sm border-2 border-dashed border-slate-100 rounded-[3.5rem] py-32 text-center shadow-inner"
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[3.5rem] py-28 text-center shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] overflow-hidden"
                     >
-                        <Sparkles className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-                        <p className="text-slate-900 font-serif italic text-2xl">Everything Is Perfect</p>
-                        <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] mt-2">No active selection found</p>
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-gradient-to-b from-slate-100/50 to-transparent pointer-events-none" />
+                        
+                        <motion.div 
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
+                            className="w-24 h-24 mx-auto mb-8 relative flex items-center justify-center pointer-events-none"
+                        >
+                            <div className="absolute inset-0 bg-slate-200/40 rounded-full blur-2xl" />
+                            <Sparkles className="w-12 h-12 text-slate-400/50" />
+                        </motion.div>
+                        <p className="text-slate-900 font-serif italic text-3xl mb-3 tracking-tight">Tranquility</p>
+                        <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">No active journeys</p>
                     </motion.div>
                 )}
             </div>
 
-            <div className="pb-safe">
-                <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-8 px-1">Completed Journeys</h2>
+            <div className="relative z-10 pb-safe">
+                <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-6 px-1">Completed Journeys</h2>
                 <div className="space-y-4">
                     {pastRequests.map((req) => {
                         const theme = getRequestTheme(req.type);

@@ -8,6 +8,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
     ArrowRight,
     RefreshCw,
+    Leaf,
+    ChefHat,
+    ShieldCheck
 } from "lucide-react";
 import { LoyaltySignIn } from "@/components/LoyaltySignIn";
 import { SeasonalStories } from "@/components/SeasonalStories";
@@ -608,65 +611,72 @@ export default function GuestDashboard() {
                         )}
                     </motion.section>
 
-                    {cartCount > 0 ? (
-                        <motion.section
-                            initial={{ opacity: 0, y: 18 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.12 }}
-                            className="rounded-[1.35rem] border p-4 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.22)]"
-                            style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}
-                        >
-                            <div className="flex items-center justify-between gap-4">
-                                <div>
-                                    <p className="mb-2 text-[10px] font-black uppercase tracking-[0.24em] opacity-35" style={{ color: theme.primary }}>
-                                        In your bag
-                                    </p>
-                                    <h3 className="text-2xl font-black tracking-tight" style={{ color: theme.primary }}>
-                                        Rs {cartTotal.toFixed(0)}
-                                    </h3>
-                                    <p className="mt-1 text-sm font-medium opacity-60">
-                                        {cartCount} item{cartCount === 1 ? "" : "s"} ready for checkout.
-                                    </p>
-                                </div>
+                    {/* Restaurant Trust / Standards Section */}
+                    <motion.section
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.12 }}
+                        className="py-4"
+                    >
+                        <div className="px-3 mb-4">
+                            <p className="text-[10px] font-black uppercase tracking-[0.24em] opacity-40 mb-1" style={{ color: theme.primary }}>
+                                Inside our kitchen
+                            </p>
+                            <h3 className="text-xl font-black tracking-tight" style={{ color: theme.primary }}>
+                                Made with passion.
+                            </h3>
+                        </div>
 
-                                <button
-                                    onClick={() => window.dispatchEvent(new CustomEvent("open_cart"))}
-                                    className="flex items-center gap-2 rounded-full px-5 py-3 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-lg transition-all active:scale-95"
-                                    style={{ backgroundColor: theme.primary }}
-                                >
-                                    Open Bag
-                                    <ArrowRight className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </motion.section>
-                    ) : (
-                        <motion.section
-                            initial={{ opacity: 0, y: 18 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.12 }}
-                            className="rounded-[2rem] border p-5 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.18)]"
-                            style={{ backgroundColor: theme.surface, borderColor: `${theme.primary}10` }}
-                        >
-                            <div className="flex items-center justify-between gap-4">
-                                <div>
-                                    <p className="mb-2 text-[10px] font-black uppercase tracking-[0.24em] opacity-35" style={{ color: theme.primary }}>
-                                        Start ordering
-                                    </p>
-                                    <h3 className="text-xl font-black tracking-tight" style={{ color: theme.primary }}>
-                                        Open the menu and place your next order.
-                                    </h3>
+                        <div className="flex overflow-x-auto no-scrollbar gap-3 px-3 pb-2 -mx-2 pl-2 snap-x">
+                            {/* Badge 1 */}
+                            <div 
+                                className="min-w-[140px] snap-start rounded-[1.4rem] p-4 border bg-white/70 backdrop-blur-md shadow-[0_12px_30px_rgba(0,0,0,0.04)]"
+                                style={{ borderColor: `${theme.primary}10` }}
+                            >
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: `${theme.secondary}40`, color: theme.primary }}>
+                                    <Leaf className="w-5 h-5" />
                                 </div>
-
-                                <button
-                                    onClick={() => router.push(`/${hotelSlug}/guest/restaurant`)}
-                                    className="shrink-0 rounded-full px-5 py-3 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-lg transition-all active:scale-95"
-                                    style={{ backgroundColor: theme.primary }}
-                                >
-                                    Menu
-                                </button>
+                                <h4 className="text-[13px] font-black tracking-tight mb-1" style={{ color: theme.primary }}>
+                                    Fresh Supplies
+                                </h4>
+                                <p className="text-[10px] font-medium leading-4 opacity-65" style={{ color: theme.primary }}>
+                                    Daily sourced local ingredients for peak flavor.
+                                </p>
                             </div>
-                        </motion.section>
-                    )}
+
+                            {/* Badge 2 */}
+                            <div 
+                                className="min-w-[140px] snap-start rounded-[1.4rem] p-4 border bg-white/70 backdrop-blur-md shadow-[0_12px_30px_rgba(0,0,0,0.04)]"
+                                style={{ borderColor: `${theme.primary}10` }}
+                            >
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: `${theme.secondary}40`, color: theme.primary }}>
+                                    <ChefHat className="w-5 h-5" />
+                                </div>
+                                <h4 className="text-[13px] font-black tracking-tight mb-1" style={{ color: theme.primary }}>
+                                    Chef Crafted
+                                </h4>
+                                <p className="text-[10px] font-medium leading-4 opacity-65" style={{ color: theme.primary }}>
+                                    Prepared meticulously by culinary experts.
+                                </p>
+                            </div>
+
+                            {/* Badge 3 */}
+                            <div 
+                                className="min-w-[140px] snap-start rounded-[1.4rem] p-4 border bg-white/70 backdrop-blur-md shadow-[0_12px_30px_rgba(0,0,0,0.04)]"
+                                style={{ borderColor: `${theme.primary}10` }}
+                            >
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: `${theme.secondary}40`, color: theme.primary }}>
+                                    <ShieldCheck className="w-5 h-5" />
+                                </div>
+                                <h4 className="text-[13px] font-black tracking-tight mb-1" style={{ color: theme.primary }}>
+                                    Hygienic Prep
+                                </h4>
+                                <p className="text-[10px] font-medium leading-4 opacity-65" style={{ color: theme.primary }}>
+                                    Strict safety and cleaning protocols in place.
+                                </p>
+                            </div>
+                        </div>
+                    </motion.section>
                 </div>
             </div>
 

@@ -69,7 +69,7 @@ export function BottomNav() {
                                     }}
                                     className={`flex flex-col items-center justify-center relative transition-all duration-300 ${
                                         isService 
-                                            ? "relative -top-[12px] w-[58px] h-[58px]" // lowered slightly to rest inside the dock
+                                            ? "relative -top-[4px] w-[56px] h-[56px]" // Tucked further down to look flush
                                             : `w-full max-w-[68px] h-[58px] rounded-[1.2rem] ${isActive ? "bg-white/10" : "bg-transparent"}`
                                     }`}
                                 >

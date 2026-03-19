@@ -630,50 +630,65 @@ export default function GuestDashboard() {
                         <div className="flex overflow-x-auto no-scrollbar gap-3 px-3 pb-2 -mx-2 pl-2 snap-x">
                             {/* Badge 1 */}
                             <div 
-                                className="min-w-[140px] snap-start rounded-[1.4rem] p-4 border bg-white/70 backdrop-blur-md shadow-[0_12px_30px_rgba(0,0,0,0.04)]"
-                                style={{ borderColor: `${theme.primary}10` }}
+                                className="relative min-w-[140px] h-[190px] snap-start rounded-[1.4rem] overflow-hidden border shadow-xl"
+                                style={{ borderColor: `${theme.primary}20` }}
                             >
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: `${theme.secondary}40`, color: theme.primary }}>
-                                    <Leaf className="w-5 h-5" />
+                                <img src="/images/trust_fresh_ingredients.png" alt="Fresh Supplies" className="absolute inset-0 w-full h-full object-cover" />
+                                <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                                
+                                <div className="absolute inset-0 p-3.5 flex flex-col justify-end z-10">
+                                    <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2 bg-black/30 backdrop-blur-md border border-white/20 text-white shadow-lg">
+                                        <Leaf className="w-4 h-4" />
+                                    </div>
+                                    <h4 className="text-[13px] font-black tracking-tight mb-0.5 text-white drop-shadow-md">
+                                        Fresh Supplies
+                                    </h4>
+                                    <p className="text-[9px] font-medium leading-3 text-white/80 drop-shadow-sm">
+                                        Daily sourced local ingredients for peak flavor.
+                                    </p>
                                 </div>
-                                <h4 className="text-[13px] font-black tracking-tight mb-1" style={{ color: theme.primary }}>
-                                    Fresh Supplies
-                                </h4>
-                                <p className="text-[10px] font-medium leading-4 opacity-65" style={{ color: theme.primary }}>
-                                    Daily sourced local ingredients for peak flavor.
-                                </p>
                             </div>
 
                             {/* Badge 2 */}
                             <div 
-                                className="min-w-[140px] snap-start rounded-[1.4rem] p-4 border bg-white/70 backdrop-blur-md shadow-[0_12px_30px_rgba(0,0,0,0.04)]"
-                                style={{ borderColor: `${theme.primary}10` }}
+                                className="relative min-w-[140px] h-[190px] snap-start rounded-[1.4rem] overflow-hidden border shadow-xl"
+                                style={{ borderColor: `${theme.primary}20` }}
                             >
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: `${theme.secondary}40`, color: theme.primary }}>
-                                    <ChefHat className="w-5 h-5" />
+                                <img src="/images/trust_chef_crafted.png" alt="Chef Crafted" className="absolute inset-0 w-full h-full object-cover" />
+                                <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                                
+                                <div className="absolute inset-0 p-3.5 flex flex-col justify-end z-10">
+                                    <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2 bg-black/30 backdrop-blur-md border border-white/20 text-white shadow-lg">
+                                        <ChefHat className="w-4 h-4" />
+                                    </div>
+                                    <h4 className="text-[13px] font-black tracking-tight mb-0.5 text-white drop-shadow-md">
+                                        Chef Crafted
+                                    </h4>
+                                    <p className="text-[9px] font-medium leading-3 text-white/80 drop-shadow-sm">
+                                        Prepared meticulously by culinary experts.
+                                    </p>
                                 </div>
-                                <h4 className="text-[13px] font-black tracking-tight mb-1" style={{ color: theme.primary }}>
-                                    Chef Crafted
-                                </h4>
-                                <p className="text-[10px] font-medium leading-4 opacity-65" style={{ color: theme.primary }}>
-                                    Prepared meticulously by culinary experts.
-                                </p>
                             </div>
 
                             {/* Badge 3 */}
                             <div 
-                                className="min-w-[140px] snap-start rounded-[1.4rem] p-4 border bg-white/70 backdrop-blur-md shadow-[0_12px_30px_rgba(0,0,0,0.04)]"
-                                style={{ borderColor: `${theme.primary}10` }}
+                                className="relative min-w-[140px] h-[190px] snap-start rounded-[1.4rem] overflow-hidden border shadow-xl"
+                                style={{ borderColor: `${theme.primary}20` }}
                             >
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: `${theme.secondary}40`, color: theme.primary }}>
-                                    <ShieldCheck className="w-5 h-5" />
+                                <img src="/images/trust_hygienic_kitchen.png" alt="Hygienic Prep" className="absolute inset-0 w-full h-full object-cover" />
+                                <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                                
+                                <div className="absolute inset-0 p-3.5 flex flex-col justify-end z-10">
+                                    <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2 bg-black/30 backdrop-blur-md border border-white/20 text-white shadow-lg">
+                                        <ShieldCheck className="w-4 h-4" />
+                                    </div>
+                                    <h4 className="text-[13px] font-black tracking-tight mb-0.5 text-white drop-shadow-md">
+                                        Hygienic Prep
+                                    </h4>
+                                    <p className="text-[9px] font-medium leading-3 text-white/80 drop-shadow-sm">
+                                        Strict safety and cleaning protocols in place.
+                                    </p>
                                 </div>
-                                <h4 className="text-[13px] font-black tracking-tight mb-1" style={{ color: theme.primary }}>
-                                    Hygienic Prep
-                                </h4>
-                                <p className="text-[10px] font-medium leading-4 opacity-65" style={{ color: theme.primary }}>
-                                    Strict safety and cleaning protocols in place.
-                                </p>
                             </div>
                         </div>
                     </motion.section>

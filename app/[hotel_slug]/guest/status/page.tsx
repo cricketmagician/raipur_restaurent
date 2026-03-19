@@ -144,50 +144,88 @@ export default function StatusPage() {
                 {activeRequests.length > 0 ? (
                     <div className="space-y-6">
                         {activeRequests.map((req) => {
-                            const theme = getRequestTheme(req.type);
+                            const themeWrapper = getRequestTheme(req.type);
+                            const isDining = req.type.toLowerCase().includes("dining") || req.type.toLowerCase().includes("food") || req.type.toLowerCase().includes("order");
+                            const isPreparing = req.status === "In Progress" || req.status === "Assigned";
+                            
+                            // Calculate step index
+                            let stepIndex = 0;
+                            if (req.status === "Pending") stepIndex = 1;
+                            else if (req.status === "Assigned") stepIndex = 2;
+                            else if (req.status === "In Progress") stepIndex = 3;
+                            else if (req.status === "Completed") stepIndex = 4;
+
                             return (
                                 <motion.div
                                     key={req.id}
                                     layout
-                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                    initial={{ opacity: 0, scale: 0.95, y: 15 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    className={`${theme.bg} ${theme.border} border p-8 rounded-[2.5rem] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.04)] relative overflow-hidden group backdrop-blur-md`}
+                                    className="bg-white/80 backdrop-blur-xl border border-slate-100/50 p-6 rounded-[2rem] shadow-[0_24px_50px_-12px_rgba(0,0,0,0.06)] relative overflow-hidden group"
                                 >
-                                    {/* Progress Strip */}
-                                    <div className="absolute top-0 left-0 w-full h-1 bg-white/50 overflow-hidden">
-                                        <motion.div
-                                            animate={{ x: ['-100%', '100%'] }}
-                                            transition={{
-                                                repeat: Infinity,
-                                                duration: req.status === "Pending" ? 3 : 2,
-                                                ease: "linear"
-                                            }}
-                                            className={`w-1/2 h-full ${theme.accent}`}
-                                        />
-                                    </div>
-
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1 pr-6">
-                                            <div className="flex items-center mb-1">
-                                                <div className={`w-2 h-2 rounded-full ${theme.accent} mr-2`} />
-                                                <h3 className={`font-serif italic text-2xl ${theme.text}`}>{req.type}</h3>
+                                    <div className="flex items-start justify-between mb-5 relative z-10">
+                                        <div className="flex-1">
+                                            <div className="flex items-center space-x-2 mb-2">
+                                                <div className={`w-8 h-8 rounded-full ${themeWrapper.light} flex items-center justify-center`}>
+                                                    <div className={`w-2.5 h-2.5 rounded-full ${themeWrapper.accent}`} />
+                                                </div>
+                                                <h3 className="font-serif italic text-2xl text-slate-900 tracking-tight">{req.type}</h3>
                                             </div>
-                                            <div className="flex items-center text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                                                <Clock className="w-3.5 h-3.5 mr-1.5 opacity-50" />
-                                                Received {req.time} <span className="mx-2 opacity-20">•</span> Room {req.room}
+                                            <div className="flex items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest pl-10">
+                                                <Clock className="w-3.5 h-3.5 mr-1.5 opacity-60" />
+                                                {req.time} <span className="mx-2 opacity-30">•</span> Room {req.room}
                                             </div>
                                         </div>
                                         <StatusBadge status={req.status as any} />
                                     </div>
 
-                                    {req.notes && (
-                                        <p className={`text-[13px] ${theme.text} font-medium opacity-60 leading-relaxed italic mt-4`}>
-                                            &ldquo;{req.notes}&rdquo;
-                                        </p>
-                                    )}
+                                    {/* Stepped Progress Bar */}
+                                    <div className="relative z-10 grid grid-cols-3 gap-2 mt-6 mb-6">
+                                        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden relative">
+                                            <motion.div className={`absolute top-0 left-0 h-full ${themeWrapper.accent}`} initial={{ width: 0 }} animate={{ width: stepIndex >= 1 ? "100%" : "0%" }} transition={{ duration: 0.5 }} />
+                                        </div>
+                                        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden relative">
+                                            <motion.div className={`absolute top-0 left-0 h-full ${themeWrapper.accent}`} initial={{ width: 0 }} animate={{ width: stepIndex >= 2 ? (stepIndex === 2 ? "50%" : "100%") : "0%" }} transition={{ duration: 1, repeat: stepIndex === 2 ? Infinity : 0 }} />
+                                        </div>
+                                        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden relative">
+                                            <motion.div className={`absolute top-0 left-0 h-full ${themeWrapper.accent}`} initial={{ width: 0 }} animate={{ width: stepIndex >= 3 ? (stepIndex === 3 ? "50%" : "100%") : "0%" }} transition={{ duration: 1, repeat: stepIndex === 3 ? Infinity : 0 }} />
+                                        </div>
+                                    </div>
 
-                                    {/* Abstract Decorative Element */}
-                                    <div className={`absolute -right-4 -bottom-4 w-24 h-24 ${theme.accent} opacity-5 blur-3xl rounded-full`} />
+                                    {/* Content & Animation Area */}
+                                    <div className="relative z-10 flex items-center justify-between mt-2 bg-slate-50/50 rounded-2xl p-4 border border-slate-100/60">
+                                        <div className="flex-1 pr-4">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">
+                                                {stepIndex === 1 ? "Order Received" : stepIndex === 2 ? "Order Accepted" : stepIndex === 3 ? "Preparing Order" : "Completed"}
+                                            </p>
+                                            <p className="text-sm font-medium text-slate-700 leading-snug line-clamp-2">
+                                                {req.notes ? `"${req.notes}"` : (isDining && isPreparing ? "Our culinary team is crafting your meal perfectly." : "We are actively taking care of your request.")}
+                                            </p>
+                                        </div>
+
+                                        {/* Functional Animation */}
+                                        {isDining && isPreparing && (
+                                            <div className="shrink-0 flex items-center justify-center relative w-16 h-16 bg-white rounded-[1.2rem] shadow-sm border border-slate-100">
+                                                <motion.div
+                                                    animate={{ rotate: [-6, 6, -6], y: [0, -3, 0] }}
+                                                    transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+                                                    className="relative z-10 text-rose-500"
+                                                >
+                                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6h.2A6.13 6.13 0 0 1 12 4a6.13 6.13 0 0 1 4.39 2h.2A4 4 0 0 1 18 13.87"/><path d="M6 12a4 4 0 0 1-1.3-7.8"/><path d="M18 12a4 4 0 0 0 1.3-7.8"/><path d="M3 20h18"/><path d="M7 20v-6"/><path d="M17 20v-6"/><path d="M12 20v-8"/></svg>
+                                                </motion.div>
+                                                <motion.div className="absolute top-2 left-3 w-1.5 h-1.5 bg-rose-300 rounded-full blur-[1px]" animate={{ y: [0, -12], opacity: [0, 0.7, 0], scale: [1, 1.3] }} transition={{ repeat: Infinity, duration: 1.4, delay: 0 }} />
+                                                <motion.div className="absolute top-3 right-3 w-1.5 h-1.5 bg-rose-300 rounded-full blur-[1px]" animate={{ y: [0, -14], opacity: [0, 0.7, 0], scale: [1, 1.4] }} transition={{ repeat: Infinity, duration: 1.6, delay: 0.5 }} />
+                                            </div>
+                                        )}
+                                        {(!isDining || !isPreparing) && (
+                                            <div className="shrink-0 flex items-center justify-center w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100">
+                                                <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Decorative Blob */}
+                                    <div className={`absolute -right-10 -bottom-10 w-40 h-40 ${themeWrapper.accent} opacity-[0.03] blur-3xl rounded-full pointer-events-none`} />
                                 </motion.div>
                             );
                         })}

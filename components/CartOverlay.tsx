@@ -186,7 +186,7 @@ export function CartOverlay({
                                             </div>
                                             <div className="grid grid-cols-1 gap-6">
                                                 {(() => {
-                                                    const suggestion = menuItems.find(m => 
+                                                    const suggestion = menuItems.find(m => m.is_recommended && !cart[m.id]) || menuItems.find(m => 
                                                         (m.category.toLowerCase() === 'desserts' || m.category.toLowerCase() === 'drinks') && 
                                                         !cart[m.id]
                                                     );

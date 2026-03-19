@@ -15,6 +15,7 @@ import {
 import { LoyaltySignIn } from "@/components/LoyaltySignIn";
 import { SeasonalStories } from "@/components/SeasonalStories";
 import { StoryOverlay } from "@/components/StoryOverlay";
+import { useAddEffectTrigger } from "@/components/AddEffect";
 import { ChefPicksSnapRail } from "@/components/ChefPicksSnapRail";
 import { EatByMoodSection } from "@/components/EatByMoodSection";
 import { Toast } from "@/components/Toast";
@@ -72,6 +73,7 @@ export default function GuestDashboard() {
     const { heroes } = useHeroes(branding?.id);
     const { stories, loading: storiesLoading } = useSeasonalStories(branding?.id);
     const { moods } = useMoods(branding?.id);
+    const triggerFly = useAddEffectTrigger();
 
     const [isOrdering, setIsOrdering] = React.useState(false);
     const [orderComplete, setOrderComplete] = React.useState(false);
@@ -329,6 +331,9 @@ export default function GuestDashboard() {
                 return;
             }
 
+            if (linkedItem.image_url) {
+                triggerFly(linkedItem.id, linkedItem.image_url, event);
+            }
             updateQuantity(linkedItem.id, (cart[linkedItem.id] || 0) + 1);
             setToast({
                 message: `${linkedItem.title} added to your bag.`,

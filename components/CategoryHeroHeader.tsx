@@ -15,12 +15,12 @@ interface CategoryHeroHeaderProps {
 
 export function CategoryHeroHeader({ name, tagline, heroImage, theme, onBack }: CategoryHeroHeaderProps) {
     return (
-        <header className="-mx-6 mb-8">
+        <header className="-mx-6 -mt-[128px] mb-8 relative z-0">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="relative h-[168px] overflow-hidden rounded-b-[2.2rem] shadow-[0_24px_90px_-38px_rgba(0,0,0,0.45)]"
+                className="relative h-[296px] overflow-hidden rounded-b-[2.2rem] shadow-[0_24px_90px_-38px_rgba(0,0,0,0.45)]"
                 style={{ backgroundColor: theme.primary }}
             >
                 {heroImage ? (
@@ -35,13 +35,15 @@ export function CategoryHeroHeader({ name, tagline, heroImage, theme, onBack }: 
                     className="absolute inset-0 opacity-80"
                     style={{ background: `radial-gradient(circle at top right, ${theme.accent}40, transparent 44%)` }}
                 />
-                <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/18 to-transparent backdrop-blur-[2px]" />
+                
+                {/* Top overlay to darken under the status bar / global header */}
+                <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/60 to-transparent backdrop-blur-[2px]" />
 
                 <motion.button
                     initial={{ opacity: 0, x: -16 }}
                     animate={{ opacity: 1, x: 0 }}
                     onClick={onBack}
-                    className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-4 py-2 text-[10px] font-black uppercase tracking-[0.28em] text-white/90 backdrop-blur-md shadow-lg transition-all active:scale-95"
+                    className="absolute left-5 top-[148px] z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-4 py-2 text-[10px] font-black uppercase tracking-[0.28em] text-white/90 backdrop-blur-md shadow-lg transition-all active:scale-95"
                 >
                     <ChevronRight className="h-4 w-4 rotate-180" />
                     <span>Discovery</span>

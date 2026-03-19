@@ -38,31 +38,26 @@ export function BottomNav() {
 
     return (
         <div className={`fixed inset-x-0 bottom-0 z-50 transition-all duration-500 ${(isHidden || isHiddenPath) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"} pointer-events-none flex justify-center`}>
-            <div className="w-full max-w-[480px] relative pb-[env(safe-area-inset-bottom)] pt-8">
+            <div className="w-full max-w-[480px] relative pb-[env(safe-area-inset-bottom)] pt-6">
                 
-                {/* Background with Cutout */}
+                {/* Simple Dock Background */}
                 <div 
-                    className="absolute inset-x-0 bottom-[env(safe-area-inset-bottom)] top-8 z-0 backdrop-blur-xl shadow-[0_-20px_40px_rgba(0,0,0,0.18)]"
+                    className="absolute inset-x-0 bottom-[env(safe-area-inset-bottom)] top-6 z-0 shadow-[0_-20px_40px_rgba(0,0,0,0.18)] border-t border-white/5"
                     style={{
                         backgroundColor: dockTone,
                         borderTopLeftRadius: "1.8rem",
                         borderTopRightRadius: "1.8rem",
-                        WebkitMaskImage: `radial-gradient(circle 42px at 50% 4px, transparent 42px, black 42.5px)`,
-                        maskImage: `radial-gradient(circle 42px at 50% 4px, transparent 42px, black 42.5px)`,
                     }}
-                >
-                    {/* Subtle top border reflection */}
-                    <div className="absolute inset-x-0 top-0 h-[1px] bg-white/10" />
-                </div>
+                />
 
                 {/* Nav Items (Overlayed) */}
-                <div className="relative z-10 pointer-events-auto flex items-end justify-between px-2 h-[72px]">
+                <div className="relative z-10 pointer-events-auto flex items-center justify-between px-2 h-[72px]">
                     {navItems.map((item) => {
                         const isActive = pathname === item.path;
                         const isService = item.id === 'service';
                         
                         return (
-                            <div key={item.id} className="flex-1 flex justify-center">
+                            <div key={item.id} className="flex-1 flex justify-center relative h-full items-center">
                                 <motion.button
                                     whileTap={{ scale: 0.9 }}
                                     onClick={() => {
@@ -72,37 +67,38 @@ export function BottomNav() {
                                         if (item.onClick) item.onClick();
                                         else router.push(item.path);
                                     }}
-                                    className={`flex flex-col items-center justify-center relative transition-all duration-300 ${isService ? "absolute -top-[22px] left-1/2 -translate-x-1/2" : "w-full py-2.5 rounded-[1.2rem]"} ${isActive && !isService ? "bg-white/10 shadow-inner" : "bg-transparent"}`}
+                                    className={`flex flex-col items-center justify-center relative transition-all duration-300 ${
+                                        isService 
+                                            ? "absolute -top-[32px] w-[64px] h-[64px] left-1/2 -translate-x-1/2"
+                                            : `w-full max-w-[68px] h-[58px] rounded-[1.2rem] ${isActive ? "bg-white/10" : "bg-transparent"}`
+                                    }`}
                                 >
                                     <div
-                                        className={`flex items-center justify-center rounded-full transition-all duration-300 ${
+                                        className={`flex items-center justify-center transition-all duration-300 ${
                                             isService
-                                                ? "bg-[#C8A96A] text-white w-[60px] h-[60px] shadow-[0_10px_20px_rgba(200,169,106,0.4)]"
-                                                : "w-10 h-10"
+                                                ? "bg-[#C8A96A] text-white w-full h-full rounded-full shadow-[0_12px_30px_rgba(200,169,106,0.4)] border-4"
+                                                : "w-8 h-8 rounded-full"
                                         }`}
+                                        style={isService ? { borderColor: dockTone } : undefined}
                                     >
                                         <item.icon
                                             className={`transition-all duration-500 ${
-                                                isService ? "w-6 h-6 text-white" : isActive ? "w-5 h-5 text-white" : "w-[22px] h-[22px] text-white/50"
+                                                isService 
+                                                    ? "w-7 h-7 text-white" 
+                                                    : isActive 
+                                                        ? "w-[22px] h-[22px] text-white" 
+                                                        : "w-[22px] h-[22px] text-white/50"
                                             }`}
                                         />
                                     </div>
                                     {!isService && (
                                         <span
-                                            className={`text-[9px] mt-1 font-bold uppercase tracking-widest transition-all duration-300 ${
+                                            className={`text-[9px] mt-0.5 font-bold uppercase tracking-widest transition-all duration-300 ${
                                                 isActive ? "text-white" : "text-white/50"
                                             }`}
                                         >
                                             {item.label}
                                         </span>
-                                    )}
-                                    {isActive && !isService && (
-                                        <motion.div 
-                                            layoutId="footerActive"
-                                            className="absolute -bottom-0.5 h-1 w-8 rounded-full bg-white/30"
-                                            initial={false}
-                                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                                        />
                                     )}
                                 </motion.button>
                             </div>
